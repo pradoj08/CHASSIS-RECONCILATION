@@ -2679,6 +2679,9 @@ th button[data-sort="ce"].ce-remove-ready {
 <!-- REVIEW FLAGS: 3-4 days = Low Warning | 5-9 days = Moderate Warning | 10+ days = Flagged for Delete -->
 <!-- REVIEW FLAGS ACTIVE: 1 day = Event Recorded Yesterday | 2-4 days = Low Warning | 5-9 days = Moderate Warning | 10+ days = Flagged for Delete -->
 <!-- EXPORTS_USE_ON_HAND_FILTER: normal export and email Excel use all On Hand rows, not current filtered view -->
+<!-- EMAIL_ATTACHMENT_EXPORTS_ALL_ON_HAND_FIXED: removed duplicate current-filter export helper -->
+<!-- EXCEL_STYLING_CE_RED_CENTERED: header color, centered cells, CE red when populated -->
+<!-- STYLED_HTML_EXCEL_EXPORT_RELIABLE: uses .xls HTML table so Excel preserves header color, centered values, red CE -->
 </head>
 <body>
 <span id="cloudStatus" class="cloud-status-hidden" aria-hidden="true"></span>
@@ -3678,17 +3681,9 @@ function exportReport(){
       return;
     }
 
-    if(typeof XLSX==="undefined"){
-      downloadImportReadyCsv(rows);
-      if(typeof showArchiveToast==="function") showArchiveToast("Excel library unavailable. Exported import-ready CSV instead.");
-      return;
-    }
-
-    const ws=XLSX.utils.json_to_sheet(rows);
-    const wb=XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb,ws,"Reconciliation");
-    XLSX.writeFile(wb,`chassis-reconciliation-import-ready-${new Date().toISOString().slice(0,10)}.xlsx`);
-    if(typeof showArchiveToast==="function") showArchiveToast("Import-ready Excel export downloaded.");
+    const fileName=`chassis-reconciliation-import-ready-${new Date().toISOString().slice(0,10)}.xls`;
+    downloadStyledExcelTable(rows,fileName);
+    if(typeof showArchiveToast==="function") showArchiveToast("Styled Excel export downloaded.");
   }catch(err){
     console.error("Export failed:",err);
     try{
@@ -3795,25 +3790,6 @@ function makeOnHandReportWorkbookRows(){
     "Review Flag": r.issue.label.replace(/<br\s*\/?>/g," / ").replace(/<[^>]+>/g,"")
   }));
 }
-function makeOnHandReportWorkbookRows(){
-  return currentRows().map(r=>({
-    "Chassis": r.chassis,
-    "Location": r.location,
-    "Chas Pool": r.pool,
-    "Event Date": r.eventDate,
-    "Event": r.event,
-    "Chas Car Kind": r.kind,
-    "Chas HC": r.hc || "",
-    "Status": r.status || "",
-    "CE": r.ce ? "CE" : "",
-    "Note": r.note || "",
-    "Yard Checked": r.yardChecked ? "Yes" : "No",
-    "Event Age": r.bucket.label,
-    "Days Old": r.daysOld,
-    "Review Flag": r.issue.label.replace(/<br\s*\/?>/g," / ").replace(/<[^>]+>/g,"")
-  }));
-}
-
 function todayCalendarKey(){
   const d=new Date();
   return dateKey(d.getFullYear(),d.getMonth(),d.getDate());
@@ -4711,6 +4687,148 @@ function addExcelTable(ws,rows){
   }];
 }
 
+function styleEmailWorksheet(ws,rows){
+  if(!rows.length || !ws["!ref"])return;
+
+  const range=XLSX.utils.decode_range(ws["!ref"]);
+  const headers=Object.keys(rows[0]||{});
+  const ceCol=headers.findIndex(h=>String(h).toLowerCase()==="ce");
+
+  const headerStyle={
+    font:{bold:true,color:{rgb:"FFFFFF"}},
+    fill:{fgColor:{rgb:"1F4E78"}},
+    alignment:{horizontal:"center",vertical:"center",wrapText:true},
+    border:{
+      top:{style:"thin",color:{rgb:"94A3B8"}},
+      bottom:{style:"thin",color:{rgb:"94A3B8"}},
+      left:{style:"thin",color:{rgb:"94A3B8"}},
+      right:{style:"thin",color:{rgb:"94A3B8"}}
+    }
+  };
+
+  const bodyStyle={
+    alignment:{horizontal:"center",vertical:"center",wrapText:true},
+    border:{
+      top:{style:"thin",color:{rgb:"D9E2F3"}},
+      bottom:{style:"thin",color:{rgb:"D9E2F3"}},
+      left:{style:"thin",color:{rgb:"D9E2F3"}},
+      right:{style:"thin",color:{rgb:"D9E2F3"}}
+    }
+  };
+
+  const cePopulatedStyle={
+    font:{bold:true,color:{rgb:"FFFFFF"}},
+    fill:{fgColor:{rgb:"C00000"}},
+    alignment:{horizontal:"center",vertical:"center",wrapText:true},
+    border:{
+      top:{style:"thin",color:{rgb:"D9E2F3"}},
+      bottom:{style:"thin",color:{rgb:"D9E2F3"}},
+      left:{style:"thin",color:{rgb:"D9E2F3"}},
+      right:{style:"thin",color:{rgb:"D9E2F3"}}
+    }
+  };
+
+  for(let C=range.s.c; C<=range.e.c; C++){
+    const addr=XLSX.utils.encode_cell({r:0,c:C});
+    if(ws[addr])ws[addr].s=headerStyle;
+  }
+
+  for(let R=1; R<=range.e.r; R++){
+    for(let C=range.s.c; C<=range.e.c; C++){
+      const addr=XLSX.utils.encode_cell({r:R,c:C});
+      if(!ws[addr])continue;
+
+      const isCePopulated=C===ceCol && String(ws[addr].v||"").trim();
+      ws[addr].s=isCePopulated ? cePopulatedStyle : bodyStyle;
+    }
+  }
+
+  ws["!autofilter"]={ref:XLSX.utils.encode_range(range)};
+  ws["!freeze"]={xSplit:0,ySplit:1};
+}
+
+function htmlCellEscape(value){
+  return String(value ?? "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;");
+}
+
+function downloadStyledExcelTable(rows, filename){
+  if(!rows.length){
+    alert("No rows available to export.");
+    return false;
+  }
+
+  const headers=Object.keys(rows[0]);
+  const ceIndex=headers.findIndex(h=>String(h).toLowerCase()==="ce");
+
+  const colgroup=headers.map(h=>{
+    const maxLen=Math.max(String(h).length,...rows.map(r=>String(r[h] ?? "").length));
+    const px=Math.min(Math.max((maxLen+2)*7,80),320);
+    return `<col style="width:${px}px">`;
+  }).join("");
+
+  const headerHtml=headers.map(h=>`<th>${htmlCellEscape(h)}</th>`).join("");
+
+  const bodyHtml=rows.map(r=>{
+    return `<tr>${headers.map((h,i)=>{
+      const value=r[h] ?? "";
+      const isCe=i===ceIndex && String(value).trim();
+      return `<td class="${isCe?"ce-populated":""}">${htmlCellEscape(value)}</td>`;
+    }).join("")}</tr>`;
+  }).join("");
+
+  const htmlWorkbook=`<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<style>
+  table {
+    border-collapse: collapse;
+    font-family: Calibri, Arial, sans-serif;
+    font-size: 11pt;
+  }
+  th {
+    background: #1F4E78;
+    color: #FFFFFF;
+    font-weight: 700;
+    text-align: center;
+    vertical-align: middle;
+    border: 1px solid #7F8EA3;
+    padding: 6px;
+    white-space: nowrap;
+  }
+  td {
+    text-align: center;
+    vertical-align: middle;
+    border: 1px solid #D9E2F3;
+    padding: 5px;
+    white-space: nowrap;
+    mso-number-format:"\\@";
+  }
+  td.ce-populated {
+    background: #C00000;
+    color: #FFFFFF;
+    font-weight: 700;
+  }
+</style>
+</head>
+<body>
+<table>
+  <colgroup>${colgroup}</colgroup>
+  <thead><tr>${headerHtml}</tr></thead>
+  <tbody>${bodyHtml}</tbody>
+</table>
+</body>
+</html>`;
+
+  const blob=new Blob([htmlWorkbook],{type:"application/vnd.ms-excel;charset=utf-8"});
+  downloadBlob(blob,filename.replace(/\.xlsx$/i,".xls"));
+  return true;
+}
+
 function downloadEmailExcelAttachment(){
   const rows=makeSortedEmailAttachmentRows();
   if(!rows.length){
@@ -4719,28 +4837,9 @@ function downloadEmailExcelAttachment(){
   }
 
   const dateStamp=new Date().toISOString().slice(0,10);
-  const fileName=`chassis-reconciliation-email-attachment-${dateStamp}.xlsx`;
+  const fileName=`chassis-reconciliation-email-attachment-${dateStamp}.xls`;
 
-  if(typeof XLSX==="undefined"){
-    downloadImportReadyCsv(rows);
-    if(typeof showArchiveToast==="function")showArchiveToast("Excel library unavailable. Downloaded CSV attachment instead.");
-    return true;
-  }
-
-  const ws=XLSX.utils.json_to_sheet(rows);
-  autoFitWorksheetColumns(ws,rows);
-  addExcelTable(ws,rows);
-
-  const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,"Reconciliation");
-  wb.Props={
-    Title:"Chassis Reconciliation Report",
-    Subject:"Chassis Reconciliation Email Attachment",
-    CreatedDate:new Date()
-  };
-
-  XLSX.writeFile(wb,fileName);
-  return true;
+  return downloadStyledExcelTable(rows,fileName);
 }
 
 function openOutlookWebCompose(subject,body){
