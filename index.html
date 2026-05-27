@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>Chassis Reconciliation Report</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <style>
 :root {
@@ -760,6 +761,102 @@ body.slider-active button:hover {
   filter: brightness(1.08);
 }
 
+
+/* Archive rename controls */
+.archive-rename-btn {
+  background: rgba(14,165,233,.18);
+  border-color: rgba(56,189,248,.38);
+  color: #e0f2fe;
+}
+.archive-rename-input {
+  width: min(420px, 100%);
+  border: 1px solid rgba(96,165,250,.36);
+  background: rgba(7,13,30,.88);
+  color: #f8fafc;
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 900;
+}
+.archive-save-name-btn {
+  background: rgba(16,185,129,.18);
+  border-color: rgba(52,211,153,.38);
+  color: #d1fae5;
+}
+.archive-cancel-name-btn {
+  background: rgba(71,85,105,.26);
+  border-color: rgba(148,163,184,.28);
+  color: #dbeafe;
+}
+.archive-row-title-edit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+
+/* Supabase cloud status */
+.cloud-status{display:inline-flex;align-items:center;justify-content:center;min-height:36px;border-radius:999px;padding:0 12px;border:1px solid rgba(148,163,184,.28);background:rgba(15,23,42,.62);color:#cbd5e1;font-size:11px;font-weight:1000;white-space:nowrap}
+.cloud-status.ok{color:#d1fae5;background:rgba(16,185,129,.16);border-color:rgba(52,211,153,.36)}
+.cloud-status.warn{color:#fde68a;background:rgba(245,158,11,.16);border-color:rgba(251,191,36,.36)}
+.cloud-status.err{color:#ffe4e6;background:rgba(225,29,72,.18);border-color:rgba(251,113,133,.38)}
+
+
+/* Manual cloud sync button */
+.btn-sync-cloud{background:rgba(16,185,129,.16)!important;border-color:rgba(52,211,153,.36)!important;color:#d1fae5!important}
+
+
+/* Visible top cloud sync controls */
+.cloud-control-card {
+  min-width: 210px;
+  min-height: 86px;
+  display: grid;
+  align-content: center;
+  gap: 7px;
+  border: 1px solid rgba(52,211,153,.32);
+  background:
+    radial-gradient(circle at top left, rgba(52,211,153,.14), transparent 12rem),
+    rgba(6, 78, 59, .20);
+  border-radius: 18px;
+  padding: 12px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+}
+.cloud-control-title {
+  color: #d1fae5;
+  font-size: 11px;
+  font-weight: 1000;
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.top-cloud-status {
+  width: 100%;
+  min-height: 28px !important;
+  justify-content: flex-start !important;
+  padding: 0 10px !important;
+}
+.cloud-control-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 7px;
+}
+.btn-sync-cloud,
+.btn-reload-cloud {
+  min-height: 30px;
+  padding: 6px 8px !important;
+  font-size: 11px !important;
+}
+.btn-sync-cloud {
+  background: rgba(16,185,129,.20) !important;
+  border-color: rgba(52,211,153,.42) !important;
+  color: #d1fae5 !important;
+}
+.btn-reload-cloud {
+  background: rgba(37,99,235,.20) !important;
+  border-color: rgba(96,165,250,.42) !important;
+  color: #dbeafe !important;
+}
+
 </style>
 </head>
 <body>
@@ -778,6 +875,16 @@ body.slider-active button:hover {
         <span>📅</span>
         <strong>Calendar</strong>
       </button>
+
+      <div class="cloud-control-card">
+        <div class="cloud-control-title">Cloud Sync</div>
+        <span id="cloudStatus" class="cloud-status top-cloud-status">Cloud: connecting</span>
+        <div class="cloud-control-actions">
+          <button id="forceSaveBtn" class="btn-sync-cloud" type="button">Force Save</button>
+          <button id="reloadCloudBtn" class="btn-reload-cloud" type="button">Reload Cloud</button>
+        </div>
+      </div>
+
 </div>
   </section>
 
@@ -944,9 +1051,160 @@ body.slider-active button:hover {
 const REPORT_TODAY = new Date("2026-05-26T00:00:00");
 const YARD_OPTIONS = ["TGRP 40/45","DCLI 40/45","TGRP & DCLP 20","FLEXI 40/20","SCLU 53/SNBZ 40","UP 53"];
 const INITIAL_ROWS = [[1, "DCNZ 408123", "DIRT - DIRT", "DCLP", "05/26/2026 14:52:56", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [2, "MSCZ 250233", "DIRT - DIRT", "DCLP", "05/25/2026 10:38:03", "PKUP(Parking Update)", "Q40", "Current(Park - UP Storage)"], [3, "DCNZ 606582", "DIRT - DIRT", "DCLP", "05/26/2026 14:18:03", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [4, "DECZ 405057", "DIRT - DIRT", "DCLP", "05/26/2026 14:26:57", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [5, "DCLZ 710906", "D - D - 31", "DCLP", "05/26/2026 07:15:29", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [6, "APMZ 418007", "L - L - 47", "DCLP", "05/26/2026 10:25:13", "PKUP(Parking Update)", "Q40", "Current(Park - UP Storage)"], [7, "DCLZ 404907", "06801 - 801", "DCLP", "05/25/2026 14:08:49", "PKUP(Parking Update)", "Q40", "Current(Park - UP Storage)"], [8, "MAEC 685232", "R - R - 16", "DCLP", "05/26/2026 15:36:10", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [9, "APMZ 700430", "P - P - 12", "DCLP", "05/26/2026 15:38:54", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [10, "DECZ 403537", "O - O - 19", "DCLP", "05/26/2026 10:27:59", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [11, "DECZ 405061", "I - I - 17", "DCLP", "05/26/2026 08:56:57", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [12, "MSCZ 140062", "06801 - 801", "DCLP", "05/25/2026 13:47:51", "PKUP(Parking Update)", "Q40", "Current(Park - UP Storage)"], [13, "DCNZ 415587", "I - I - 41", "DCLP", "05/26/2026 09:01:30", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [14, "APMZ 406229", "DIRT - DIRT", "DCLP", "05/26/2026 14:39:56", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [15, "APMZ 412267", "M - M - 157", "DCLP", "05/26/2026 05:33:52", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [16, "POCZ 2001", "06802 - 802", "DCLP", "05/13/2026 06:44:05", "BARE(Breaking a Container/Chassis pair)", "Q40", "Current(Park - UP Storage)"], [17, "MSCZ 140374", "N - N - 79", "DCLP", "05/26/2026 15:42:55", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [18, "APMZ 417637", "N - N - 36", "DCLP", "05/26/2026 15:52:09", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [19, "DCLZ 700661", "06802 - 802", "DCLP", "05/05/2026 10:44:55", "MTUP(Match Update)", "Q40", "Current(Park - UP Storage)"], [20, "APMZ 405743", "M - M - 101", "DCLP", "05/26/2026 05:47:46", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [21, "APMZ 400723", "M - M - 7", "DCLP", "05/01/2026 07:22:04", "MTUP(Match Update)", "Q40", "Current(Park - UP Storage)"], [22, "NEDZ 409299", "O - O - 43", "DCLP", "05/26/2026 10:30:39", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [23, "APMZ 410315", "DIRT - DIRT", "DCLP", "05/26/2026 14:54:24", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [24, "PONZ 457834", "I - I - 42", "DCLP", "05/26/2026 09:01:40", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [25, "PONZ 456960", "DIRT - DIRT", "DCLP", "05/26/2026 14:14:13", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [26, "DCLZ 405582", "DIRT - DIRT", "DCLP", "05/26/2026 14:42:44", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [27, "DCLZ 404028", "DIRT - DIRT", "DCLP", "05/26/2026 14:10:26", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [28, "DCLZ 413504", "I - I - 7", "DCLP", "05/26/2026 08:53:39", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [29, "MAEC 710520", "L - L - 15", "DCLP", "05/26/2026 09:56:27", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [30, "APMZ 405404", "M - M - 124", "DCLP", "05/26/2026 05:43:23", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [31, "POCZ 400837", "D - D - 29", "DCLP", "05/26/2026 07:15:41", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [32, "DCLZ 420214", "N - N - 19", "DCLP", "05/26/2026 15:54:56", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [33, "MAEC 666017", "06801 - 801", "DCLP", "05/26/2026 09:31:54", "MOVE(Move)", "Q40", "Current(Park - UP Storage)"], [34, "DCSZ 711698", "N - N - 75", "DCLP", "05/26/2026 15:43:15", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [35, "DCNZ 507068", "I - I - 3", "DCLP", "05/26/2026 08:53:17", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [36, "MAEC 734047", "SHOP - SHOP", "DCLP", "05/25/2026 13:42:12", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [37, "IPPZ 400539", "06801 - 801", "DCLP", "05/24/2026 23:44:01", "BARE(Breaking a Container/Chassis pair)", "Q40", "Current(Park - UP Storage)"], [38, "MAEC 450170", "S - S - 31", "DCLP", "05/26/2026 15:33:15", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [39, "MAEC 623989", "M - M - 100", "DCLP", "05/26/2026 05:47:51", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [40, "MSCZ 423300", "DIRT - DIRT", "DCLP", "05/26/2026 14:49:27", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [41, "APMZ 406431", "DIRT - DIRT", "DCLP", "05/26/2026 14:10:41", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [42, "DCLZ 700401", "N - N - 10", "DCLP", "05/26/2026 15:55:40", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [43, "MAEC 731800", "I - I - 24", "DCLP", "05/21/2026 07:56:15", "INUP(Inventory Update)", "Q40", "Current(Park - UP Storage)"], [44, "DCNZ 405302", "DIRT - DIRT", "DCLP", "05/26/2026 14:15:58", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [45, "DCLZ 406511", "DIRT - DIRT", "DCLP", "05/26/2026 14:16:31", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [46, "MSCZ 423689", "DIRT - DIRT", "DCLP", "05/26/2026 14:35:01", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [47, "APMZ 411438", "BOWL - BOWL", "DCLP", "05/18/2026 14:02:53", "MTUP(Match Update)", "Q40", "Current(Park - UP Storage)"], [48, "MSCZ 451085", "06808 - 808", "DCLP", "05/08/2026 20:13:28", "BARE(Breaking a Container/Chassis pair)", "Q40", "Current(Park - UP Storage)"], [49, "DCNZ 498301", "DIRT - DIRT", "DCLP", "05/26/2026 14:21:10", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [50, "DECZ 403469", "K - K - 10", "DCLP", "05/26/2026 09:29:26", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [51, "APMZ 426111", "M - M - 99", "DCLP", "05/26/2026 05:47:55", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [52, "APMZ 701853", "I - I - 28", "DCLP", "05/26/2026 09:00:00", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"]].map(([id,chassis,location,pool,eventDate,event,kind,status])=>({id,chassis,location,pool,eventDate,event,kind,status}));
-let tableRows=[...INITIAL_ROWS], query="", filter="all", sortConfig={key:"id",direction:"asc"}, showBanner=true, clearArmed=false, clearTimer=null, importedFileArchives=[], archiveDeleteArmedId=null, archiveDeleteTimer=null, recycleDeleteArmedId=null, recycleDeleteTimer=null, emptyRecycleArmed=false, emptyRecycleTimer=null, recycleExpanded=false;
+let tableRows=[...INITIAL_ROWS], query="", filter="all", sortConfig={key:"id",direction:"asc"}, showBanner=true, clearArmed=false, clearTimer=null, importedFileArchives=[], archiveDeleteArmedId=null, archiveDeleteTimer=null, recycleDeleteArmedId=null, recycleDeleteTimer=null, emptyRecycleArmed=false, emptyRecycleTimer=null, recycleExpanded=false, archiveRenameId=null;
 const filters=[["all","On Hand"],["yardChecked","Yard Checked"],["today","Event Today"],["missingToday","Missing Event Today"],["tenPlus","Flagged for Delete"],["notChecked","Not Yard Checked"]];
 const $=id=>document.getElementById(id);
+
+const SUPABASE_URL="https://epthcamzzwegsdggrjgh.supabase.co";
+const SUPABASE_KEY="sb_publishable_f5HYn7EM12Z7V2psO_njmQ_w89WOtm1";
+const CLOUD_KEYS={current:"current_session",archives:"archive_list",recycle:"archive_recycle_bin",calendar:"yard_check_calendar"};
+let cloudReady=false, cloudLoading=false, cloudSaveTimer=null, cloudLastSavedAt=null;
+
+function setCloudStatus(text,mode="warn"){
+  const el=$("cloudStatus"); if(!el)return;
+  el.textContent=text; el.classList.remove("ok","warn","err"); el.classList.add(mode);
+}
+function cloudHeaders(extra={}){
+  return {
+    "apikey":SUPABASE_KEY,
+    "Authorization":"Bearer "+SUPABASE_KEY,
+    "Content-Type":"application/json",
+    "Prefer":"return=representation",
+    ...extra
+  };
+}
+async function cloudUpsert(key,value){
+  const res=await fetch(`${SUPABASE_URL}/rest/v1/chassis_reconciliation_state?on_conflict=state_key`,{
+    method:"POST",
+    headers:cloudHeaders({"Prefer":"resolution=merge-duplicates,return=representation"}),
+    body:JSON.stringify({state_key:key,state_value:value,updated_at:new Date().toISOString()})
+  });
+  if(!res.ok){
+    const text=await res.text().catch(()=>"");
+    throw new Error(`Supabase upsert failed ${res.status}: ${text}`);
+  }
+  return true;
+}
+async function cloudGet(key){
+  const res=await fetch(`${SUPABASE_URL}/rest/v1/chassis_reconciliation_state?state_key=eq.${encodeURIComponent(key)}&select=state_value`,{
+    method:"GET",
+    headers:cloudHeaders()
+  });
+  if(!res.ok){
+    const text=await res.text().catch(()=>"");
+    throw new Error(`Supabase read failed ${res.status}: ${text}`);
+  }
+  const rows=await res.json();
+  return rows && rows[0] ? rows[0].state_value : null;
+}
+async function testCloudConnection(){
+  try{
+    setCloudStatus("Cloud: testing","warn");
+    await cloudGet(CLOUD_KEYS.current);
+    setCloudStatus("Cloud: connected","ok");
+    cloudReady=true;
+    return true;
+  }catch(err){
+    console.error("Cloud test failed",err);
+    setCloudStatus("Cloud: SQL/URL issue","err");
+    return false;
+  }
+}
+function makeCurrentSessionSnapshot(){
+  return {
+    savedAt:new Date().toISOString(),
+    reportDate:REPORT_TODAY.toISOString(),
+    yardChecked:$("yardSelect")?.value||"",
+    tableRows,
+    query,
+    filter,
+    sortConfig,
+    showBanner,
+    importedFileArchives
+  };
+}
+function applyCurrentSessionSnapshot(snap){
+  if(!snap||!Array.isArray(snap.tableRows))return false;
+  tableRows=snap.tableRows;
+  query=snap.query||"";
+  filter=snap.filter||"all";
+  sortConfig=snap.sortConfig||{key:"id",direction:"asc"};
+  showBanner=snap.showBanner!==false;
+  importedFileArchives=Array.isArray(snap.importedFileArchives)?snap.importedFileArchives:[];
+  if($("search"))$("search").value=query;
+  if($("yardSelect")&&snap.yardChecked)$("yardSelect").value=snap.yardChecked;
+  return true;
+}
+function queueCloudSave(){
+  clearTimeout(cloudSaveTimer);
+  cloudSaveTimer=setTimeout(saveCurrentSessionToCloud,350);
+}
+async function saveCurrentSessionToCloud(){
+  if(cloudLoading)return;
+  try{
+    await cloudUpsert(CLOUD_KEYS.current,makeCurrentSessionSnapshot());
+    cloudReady=true;
+    cloudLastSavedAt=new Date().toISOString();
+    setCloudStatus("Cloud: saved","ok");
+  }catch(err){
+    console.error("Cloud current-session save failed",err);
+    setCloudStatus("Cloud: save failed","err");
+  }
+}
+async function saveAllCloudState(){
+  if(cloudLoading)return;
+  try{
+    setCloudStatus("Cloud: saving","warn");
+    await Promise.all([
+      cloudUpsert(CLOUD_KEYS.current,makeCurrentSessionSnapshot()),
+      cloudUpsert(CLOUD_KEYS.archives,getArchiveList()),
+      cloudUpsert(CLOUD_KEYS.recycle,getRecycleBin()),
+      cloudUpsert(CLOUD_KEYS.calendar,getYardCalendarState())
+    ]);
+    cloudReady=true;
+    cloudLastSavedAt=new Date().toISOString();
+    setCloudStatus("Cloud: force saved","ok");
+    if(typeof showArchiveToast==="function")showArchiveToast("Cloud force save complete.");
+  }catch(err){
+    console.error("Cloud full save failed",err);
+    setCloudStatus("Cloud: force failed","err");
+    alert("Cloud save failed. Run the latest SQL, then try Force Save again.\n\n"+(err&&err.message?err.message:err));
+  }
+}
+async function loadCloudState(){
+  try{
+    cloudLoading=true;
+    setCloudStatus("Cloud: loading","warn");
+    const [current,archives,recycle,calendar]=await Promise.all([
+      cloudGet(CLOUD_KEYS.current),
+      cloudGet(CLOUD_KEYS.archives),
+      cloudGet(CLOUD_KEYS.recycle),
+      cloudGet(CLOUD_KEYS.calendar)
+    ]);
+
+    if(Array.isArray(archives))localStorage.setItem("chassisReconciliationArchiveList",JSON.stringify(archives));
+    if(Array.isArray(recycle))localStorage.setItem("chassisReconciliationArchiveRecycleBin",JSON.stringify(recycle));
+    if(calendar&&typeof calendar==="object")localStorage.setItem("setteYardCheckCalendar",JSON.stringify(calendar));
+
+    const applied=applyCurrentSessionSnapshot(current);
+    cloudReady=true;
+    cloudLoading=false;
+    setCloudStatus("Cloud: synced","ok");
+    render();
+
+    // First device safety: if the cloud current_session is empty, push this page state.
+    if(!applied && tableRows.length) queueCloudSave();
+  }catch(err){
+    cloudReady=false;
+    cloudLoading=false;
+    console.error("Cloud load failed",err);
+    setCloudStatus("Cloud: check SQL","err");
+  }
+}
+async function reloadCloudState(){
+  await loadCloudState();
+  if(typeof showArchiveToast==="function")showArchiveToast("Cloud data reloaded.");
+}
 function parseEventDate(v){const [dp,tp="00:00:00"]=String(v||"").split(" ");const [m,d,y]=dp.split("/").map(Number);const [hh,mm,ss]=tp.split(":").map(Number);return new Date(y||1900,(m||1)-1,d||1,hh||0,mm||0,ss||0)}
 function formatDateShort(v){const [dp,tp=""]=String(v||"").split(" ");const [m,d]=dp.split("/");const [hh,mm]=tp.split(":");return `${m||"--"}/${d||"--"}${hh&&mm?` ${hh}:${mm}`:""}`}
 function daysOld(r){const ev=parseEventDate(r.eventDate);const mid=new Date(ev.getFullYear(),ev.getMonth(),ev.getDate());return Math.floor((REPORT_TODAY-mid)/86400000)}
@@ -971,7 +1229,7 @@ function pick(row,map,cands,fallback=-1){
   return h?row[map[h]]??"—":fallback>=0?row[fallback]??"—":"—";
 }
 function normalizeRows(data,start){if(data.length<2)return[];const headers=data[0].map(h=>normHeader(h));const map=headers.reduce((a,h,i)=>{a[h]=i;return a},{});return data.slice(1).map((row,i)=>{const chassis=pick(row,map,["chassis","chassis #","chassis number","chassis id"],1);const location=pick(row,map,["location","loc","current location","parking location"],2);const pool=pick(row,map,["chas pool","chassis pool","pool"],3);const eventDate=pick(row,map,["event date","event datetime","date"],4);const event=pick(row,map,["event","event type","last event"],5);const kind=pick(row,map,["chas car kind","chas/car kind","chassis car kind","car kind","chas kind","kind","chassis kind","type"],-1);const status=pick(row,map,["status","current status"],7);return{id:start+i+1,chassis:String(chassis||"—"),location:String(location||"—"),pool:String(pool||"—"),eventDate:String(eventDate||"01/01/1900 00:00:00"),event:String(event||"—"),kind:String(kind&&kind!==eventDate?kind:"—"),status:String(status||"—")}}).filter(r=>r.chassis!=="—")}
-async function importFiles(files){const all=[];importedFileArchives=[];for(const file of [...files]){let dataUrl='';try{dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)})}catch{}importedFileArchives.push({name:file.name,size:file.size,type:file.type,lastModified:file.lastModified,dataUrl});const buf=await file.arrayBuffer();const wb=XLSX.read(buf,{type:"array",cellDates:false});const sh=wb.Sheets[wb.SheetNames[0]];const data=XLSX.utils.sheet_to_json(sh,{header:1,defval:""}).filter(r=>r.some(Boolean));all.push(...normalizeRows(data,all.length))}tableRows=all.map((r,i)=>({...r,id:i+1}));query="";filter="all";sortConfig={key:"id",direction:"asc"};$("search").value="";render()}
+async function importFiles(files){const all=[];importedFileArchives=[];for(const file of [...files]){let dataUrl='';try{dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)})}catch{}importedFileArchives.push({name:file.name,size:file.size,type:file.type,lastModified:file.lastModified,dataUrl});const buf=await file.arrayBuffer();const wb=XLSX.read(buf,{type:"array",cellDates:false});const sh=wb.Sheets[wb.SheetNames[0]];const data=XLSX.utils.sheet_to_json(sh,{header:1,defval:""}).filter(r=>r.some(Boolean));all.push(...normalizeRows(data,all.length))}tableRows=all.map((r,i)=>({...r,id:i+1}));query="";filter="all";sortConfig={key:"id",direction:"asc"};$("search").value="";render();queueCloudSave()}
 function csvEscape(value){
   const s=String(value ?? "");
   return /[",\n\r]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
@@ -1036,7 +1294,7 @@ function clearReport(){
     clear.textContent="🗑 Clear";
     clear.classList.remove("clear-armed");
   }
-  render();
+  render();queueCloudSave();
 }
 function handleClearClick(){
   const clear=$("clearBtn");
@@ -1068,14 +1326,14 @@ function showArchiveToast(message){
   window.__archiveToastTimer=setTimeout(()=>toast.classList.remove("show"),3200);
 }
 function getArchiveList(){try{return JSON.parse(localStorage.getItem("chassisReconciliationArchiveList")||"[]")||[]}catch{return[]}}
-function saveArchiveList(list){localStorage.setItem("chassisReconciliationArchiveList",JSON.stringify(list))}
+function saveArchiveList(list){localStorage.setItem("chassisReconciliationArchiveList",JSON.stringify(list));cloudUpsert(CLOUD_KEYS.archives,list).then(()=>setCloudStatus("Cloud: saved","ok")).catch(err=>{console.error(err);setCloudStatus("Cloud: save failed","err")})}
 function makeArchiveId(){return "archive_"+Date.now()+"_"+Math.random().toString(16).slice(2)}
 function makeArchiveName(){const d=new Date();return `Chassis Archive ${String(d.getMonth()+1).padStart(2,"0")}/${String(d.getDate()).padStart(2,"0")}/${d.getFullYear()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`}
 function makeSnapshot(){
   const e=enrich();
   return {id:makeArchiveId(),name:makeArchiveName(),savedAt:new Date().toISOString(),reportDate:REPORT_TODAY.toISOString(),yardChecked:$("yardSelect")?.value||"",tableRows,query,filter,sortConfig,showBanner,importedFileArchives,counts:{onHand:e.length,yardChecked:e.filter(r=>r.yardChecked).length,eventToday:e.filter(r=>r.bucket.key==="today").length,missingToday:e.filter(r=>r.bucket.key!=="today").length,flaggedDelete:e.filter(r=>r.bucket.key==="tenPlus").length}};
 }
-function saveSnapshot(){const snap=makeSnapshot();const list=getArchiveList();list.unshift(snap);saveArchiveList(list);localStorage.setItem("chassisReconciliationLastArchive",JSON.stringify(snap));return snap}
+function saveSnapshot(){const snap=makeSnapshot();const customName=prompt("Name this archive:",snap.name);if(customName&&customName.trim())snap.name=customName.trim();const list=getArchiveList();list.unshift(snap);saveArchiveList(list);localStorage.setItem("chassisReconciliationLastArchive",JSON.stringify(snap));return snap}
 function makeReportWorkbookRows(){
   return currentRows().map(r=>({
     "Chassis": r.chassis,
@@ -1109,13 +1367,13 @@ async function archivePage(){
       else originals.file("README.txt","No imported source files were captured in this session.");
       const blob=await zip.generateAsync({type:"blob"});
       const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=`chassis-reconciliation-archive-${safeDate}.zip`; document.body.appendChild(a); a.click(); setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},500);
-      showArchiveToast("Archive saved as a new session and download started.");
+      showArchiveToast("Archive saved as a new session and download started.");saveAllCloudState();saveAllCloudState();
     } else {
-      showArchiveToast("Archive saved as a new session.");
+      showArchiveToast("Archive saved as a new session.");saveAllCloudState();saveAllCloudState();
     }
   }catch(err){console.error(err);showArchiveToast("Archive saved. Download could not start.")}
 }
-function restoreSnapshot(snap){if(!snap)return;tableRows=Array.isArray(snap.tableRows)?snap.tableRows:[];query=snap.query||"";filter=snap.filter||"all";sortConfig=snap.sortConfig||{key:"id",direction:"asc"};showBanner=snap.showBanner!==false;importedFileArchives=Array.isArray(snap.importedFileArchives)?snap.importedFileArchives:[];if($("search"))$("search").value=query;if($("yardSelect")&&snap.yardChecked)$("yardSelect").value=snap.yardChecked;render()}
+function restoreSnapshot(snap){if(!snap)return;tableRows=Array.isArray(snap.tableRows)?snap.tableRows:[];query=snap.query||"";filter=snap.filter||"all";sortConfig=snap.sortConfig||{key:"id",direction:"asc"};showBanner=snap.showBanner!==false;importedFileArchives=Array.isArray(snap.importedFileArchives)?snap.importedFileArchives:[];if($("search"))$("search").value=query;if($("yardSelect")&&snap.yardChecked)$("yardSelect").value=snap.yardChecked;render();queueCloudSave()}
 function restoreLastArchive(){const snap=getArchiveList()[0];if(!snap){alert("No saved archive snapshot found in this browser yet.");return}restoreSnapshot(snap)}
 function openArchiveModal(){renderArchiveModal();$("archiveModal").classList.add("show");$("archiveModal").setAttribute("aria-hidden","false")}
 function closeArchiveModal(){$("archiveModal").classList.remove("show");$("archiveModal").setAttribute("aria-hidden","true")}
@@ -1163,6 +1421,7 @@ function getRecycleBin(){
 }
 function saveRecycleBin(list){
   localStorage.setItem("chassisReconciliationArchiveRecycleBin",JSON.stringify(list));
+  cloudUpsert(CLOUD_KEYS.recycle,list).then(()=>setCloudStatus("Cloud: saved","ok")).catch(err=>{console.error(err);setCloudStatus("Cloud: save failed","err")});
 }
 function moveArchiveToRecycleBin(id){
   const list=getArchiveList();
@@ -1281,6 +1540,47 @@ function deleteArchiveById(id){
 
   renderArchiveModal();
 }
+
+function renameArchiveById(id,newName){
+  const clean=String(newName||"").trim();
+  if(!clean){
+    alert("Archive name cannot be blank.");
+    return;
+  }
+  const list=getArchiveList();
+  const idx=list.findIndex(a=>a.id===id);
+  if(idx===-1)return;
+  list[idx].name=clean;
+  list[idx].renamedAt=new Date().toISOString();
+  saveArchiveList(list);
+
+  const lastRaw=localStorage.getItem("chassisReconciliationLastArchive");
+  if(lastRaw){
+    try{
+      const last=JSON.parse(lastRaw);
+      if(last && last.id===id){
+        last.name=clean;
+        last.renamedAt=list[idx].renamedAt;
+        localStorage.setItem("chassisReconciliationLastArchive",JSON.stringify(last));
+      }
+    }catch{}
+  }
+
+  archiveRenameId=null;
+  showArchiveToast("Archive renamed.");
+  renderArchiveModal();
+}
+function startArchiveRename(id){
+  archiveRenameId=id;
+  archiveDeleteArmedId=null;
+  renderArchiveModal();
+}
+function cancelArchiveRename(){
+  archiveRenameId=null;
+  renderArchiveModal();
+}
+
+
 function renderArchiveModal(){
   const list=getArchiveList(), recycle=getRecycleBin(), e=enrich(), lib=$("archiveLibraryList"), recycleLib=$("archiveRecycleList");
   const recycleBadge=$("recycleCountBadge"), recycleBody=$("archiveRecycleBody"), recycleToggleText=$("recycleToggleText"), recycleToggleHeader=$("recycleToggleHeader");
@@ -1300,9 +1600,13 @@ function renderArchiveModal(){
     lib.innerHTML=list.map(s=>{
       const c=s.counts||{};
       const armed=archiveDeleteArmedId===s.id;
+      const renaming=archiveRenameId===s.id;
+      const titleHtml=renaming
+        ? `<div class="archive-row-title-edit"><input class="archive-rename-input" data-rename-input="${s.id}" value="${String(s.name||"Chassis Archive").replace(/"/g,"&quot;")}"><button class="archive-save-name-btn" type="button" data-rename-save="${s.id}">Save</button><button class="archive-cancel-name-btn" type="button" data-rename-cancel="${s.id}">Cancel</button></div>`
+        : `<div class="archive-row-title">${s.name||"Chassis Archive"}</div>`;
       return `<div class="archive-row ${armed?"archive-row-delete-armed":""}">
         <div>
-          <div class="archive-row-title">${s.name||"Chassis Archive"}</div>
+          ${titleHtml}
           <div class="archive-row-meta">
             <span class="archive-meta-pill">${new Date(s.savedAt).toLocaleString()}</span>
             <span class="archive-meta-pill">On Hand: ${c.onHand??(s.tableRows||[]).length}</span>
@@ -1312,6 +1616,7 @@ function renderArchiveModal(){
         </div>
         <div class="archive-row-actions">
           <button class="archive-view-btn" type="button" data-view="${s.id}">Quick View</button>
+          <button class="archive-rename-btn" type="button" data-rename="${s.id}">Rename</button>
           <button class="archive-restore-btn" type="button" data-restore="${s.id}">Restore</button>
           <button class="archive-delete-btn ${armed?"armed":""}" type="button" data-delete="${s.id}">${armed?"Move to Recycle Bin":"Delete"}</button>
         </div>
@@ -1320,12 +1625,29 @@ function renderArchiveModal(){
 
     lib.onclick=(event)=>{
       const viewBtn=event.target.closest("[data-view]");
+      const renameBtn=event.target.closest("[data-rename]");
+      const saveBtn=event.target.closest("[data-rename-save]");
+      const cancelBtn=event.target.closest("[data-rename-cancel]");
       const restoreBtn=event.target.closest("[data-restore]");
       const deleteBtn=event.target.closest("[data-delete]");
       if(viewBtn){quickViewArchive(viewBtn.dataset.view);return}
+      if(renameBtn){startArchiveRename(renameBtn.dataset.rename);return}
+      if(saveBtn){
+        const input=lib.querySelector(`[data-rename-input="${saveBtn.dataset.renameSave}"]`);
+        renameArchiveById(saveBtn.dataset.renameSave,input?input.value:"");
+        return;
+      }
+      if(cancelBtn){cancelArchiveRename();return}
       if(restoreBtn){restoreArchiveById(restoreBtn.dataset.restore);return}
       if(deleteBtn){deleteArchiveById(deleteBtn.dataset.delete);return}
     };
+    lib.querySelectorAll("[data-rename-input]").forEach(input=>{
+      input.onkeydown=(event)=>{
+        if(event.key==="Enter")renameArchiveById(input.dataset.renameInput,input.value);
+        if(event.key==="Escape")cancelArchiveRename();
+      };
+      setTimeout(()=>input.focus(),0);
+    });
   }
 
   const emptyBtn=$("emptyRecycleBtn");
@@ -1559,6 +1881,7 @@ function getYardCalendarState(){
 }
 function saveYardCalendarState(state){
   localStorage.setItem("setteYardCheckCalendar",JSON.stringify(state));
+  cloudUpsert(CLOUD_KEYS.calendar,state).then(()=>setCloudStatus("Cloud: saved","ok")).catch(err=>{console.error(err);setCloudStatus("Cloud: save failed","err")});
 }
 function dateKey(year,month,day){
   return `${year}-${String(month+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
@@ -1634,12 +1957,14 @@ function renderYardCalendar(){
 function init(){
   $("yardSelect").innerHTML=YARD_OPTIONS.map(o=>`<option>${o}</option>`).join("");
   $("yardLabel").textContent=`Yard checked ${String(REPORT_TODAY.getMonth()+1).padStart(2,"0")}/${String(REPORT_TODAY.getDate()).padStart(2,"0")}/${REPORT_TODAY.getFullYear()}`;setupDisplaySliders();
-  $("search").oninput=e=>{query=e.target.value;render()};
-  document.querySelectorAll("th button").forEach(b=>b.onclick=()=>{const k=b.dataset.sort;sortConfig={key:k,direction:sortConfig.key===k&&sortConfig.direction==="asc"?"desc":"asc"};render()});
-  $("bannerToggle").onclick=()=>{showBanner=!showBanner;render()};
+  $("search").oninput=e=>{query=e.target.value;render();queueCloudSave()};
+  document.querySelectorAll("th button").forEach(b=>b.onclick=()=>{const k=b.dataset.sort;sortConfig={key:k,direction:sortConfig.key===k&&sortConfig.direction==="asc"?"desc":"asc"};render();queueCloudSave()});
+  $("bannerToggle").onclick=()=>{showBanner=!showBanner;render();queueCloudSave()};
   $("importBtn").onclick=()=>$("fileInput").click();
   $("fileInput").onchange=e=>{if(e.target.files?.length)importFiles(e.target.files);e.target.value=""};
-  $("clearBtn").onclick=typeof handleClearClick==="function"?handleClearClick:()=>{tableRows=[];query="";filter="all";$("search").value="";render()};
+  $("clearBtn").onclick=typeof handleClearClick==="function"?handleClearClick:()=>{tableRows=[];query="";filter="all";$("search").value="";render();queueCloudSave()};
+  const forceSaveBtn=$("forceSaveBtn"); if(forceSaveBtn)forceSaveBtn.onclick=saveAllCloudState;
+  const reloadCloudBtn=$("reloadCloudBtn"); if(reloadCloudBtn)reloadCloudBtn.onclick=reloadCloudState;
   const copyChassisBtn=$("copyChassisBtn"); if(copyChassisBtn)copyChassisBtn.onclick=copyFilteredChassisList;
   const emailReportBtn=$("emailReportBtn"); if(emailReportBtn)emailReportBtn.onclick=sendEmailReport;
   const calendarTopBtn=$("calendarTopBtn"); if(calendarTopBtn)calendarTopBtn.onclick=openYardCalendar;
@@ -1653,9 +1978,11 @@ function init(){
   const calModal=$("yardCalendarModal"); if(calModal)calModal.addEventListener("click",e=>{if(e.target===calModal)closeYardCalendar()});
   const prevCal=$("prevCalendarMonth"); if(prevCal)prevCal.onclick=()=>{yardCalendarMonth=new Date(yardCalendarMonth.getFullYear(),yardCalendarMonth.getMonth()-1,1);renderYardCalendar()};
   const nextCal=$("nextCalendarMonth"); if(nextCal)nextCal.onclick=()=>{yardCalendarMonth=new Date(yardCalendarMonth.getFullYear(),yardCalendarMonth.getMonth()+1,1);renderYardCalendar()};
-  render()
+  render();
+  loadCloudState();
 }
 
+window.addEventListener("beforeunload",()=>{try{saveAllCloudState()}catch{}});
 init();
 </script>
 </body>
