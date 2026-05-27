@@ -2682,6 +2682,7 @@ th button[data-sort="ce"].ce-remove-ready {
 <!-- EMAIL_ATTACHMENT_EXPORTS_ALL_ON_HAND_FIXED: removed duplicate current-filter export helper -->
 <!-- EXCEL_STYLING_CE_RED_CENTERED: header color, centered cells, CE red when populated -->
 <!-- STYLED_HTML_EXCEL_EXPORT_RELIABLE: uses .xls HTML table so Excel preserves header color, centered values, red CE -->
+<!-- EXCEL_CE_EVENT_AGE_DAYS_YELLOW: CE rows highlight Event Age and Days Old yellow; header has background color -->
 </head>
 <body>
 <span id="cloudStatus" class="cloud-status-hidden" aria-hidden="true"></span>
@@ -4772,11 +4773,16 @@ function downloadStyledExcelTable(rows, filename){
 
   const headerHtml=headers.map(h=>`<th>${htmlCellEscape(h)}</th>`).join("");
 
+  const eventAgeIndex=headers.findIndex(h=>String(h).toLowerCase()==="event age");
+  const daysOldIndex=headers.findIndex(h=>String(h).toLowerCase()==="days old");
+
   const bodyHtml=rows.map(r=>{
+    const cePopulated=ceIndex>=0 && String(r[headers[ceIndex]] ?? "").trim();
     return `<tr>${headers.map((h,i)=>{
       const value=r[h] ?? "";
       const isCe=i===ceIndex && String(value).trim();
-      return `<td class="${isCe?"ce-populated":""}">${htmlCellEscape(value)}</td>`;
+      const isCeAgeHighlight=cePopulated && (i===eventAgeIndex || i===daysOldIndex);
+      return `<td class="${isCe?"ce-populated":isCeAgeHighlight?"ce-age-highlight":""}">${htmlCellEscape(value)}</td>`;
     }).join("")}</tr>`;
   }).join("");
 
@@ -4791,8 +4797,8 @@ function downloadStyledExcelTable(rows, filename){
     font-size: 11pt;
   }
   th {
-    background: #1F4E78;
-    color: #FFFFFF;
+    background: #1F4E78 !important;
+    color: #FFFFFF !important;
     font-weight: 700;
     text-align: center;
     vertical-align: middle;
@@ -4809,8 +4815,13 @@ function downloadStyledExcelTable(rows, filename){
     mso-number-format:"\\@";
   }
   td.ce-populated {
-    background: #C00000;
-    color: #FFFFFF;
+    background: #C00000 !important;
+    color: #FFFFFF !important;
+    font-weight: 700;
+  }
+  td.ce-age-highlight {
+    background: #FFFF00 !important;
+    color: #000000 !important;
     font-weight: 700;
   }
 </style>
