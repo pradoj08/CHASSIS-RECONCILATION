@@ -2678,6 +2678,7 @@ th button[data-sort="ce"].ce-remove-ready {
 </style>
 <!-- REVIEW FLAGS: 3-4 days = Low Warning | 5-9 days = Moderate Warning | 10+ days = Flagged for Delete -->
 <!-- REVIEW FLAGS ACTIVE: 1 day = Event Recorded Yesterday | 2-4 days = Low Warning | 5-9 days = Moderate Warning | 10+ days = Flagged for Delete -->
+<!-- EXPORTS_USE_ON_HAND_FILTER: normal export and email Excel use all On Hand rows, not current filtered view -->
 </head>
 <body>
 <span id="cloudStatus" class="cloud-status-hidden" aria-hidden="true"></span>
@@ -3671,7 +3672,7 @@ function downloadImportReadyCsv(rows){
 }
 function exportReport(){
   try{
-    const rows=makeReportWorkbookRows();
+    const rows=makeOnHandReportWorkbookRows();
     if(!rows.length){
       alert("No rows available to export.");
       return;
@@ -3691,7 +3692,7 @@ function exportReport(){
   }catch(err){
     console.error("Export failed:",err);
     try{
-      downloadImportReadyCsv(makeReportWorkbookRows());
+      downloadImportReadyCsv(makeOnHandReportWorkbookRows());
       if(typeof showArchiveToast==="function") showArchiveToast("Excel export failed. Exported import-ready CSV instead.");
     }catch(csvErr){
       console.error("CSV fallback failed:",csvErr);
@@ -3773,7 +3774,28 @@ function saveSnapshot(customName){
   localStorage.setItem("chassisReconciliationLastArchive",JSON.stringify(snap));
   return snap;
 }
-function makeReportWorkbookRows(){
+function onHandRowsForExport(){
+  return sortRows(enrich());
+}
+function makeOnHandReportWorkbookRows(){
+  return onHandRowsForExport().map(r=>({
+    "Chassis": r.chassis,
+    "Location": r.location,
+    "Chas Pool": r.pool,
+    "Event Date": r.eventDate,
+    "Event": r.event,
+    "Chas Car Kind": r.kind,
+    "Chas HC": r.hc || "",
+    "Status": r.status || "",
+    "CE": r.ce ? "CE" : "",
+    "Note": r.note || "",
+    "Yard Checked": r.yardChecked ? "Yes" : "No",
+    "Event Age": r.bucket.label,
+    "Days Old": r.daysOld,
+    "Review Flag": r.issue.label.replace(/<br\s*\/?>/g," / ").replace(/<[^>]+>/g,"")
+  }));
+}
+function makeOnHandReportWorkbookRows(){
   return currentRows().map(r=>({
     "Chassis": r.chassis,
     "Location": r.location,
@@ -3946,7 +3968,7 @@ async function archivePage(options={}){
     if(typeof XLSX!=="undefined" && typeof JSZip!=="undefined"){
       const folderDate=new Date().toISOString().slice(0,10);
       const safeDate=folderDate.replaceAll("-","");
-      const ws=XLSX.utils.json_to_sheet(makeReportWorkbookRows());
+      const ws=XLSX.utils.json_to_sheet(makeOnHandReportWorkbookRows());
       const wb=XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb,ws,"Reconciliation");
       const wbArray=XLSX.write(wb,{bookType:"xlsx",type:"array"});
       const zip=new JSZip(); const folder=zip.folder(`chassis-reconciliation-${folderDate}`);
@@ -4658,7 +4680,7 @@ function excelDateSortValue(value){
 }
 
 function makeSortedEmailAttachmentRows(){
-  return makeReportWorkbookRows()
+  return makeOnHandReportWorkbookRows()
     .slice()
     .sort((a,b)=>excelDateSortValue(a["Event Date"])-excelDateSortValue(b["Event Date"]));
 }
