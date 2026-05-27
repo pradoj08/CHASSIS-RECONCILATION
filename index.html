@@ -2480,6 +2480,52 @@ th button[data-sort="ce"].ce-remove-ready {
   }
 }
 
+
+/* Mobile-safe Force Save button feedback */
+#forceSaveBtn:disabled {
+  opacity: .72 !important;
+  cursor: wait !important;
+}
+
+
+/* Chas HC populated warning color */
+.hc-chip.populated {
+  color: #ffe4e6 !important;
+  background: rgba(225,29,72,.24) !important;
+  border-color: rgba(251,113,133,.52) !important;
+  box-shadow: 0 0 0 3px rgba(225,29,72,.14) !important;
+}
+
+
+/* Per-row chassis copy icon */
+.chassis-cell-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 7px;
+  min-width: 0;
+}
+.copy-one-chassis-btn {
+  flex: 0 0 auto;
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  border: 1px solid rgba(96,165,250,.34) !important;
+  background: rgba(37,99,235,.18) !important;
+  color: #dbeafe !important;
+  font-size: 13px !important;
+  font-weight: 1000 !important;
+  padding: 0 !important;
+  cursor: pointer;
+}
+.copy-one-chassis-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.12);
+  box-shadow: 0 0 0 3px rgba(96,165,250,.14);
+}
+
 </style>
 <!-- REVIEW FLAGS: 3-4 days = Low Warning | 5-9 days = Moderate Warning | 10+ days = Flagged for Delete -->
 <!-- REVIEW FLAGS ACTIVE: 1 day = Event Recorded Yesterday | 2-4 days = Low Warning | 5-9 days = Moderate Warning | 10+ days = Flagged for Delete -->
@@ -2792,12 +2838,16 @@ function cloudHeaders(extra={}){
     ...extra
   };
 }
-async function cloudUpsert(key,value){
-  const res=await fetch(`${SUPABASE_URL}/rest/v1/chassis_reconciliation_state?on_conflict=state_key`,{
+async function cloudUpsert(key,value,options={}){
+  const payload=JSON.stringify({state_key:key,state_value:value,updated_at:new Date().toISOString()});
+  const fetchOptions={
     method:"POST",
     headers:cloudHeaders({"Prefer":"resolution=merge-duplicates,return=representation"}),
-    body:JSON.stringify({state_key:key,state_value:value,updated_at:new Date().toISOString()})
-  });
+    body:payload
+  };
+  if(options.keepalive && payload.length < 60000) fetchOptions.keepalive=true;
+
+  const res=await fetch(`${SUPABASE_URL}/rest/v1/chassis_reconciliation_state?on_conflict=state_key`,fetchOptions);
   if(!res.ok){
     const text=await res.text().catch(()=>"");
     throw new Error(`Supabase upsert failed ${res.status}: ${text}`);
@@ -2832,7 +2882,7 @@ async function testCloudConnection(){
 function makeCurrentSessionSnapshot(){
   return {
     savedAt:new Date().toISOString(),
-    reportDate:REPORT_TODAY.toISOString(),
+    reportDate:getReportBaseDate().toISOString(),
     yardChecked:$("yardSelect")?.value||"",
     tableRows,
     query,
@@ -2859,35 +2909,43 @@ function queueCloudSave(){
   cloudSaveTimer=setTimeout(saveCurrentSessionToCloud,350);
 }
 async function saveCurrentSessionToCloud(){
-  if(cloudLoading)return;
   try{
-    await cloudUpsert(CLOUD_KEYS.current,makeCurrentSessionSnapshot());
+    await cloudUpsert(CLOUD_KEYS.current,makeCurrentSessionSnapshot(),{keepalive:true});
     cloudReady=true;
     cloudLastSavedAt=new Date().toISOString();
     setCloudStatus("Cloud: saved","ok");
   }catch(err){
     console.error("Cloud current-session save failed",err);
     setCloudStatus("Cloud: save failed","err");
+    if(typeof showArchiveToast==="function")showArchiveToast("Cloud save failed on this device.");
   }
 }
 async function saveAllCloudState(){
-  if(cloudLoading)return;
   try{
     setCloudStatus("Cloud: saving","warn");
-    await Promise.all([
-      cloudUpsert(CLOUD_KEYS.current,makeCurrentSessionSnapshot()),
-      cloudUpsert(CLOUD_KEYS.archives,getArchiveList()),
-      cloudUpsert(CLOUD_KEYS.recycle,getRecycleBin()),
-      cloudUpsert(CLOUD_KEYS.calendar,getYardCalendarState())
-    ]);
+    const btn=$("forceSaveBtn");
+    const oldText=btn?btn.textContent:"";
+    if(btn){btn.textContent="Saving...";btn.disabled=true}
+
+    await cloudUpsert(CLOUD_KEYS.current,makeCurrentSessionSnapshot());
+    await cloudUpsert(CLOUD_KEYS.archives,getArchiveList());
+    await cloudUpsert(CLOUD_KEYS.recycle,getRecycleBin());
+    await cloudUpsert(CLOUD_KEYS.calendar,getYardCalendarState());
+
     cloudReady=true;
     cloudLastSavedAt=new Date().toISOString();
     setCloudStatus("Cloud: force saved","ok");
-    if(typeof showArchiveToast==="function")showArchiveToast("Cloud force save complete.");
+    if(typeof showArchiveToast==="function")showArchiveToast("Cloud save complete.");
+    if(btn){btn.textContent=oldText||"Force Save";btn.disabled=false}
+    return true;
   }catch(err){
     console.error("Cloud full save failed",err);
     setCloudStatus("Cloud: force failed","err");
-    alert("Cloud save failed. Run the latest SQL, then try Force Save again.\n\n"+(err&&err.message?err.message:err));
+    const btn=$("forceSaveBtn");
+    if(btn){btn.textContent="Force Save";btn.disabled=false}
+    if(typeof showArchiveToast==="function")showArchiveToast("Cloud save failed on this device.");
+    alert("Cloud save failed on this device. Make sure the phone is using the deployed https:// website, not a local file, and that Supabase SQL v4 has been run.\\n\\n"+(err&&err.message?err.message:err));
+    return false;
   }
 }
 async function loadCloudState(){
@@ -2924,9 +2982,74 @@ async function reloadCloudState(){
   await loadCloudState();
   if(typeof showArchiveToast==="function")showArchiveToast("Cloud data reloaded.");
 }
-function parseEventDate(v){const [dp,tp="00:00:00"]=String(v||"").split(" ");const [m,d,y]=dp.split("/").map(Number);const [hh,mm,ss]=tp.split(":").map(Number);return new Date(y||1900,(m||1)-1,d||1,hh||0,mm||0,ss||0)}
-function formatDateShort(v){const [dp,tp=""]=String(v||"").split(" ");const [m,d]=dp.split("/");const [hh,mm]=tp.split(":");return `${m||"--"}/${d||"--"}${hh&&mm?` ${hh}:${mm}`:""}`}
-function daysOld(r){const ev=parseEventDate(r.eventDate);const mid=new Date(ev.getFullYear(),ev.getMonth(),ev.getDate());return Math.floor((REPORT_TODAY-mid)/86400000)}
+window.testChassisCloudSave=saveAllCloudState;
+function parseEventDate(v){
+  const raw=String(v||"").trim();
+  if(!raw)return new Date(1900,0,1);
+
+  // Handles Excel serial dates if they ever come through as a number/string number.
+  if(/^\d+(\.\d+)?$/.test(raw)){
+    const n=Number(raw);
+    if(n>20000 && n<90000){
+      const epoch=new Date(Date.UTC(1899,11,30));
+      const ms=epoch.getTime()+n*86400000;
+      const d=new Date(ms);
+      return new Date(d.getUTCFullYear(),d.getUTCMonth(),d.getUTCDate());
+    }
+  }
+
+  const [dp,tp="00:00:00"]=raw.split(/\s+/);
+  let m,d,y;
+
+  if(dp.includes("/")){
+    [m,d,y]=dp.split("/").map(Number);
+  }else if(dp.includes("-")){
+    const parts=dp.split("-").map(Number);
+    if(String(parts[0]).length===4){y=parts[0];m=parts[1];d=parts[2];}
+    else {m=parts[0];d=parts[1];y=parts[2];}
+  }
+
+  if(y && y<100)y+=2000;
+
+  const [hh=0,mm=0,ss=0]=tp.split(":").map(Number);
+  return new Date(y||1900,(m||1)-1,d||1,hh||0,mm||0,ss||0);
+}
+function dateOnly(d){
+  return new Date(d.getFullYear(),d.getMonth(),d.getDate());
+}
+function getReportBaseDate(){
+  const dates=(tableRows||[])
+    .map(r=>parseEventDate(r.eventDate))
+    .filter(d=>d instanceof Date && !Number.isNaN(d.getTime()) && d.getFullYear()>1950);
+
+  if(!dates.length)return dateOnly(REPORT_TODAY);
+
+  const max=new Date(Math.max(...dates.map(d=>dateOnly(d).getTime())));
+  return dateOnly(max);
+}
+function formatReportDate(){
+  const d=getReportBaseDate();
+  return `${String(d.getMonth()+1).padStart(2,"0")}/${String(d.getDate()).padStart(2,"0")}/${d.getFullYear()}`;
+}
+function formatDateShort(v){
+  const raw=String(v||"");
+  const [dp,tp=""]=raw.split(/\s+/);
+  let m="--",d="--";
+  if(dp.includes("/")){[m,d]=dp.split("/");}
+  else if(dp.includes("-")){
+    const p=dp.split("-");
+    if(p[0]&&p[0].length===4){m=p[1]||"--";d=p[2]||"--";}
+    else {m=p[0]||"--";d=p[1]||"--";}
+  }
+  const [hh,mm]=tp.split(":");
+  return `${m||"--"}/${d||"--"}${hh&&mm?` ${hh}:${mm}`:""}`;
+}
+function daysOld(r){
+  const ev=dateOnly(parseEventDate(r.eventDate));
+  const base=getReportBaseDate();
+  const diff=Math.floor((base-ev)/86400000);
+  return Math.max(0,diff);
+}
 function ageBucket(r){
   const d=daysOld(r);
   if(d===0)return{key:"today",label:"Today"};
@@ -2951,7 +3074,7 @@ function issueTag(r){
   return{label:"OK",cls:"ok"};
 }
 function locClass(loc){if(loc.includes("DIRT"))return"dirt";if(loc.includes("SHOP"))return"shop";if(loc.includes("068"))return"rail";if(loc.includes("BOWL"))return"bowl";return"normal"}
-function enrich(){return tableRows.map(r=>{const bucket=ageBucket(r);return{...r,hc:r.hc||"",ce:!!r.ce,note:r.note||"",daysOld:daysOld(r),bucket,yardChecked:isYardChecked(r),issue:issueTag(r)}})}
+function enrich(){return tableRows.map(r=>{const bucket=ageBucket(r);return{...r,hc:r.hc||"",ce:!!r.ce,note:cleanImportedNoteValue(r.note),daysOld:daysOld(r),bucket,yardChecked:isYardChecked(r),issue:issueTag(r)}})}
 function applyFilters(rows){return rows.filter(r=>{const text=Object.values(r).join(" ").toLowerCase();const q=text.includes(query.toLowerCase());const f=filter==="all"||(filter==="yardChecked"&&r.yardChecked)||(filter==="today"&&r.bucket.key==="today")||(filter==="missingToday"&&r.bucket.key!=="today")||(filter==="tenPlus"&&r.bucket.key==="tenPlus")||(filter==="notChecked"&&!r.yardChecked);return q&&f})}
 function sortRows(rows){const val=(r,k)=>k==="yardChecked"?(r.yardChecked?1:0):k==="eventAge"?r.daysOld:k==="eventDate"?parseEventDate(r.eventDate).getTime():k==="reviewFlag"?r.issue.label.replace(/<br\s*\/?>/g," / ").replace(/<[^>]+>/g,""):k==="ce"?(r.ce?1:0):r[k]??"";return [...rows].sort((a,b)=>{const av=val(a,sortConfig.key),bv=val(b,sortConfig.key);if(typeof av==="number"&&typeof bv==="number")return sortConfig.direction==="asc"?av-bv:bv-av;const res=String(av).localeCompare(String(bv),undefined,{numeric:true,sensitivity:"base"});return sortConfig.direction==="asc"?res:-res})}
 function currentRows(){return sortRows(applyFilters(enrich()))}
@@ -3058,7 +3181,7 @@ function renderNoteHistory(row){
 }
 
 function rowHasNote(r){
-  return String(r.note||"").trim().length>0;
+  return cleanImportedNoteValue(r.note).length>0;
 }
 function openNoteModal(id){
   activeNoteRowId=String(id);
@@ -3068,7 +3191,7 @@ function openNoteModal(id){
   const modal=$("noteModal");
   if(!row||!modal)return;
   $("noteTitle").textContent=row.chassis||"Chassis";
-  $("noteText").value=row.note||"";
+  $("noteText").value=cleanImportedNoteValue(row.note);
   const del=$("noteDeleteBtn");
   if(del){
     del.textContent="Delete Note";
@@ -3099,17 +3222,16 @@ function forceSaveAfterNoteChange(){
   }
 }
 
-function saveActiveNote(){
+async function saveActiveNote(){
   if(activeNoteRowId==null)return;
   const text=String($("noteText")?.value||"").trim();
   tableRows=tableRows.map(r=>String(r.id)===activeNoteRowId?{...r,note:text}:r);
   render();
-  queueCloudSave();
-  saveAllCloudState();
+  await saveAllCloudState();
   closeNoteModal();
   if(typeof showArchiveToast==="function")showArchiveToast(text?"Note saved and force-saved.":"Note cleared and force-saved.");
 }
-function deleteActiveNote(){
+async function deleteActiveNote(){
   if(activeNoteRowId==null)return;
   const btn=$("noteDeleteBtn");
   if(!noteDeleteArmed){
@@ -3130,16 +3252,51 @@ function deleteActiveNote(){
   }
   tableRows=tableRows.map(r=>String(r.id)===activeNoteRowId?{...r,note:""}:r);
   render();
-  queueCloudSave();
-  saveAllCloudState();
+  await saveAllCloudState();
   closeNoteModal();
   if(typeof showArchiveToast==="function")showArchiveToast("Note deleted and force-saved.");
+}
+
+
+async function copySingleChassis(id){
+  const row=tableRows.find(r=>String(r.id)===String(id));
+  const value=String(row?.chassis||"").trim();
+  if(!value)return;
+
+  try{
+    if(navigator.clipboard && window.isSecureContext){
+      await navigator.clipboard.writeText(value);
+    }else{
+      const ta=document.createElement("textarea");
+      ta.value=value;
+      ta.setAttribute("readonly","");
+      ta.style.position="fixed";
+      ta.style.top="-1000px";
+      ta.style.left="-1000px";
+      document.body.appendChild(ta);
+      ta.focus();
+      ta.select();
+      document.execCommand("copy");
+      ta.remove();
+    }
+    if(typeof showArchiveToast==="function")showArchiveToast(`Copied ${value}`);
+  }catch(err){
+    console.error("Copy chassis failed",err);
+    alert("Copy failed. Browser clipboard access may be blocked.");
+  }
 }
 
 function renderTable(rows,total){
   $("showing").textContent=`Showing ${rows.length} of ${total} chassis`;
   $("empty").style.display=rows.length?"none":"block";
-  $("tbody").innerHTML=rows.map(r=>`<tr><td>${r.id}</td><td><button type="button" class="chassis-note-btn" data-note-open="${r.id}"><span class="chassis"><span class="chassis-id-text">${r.chassis}</span><span class="kind">${r.kind}${rowHasNote(r)?'<span class="note-badge">N</span>':''}</span></span></button></td><td><span class="chip ${r.yardChecked?"yes":"no"}">${r.yardChecked?"⊙ Yes":"No"}</span></td><td><span class="event-age-combo"><strong>${r.daysOld}d</strong><span class="chip ${r.bucket.key}">${r.bucket.label}</span></span></td><td><span class="loc ${locClass(r.location)}">⌾ ${r.location}</span></td><td>◷ ${formatDateShort(r.eventDate)}</td><td><span class="hc-chip">${r.hc||"—"}</span></td><td><span class="event-type">${r.event}</span></td><td><span class="review ${r.issue.cls}">${r.issue.label}</span></td><td><span class="pool">${r.pool}</span></td><td class="ce-cell ${ceSelectedIds.has(String(r.id))?'selected':''}" data-ce-cell="${r.id}"><button type="button" class="ce-flag ${r.ce?'active':''} ${ceSelectedIds.has(String(r.id))?'selected':''}" data-ce-toggle="${r.id}">${r.ce?'CE':'—'}</button></td></tr>`).join("");
+  $("tbody").innerHTML=rows.map(r=>`<tr><td>${r.id}</td><td>
+  <div class="chassis-cell-wrap">
+    <button type="button" class="copy-one-chassis-btn" data-copy-one="${r.id}" title="Copy chassis">⧉</button>
+    <button type="button" class="chassis-note-btn" data-note-open="${r.id}"><span class="chassis"><span class="chassis-id-text">${r.chassis}</span><span class="kind">${r.kind}${rowHasNote(r)?'<span class="note-badge">N</span>':''}</span></span></button>
+  </div>
+</td><td><span class="chip ${r.yardChecked?"yes":"no"}">${r.yardChecked?"⊙ Yes":"No"}</span></td><td><span class="event-age-combo"><strong>${r.daysOld}d</strong><span class="chip ${r.bucket.key}">${r.bucket.label}</span></span></td><td><span class="loc ${locClass(r.location)}">⌾ ${r.location}</span></td><td>◷ ${formatDateShort(r.eventDate)}</td><td><span class="hc-chip ${String(r.hc||"").trim()&&String(r.hc||"").trim()!=="—"?"populated":""}">${r.hc||"—"}</span></td><td><span class="event-type">${r.event}</span></td><td><span class="review ${r.issue.cls}">${r.issue.label}</span></td><td><span class="pool">${r.pool}</span></td><td class="ce-cell ${ceSelectedIds.has(String(r.id))?'selected':''}" data-ce-cell="${r.id}"><button type="button" class="ce-flag ${r.ce?'active':''} ${ceSelectedIds.has(String(r.id))?'selected':''}" data-ce-toggle="${r.id}">${r.ce?'CE':'—'}</button></td></tr>`).join("");
+
+  document.querySelectorAll("[data-copy-one]").forEach(btn=>{btn.onclick=(event)=>{event.preventDefault();event.stopPropagation();copySingleChassis(btn.dataset.copyOne)}});
 
   document.querySelectorAll("[data-note-open]").forEach(btn=>{btn.onclick=()=>openNoteModal(btn.dataset.noteOpen)});
 
@@ -3254,14 +3411,28 @@ function handleCePointerMove(event){
   if(cell)extendCeDrag(cell.dataset.ceCell,event);
 }
 
+
+function updateReportDateLabel(){
+  const label=$("yardLabel");
+  if(label)label.textContent=`Yard checked ${formatReportDate()}`;
+}
+
 function render(){const e=enrich(),rows=sortRows(applyFilters(e));renderMetrics(e);renderBanner(e);renderFilters();renderSort();renderTable(rows,e.length)}
 function normHeader(v){return String(v||"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim()}
 function pick(row,map,cands,fallback=-1){
   const h=cands.map(normHeader).find(n=>map[n]!==undefined);
   return h?row[map[h]]??"—":fallback>=0?row[fallback]??"—":"—";
 }
-function normalizeRows(data,start){if(data.length<2)return[];const headers=data[0].map(h=>normHeader(h));const map=headers.reduce((a,h,i)=>{a[h]=i;return a},{});return data.slice(1).map((row,i)=>{const chassis=pick(row,map,["chassis","chassis #","chassis number","chassis id"],1);const location=pick(row,map,["location","loc","current location","parking location"],2);const pool=pick(row,map,["chas pool","chassis pool","pool"],3);const eventDate=pick(row,map,["event date","event datetime","date"],4);const event=pick(row,map,["event","event type","last event"],5);const kind=pick(row,map,["chas car kind","chas/car kind","chassis car kind","car kind","chas kind","kind","chassis kind","type"],-1);const hc=pick(row,map,["chas hc","hc","chassis hc","hazard class","height code"],-1);const status=pick(row,map,["status","current status"],7);const ce=pick(row,map,["ce","c/e","customer exception","ce flag"],-1);const note=pick(row,map,["note","notes","chassis note"],-1);return{id:start+i+1,chassis:String(chassis||"—"),location:String(location||"—"),pool:String(pool||"—"),eventDate:String(eventDate||"01/01/1900 00:00:00"),event:String(event||"—"),kind:String(kind&&kind!==eventDate?kind:"—"),hc:String(hc&&hc!==eventDate?hc:""),status:String(status||"—"),ce:String(ce||"").toLowerCase().includes("ce")||String(ce||"").toLowerCase()==="yes"||String(ce||"").toLowerCase()==="true",note:String(note&&note!==eventDate?note:"")}}).filter(r=>r.chassis!=="—")}
-async function importFiles(files){const all=[];importedFileArchives=[];for(const file of [...files]){let dataUrl='';try{dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)})}catch{}importedFileArchives.push({name:file.name,size:file.size,type:file.type,lastModified:file.lastModified,dataUrl});const buf=await file.arrayBuffer();const wb=XLSX.read(buf,{type:"array",cellDates:false});const sh=wb.Sheets[wb.SheetNames[0]];const data=XLSX.utils.sheet_to_json(sh,{header:1,defval:""}).filter(r=>r.some(Boolean));all.push(...normalizeRows(data,all.length))}tableRows=all.map((r,i)=>({...r,id:i+1}));query="";filter="all";sortConfig={key:"id",direction:"asc"};$("search").value="";render();queueCloudSave()}
+
+function cleanImportedNoteValue(value){
+  const s=String(value ?? "").trim();
+  if(!s)return "";
+  if(["-","—","--","n/a","na","none","null","undefined"].includes(s.toLowerCase()))return "";
+  return s;
+}
+
+function normalizeRows(data,start){if(data.length<2)return[];const headers=data[0].map(h=>normHeader(h));const map=headers.reduce((a,h,i)=>{a[h]=i;return a},{});return data.slice(1).map((row,i)=>{const chassis=pick(row,map,["chassis","chassis #","chassis number","chassis id"],1);const location=pick(row,map,["location","loc","current location","parking location"],2);const pool=pick(row,map,["chas pool","chassis pool","pool"],3);const eventDate=pick(row,map,["event date","event datetime","date"],4);const event=pick(row,map,["event","event type","last event"],5);const kind=pick(row,map,["chas car kind","chas/car kind","chassis car kind","car kind","chas kind","kind","chassis kind","type"],-1);const hc=pick(row,map,["chas hc","hc","chassis hc","hazard class","height code"],-1);const status=pick(row,map,["status","current status"],7);const ce=pick(row,map,["ce","c/e","customer exception","ce flag"],-1);const note=pick(row,map,["note","notes","chassis note"],-1);return{id:start+i+1,chassis:String(chassis||"—"),location:String(location||"—"),pool:String(pool||"—"),eventDate:String(eventDate||"01/01/1900 00:00:00"),event:String(event||"—"),kind:String(kind&&kind!==eventDate?kind:"—"),hc:String(hc&&hc!==eventDate?hc:""),status:String(status||"—"),ce:String(ce||"").toLowerCase().includes("ce")||String(ce||"").toLowerCase()==="yes"||String(ce||"").toLowerCase()==="true",note:cleanImportedNoteValue(note!==eventDate?note:"")}}).filter(r=>r.chassis!=="—")}
+async function importFiles(files){const all=[];importedFileArchives=[];for(const file of [...files]){let dataUrl='';try{dataUrl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(file)})}catch{}importedFileArchives.push({name:file.name,size:file.size,type:file.type,lastModified:file.lastModified,dataUrl});const buf=await file.arrayBuffer();const wb=XLSX.read(buf,{type:"array",cellDates:false});const sh=wb.Sheets[wb.SheetNames[0]];const data=XLSX.utils.sheet_to_json(sh,{header:1,defval:""}).filter(r=>r.some(Boolean));all.push(...normalizeRows(data,all.length))}tableRows=all.map((r,i)=>({...r,id:i+1,note:cleanImportedNoteValue(r.note)}));query="";filter="all";sortConfig={key:"id",direction:"asc"};$("search").value="";render();queueCloudSave()}
 function csvEscape(value){
   const s=String(value ?? "");
   return /[",\n\r]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
@@ -3363,7 +3534,7 @@ function makeArchiveId(){return "archive_"+Date.now()+"_"+Math.random().toString
 function makeArchiveName(){const d=new Date();return `Chassis Archive ${String(d.getMonth()+1).padStart(2,"0")}/${String(d.getDate()).padStart(2,"0")}/${d.getFullYear()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`}
 function makeSnapshot(){
   const e=enrich();
-  return {id:makeArchiveId(),name:makeArchiveName(),savedAt:new Date().toISOString(),reportDate:REPORT_TODAY.toISOString(),yardChecked:$("yardSelect")?.value||"",tableRows,query,filter,sortConfig,showBanner,importedFileArchives,counts:{onHand:e.length,yardChecked:e.filter(r=>r.yardChecked).length,eventToday:e.filter(r=>r.bucket.key==="today").length,missingToday:e.filter(r=>r.bucket.key!=="today").length,flaggedDelete:e.filter(r=>r.bucket.key==="tenPlus").length}};
+  return {id:makeArchiveId(),name:makeArchiveName(),savedAt:new Date().toISOString(),reportDate:getReportBaseDate().toISOString(),yardChecked:$("yardSelect")?.value||"",tableRows,query,filter,sortConfig,showBanner,importedFileArchives,counts:{onHand:e.length,yardChecked:e.filter(r=>r.yardChecked).length,eventToday:e.filter(r=>r.bucket.key==="today").length,missingToday:e.filter(r=>r.bucket.key!=="today").length,flaggedDelete:e.filter(r=>r.bucket.key==="tenPlus").length}};
 }
 function saveSnapshot(customName){
   const snap=makeSnapshot();
@@ -3399,7 +3570,7 @@ function todayCalendarKey(){
   return dateKey(d.getFullYear(),d.getMonth(),d.getDate());
 }
 function reportCalendarKey(){
-  return dateKey(REPORT_TODAY.getFullYear(),REPORT_TODAY.getMonth(),REPORT_TODAY.getDate());
+  const d=getReportBaseDate(); return dateKey(d.getFullYear(),d.getMonth(),d.getDate());
 }
 function currentReportDateKey(){
   return todayCalendarKey();
@@ -4392,14 +4563,18 @@ function renderYardCalendar(){
 
 function init(){
   $("yardSelect").innerHTML=YARD_OPTIONS.map(o=>`<option>${o}</option>`).join("");
-  $("yardLabel").textContent=`Yard checked ${String(REPORT_TODAY.getMonth()+1).padStart(2,"0")}/${String(REPORT_TODAY.getDate()).padStart(2,"0")}/${REPORT_TODAY.getFullYear()}`;setupDisplaySliders();
+  updateReportDateLabel();setupDisplaySliders();
   $("search").oninput=e=>{query=e.target.value;render();queueCloudSave()};
   document.querySelectorAll("th button[data-sort]").forEach(b=>b.onclick=()=>{const k=b.dataset.sort;if(k==="ce"&&applySelectedCeFlags())return;sortConfig={key:k,direction:sortConfig.key===k&&sortConfig.direction==="asc"?"desc":"asc"};render();queueCloudSave()});
   const bannerToggle=$("bannerToggle"); if(bannerToggle)bannerToggle.onclick=()=>{showBanner=!showBanner;render();queueCloudSave()};
   $("importBtn").onclick=()=>$("fileInput").click();
   $("fileInput").onchange=e=>{if(e.target.files?.length)importFiles(e.target.files);e.target.value=""};
   $("clearBtn").onclick=typeof handleClearClick==="function"?handleClearClick:()=>{tableRows=[];query="";filter="all";$("search").value="";render();queueCloudSave()};
-  const forceSaveBtn=$("forceSaveBtn"); if(forceSaveBtn)forceSaveBtn.onclick=saveAllCloudState;
+  const forceSaveBtn=$("forceSaveBtn"); if(forceSaveBtn){
+    const doForceSave=e=>{if(e){e.preventDefault();e.stopPropagation()} saveAllCloudState()};
+    forceSaveBtn.onclick=doForceSave;
+    forceSaveBtn.ontouchend=doForceSave;
+  }
   const copyChassisBtn=$("copyChassisBtn"); if(copyChassisBtn)copyChassisBtn.onclick=copyFilteredChassisList;
   const emailReportBtn=$("emailReportBtn"); if(emailReportBtn)emailReportBtn.onclick=sendEmailReport;
   const calendarTopBtn=$("calendarTopBtn"); if(calendarTopBtn)calendarTopBtn.onclick=openYardCalendar;
