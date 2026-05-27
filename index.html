@@ -2538,6 +2538,130 @@ th button[data-sort="ce"].ce-remove-ready {
   position: relative !important;
 }
 
+
+/* Archive direct editor */
+.archive-edit-btn {
+  background: rgba(168,85,247,.18);
+  border-color: rgba(216,180,254,.38);
+  color: #f3e8ff;
+}
+.archive-editor-panel {
+  margin-top: 14px;
+  border: 1px solid rgba(168,85,247,.34);
+  background:
+    radial-gradient(circle at top left, rgba(168,85,247,.14), transparent 18rem),
+    rgba(15,23,42,.62);
+  border-radius: 20px;
+  padding: 14px;
+}
+.archive-editor-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  border-bottom: 1px solid rgba(148,163,184,.16);
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+}
+.archive-editor-head h3 {
+  margin: 6px 0 2px;
+  color: #f8fafc;
+  font-size: 22px;
+}
+.archive-editor-head p {
+  margin: 0;
+  color: #9fb0cd;
+  font-size: 12px;
+  font-weight: 850;
+}
+.archive-editor-fields {
+  display: grid;
+  grid-template-columns: 1fr 260px;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.archive-editor-fields label {
+  display: grid;
+  gap: 5px;
+}
+.archive-editor-fields span {
+  color: #bfdbfe;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  font-weight: 1000;
+}
+.archive-editor-fields input,
+.archive-editor-table input,
+.archive-editor-table textarea {
+  width: 100%;
+  border: 1px solid rgba(96,165,250,.25);
+  background: rgba(7,13,30,.84);
+  color: #f8fafc;
+  border-radius: 9px;
+  padding: 7px 8px;
+  font-size: 11px;
+  font-weight: 850;
+}
+.archive-editor-table textarea {
+  min-height: 34px;
+  resize: vertical;
+}
+.archive-editor-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.archive-editor-table-wrap {
+  overflow: auto;
+  border: 1px solid rgba(148,163,184,.15);
+  border-radius: 14px;
+  max-height: 470px;
+}
+.archive-editor-table {
+  width: 100%;
+  min-width: 1180px;
+}
+.archive-editor-table th,
+.archive-editor-table td {
+  padding: 7px;
+  font-size: 11px;
+  text-align: center;
+}
+.archive-editor-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: rgba(15,23,42,.96);
+}
+.archive-editor-ce {
+  width: 18px;
+  height: 18px;
+  accent-color: #ff7a00;
+}
+.archive-editor-row-delete {
+  background: rgba(225,29,72,.18);
+  border-color: rgba(251,113,133,.40);
+  color: #ffe4e6;
+  min-height: 30px;
+  padding: 4px 8px;
+}
+@media(max-width: 760px){
+  .archive-editor-fields {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* Archive button update mode */
+#archiveBtn.update-mode {
+  background: linear-gradient(135deg, rgba(245,158,11,.92), rgba(217,119,6,.82)) !important;
+  border-color: rgba(251,191,36,.60) !important;
+  color: #451a03 !important;
+  box-shadow: 0 12px 28px rgba(245,158,11,.22), inset 0 1px 0 rgba(255,255,255,.20) !important;
+}
+
 </style>
 <!-- REVIEW FLAGS: 3-4 days = Low Warning | 5-9 days = Moderate Warning | 10+ days = Flagged for Delete -->
 <!-- REVIEW FLAGS ACTIVE: 1 day = Event Recorded Yesterday | 2-4 days = Low Warning | 5-9 days = Moderate Warning | 10+ days = Flagged for Delete -->
@@ -2685,6 +2809,54 @@ th button[data-sort="ce"].ce-remove-ready {
       <div class="archive-list-title">Quick View</div>
       <div id="archiveQuickViewBody"></div>
     </div>
+
+    <div id="archiveEditorPanel" class="archive-editor-panel" style="display:none">
+      <div class="archive-editor-head">
+        <div>
+          <div class="archive-kicker">Edit Archive</div>
+          <h3 id="archiveEditorTitle">Archive Editor</h3>
+          <p>Edit saved archive rows directly, then save the changes back to the archive library.</p>
+        </div>
+        <button id="archiveEditorClose" class="archive-close" type="button">Close Editor</button>
+      </div>
+
+      <div class="archive-editor-fields">
+        <label>
+          <span>Archive Name</span>
+          <input id="archiveEditName" type="text">
+        </label>
+        <label>
+          <span>Yard Check Drop</span>
+          <input id="archiveEditYard" type="text">
+        </label>
+      </div>
+
+      <div class="archive-editor-toolbar">
+        <button id="archiveEditorAddRow" type="button">+ Add Row</button>
+        <button id="archiveEditorSave" class="archive-save-name-btn" type="button">Save Archive Edits</button>
+      </div>
+
+      <div class="archive-editor-table-wrap">
+        <table class="archive-editor-table">
+          <thead>
+            <tr>
+              <th>Chassis</th>
+              <th>Kind</th>
+              <th>HC</th>
+              <th>Location</th>
+              <th>Event Date</th>
+              <th>Event</th>
+              <th>Pool</th>
+              <th>CE</th>
+              <th>Note</th>
+              <th>Delete</th>
+            </tr>
+          </thead>
+          <tbody id="archiveEditorRows"></tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 </section>
 
@@ -2828,7 +3000,7 @@ th button[data-sort="ce"].ce-remove-ready {
 const REPORT_TODAY = new Date("2026-05-26T00:00:00");
 const YARD_OPTIONS = ["TGRP 40/45","DCLI 40/45","TGRP & DCLP 20","FLEXI 40/20","SCLU 53/SNBZ 40","DCLI/UP 53"];
 const INITIAL_ROWS = [[1, "DCNZ 408123", "DIRT - DIRT", "DCLP", "05/26/2026 14:52:56", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [2, "MSCZ 250233", "DIRT - DIRT", "DCLP", "05/25/2026 10:38:03", "PKUP(Parking Update)", "Q40", "Current(Park - UP Storage)"], [3, "DCNZ 606582", "DIRT - DIRT", "DCLP", "05/26/2026 14:18:03", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [4, "DECZ 405057", "DIRT - DIRT", "DCLP", "05/26/2026 14:26:57", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [5, "DCLZ 710906", "D - D - 31", "DCLP", "05/26/2026 07:15:29", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [6, "APMZ 418007", "L - L - 47", "DCLP", "05/26/2026 10:25:13", "PKUP(Parking Update)", "Q40", "Current(Park - UP Storage)"], [7, "DCLZ 404907", "06801 - 801", "DCLP", "05/25/2026 14:08:49", "PKUP(Parking Update)", "Q40", "Current(Park - UP Storage)"], [8, "MAEC 685232", "R - R - 16", "DCLP", "05/26/2026 15:36:10", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [9, "APMZ 700430", "P - P - 12", "DCLP", "05/26/2026 15:38:54", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [10, "DECZ 403537", "O - O - 19", "DCLP", "05/26/2026 10:27:59", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [11, "DECZ 405061", "I - I - 17", "DCLP", "05/26/2026 08:56:57", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [12, "MSCZ 140062", "06801 - 801", "DCLP", "05/25/2026 13:47:51", "PKUP(Parking Update)", "Q40", "Current(Park - UP Storage)"], [13, "DCNZ 415587", "I - I - 41", "DCLP", "05/26/2026 09:01:30", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [14, "APMZ 406229", "DIRT - DIRT", "DCLP", "05/26/2026 14:39:56", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [15, "APMZ 412267", "M - M - 157", "DCLP", "05/26/2026 05:33:52", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [16, "POCZ 2001", "06802 - 802", "DCLP", "05/13/2026 06:44:05", "BARE(Breaking a Container/Chassis pair)", "Q40", "Current(Park - UP Storage)"], [17, "MSCZ 140374", "N - N - 79", "DCLP", "05/26/2026 15:42:55", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [18, "APMZ 417637", "N - N - 36", "DCLP", "05/26/2026 15:52:09", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [19, "DCLZ 700661", "06802 - 802", "DCLP", "05/05/2026 10:44:55", "MTUP(Match Update)", "Q40", "Current(Park - UP Storage)"], [20, "APMZ 405743", "M - M - 101", "DCLP", "05/26/2026 05:47:46", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [21, "APMZ 400723", "M - M - 7", "DCLP", "05/01/2026 07:22:04", "MTUP(Match Update)", "Q40", "Current(Park - UP Storage)"], [22, "NEDZ 409299", "O - O - 43", "DCLP", "05/26/2026 10:30:39", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [23, "APMZ 410315", "DIRT - DIRT", "DCLP", "05/26/2026 14:54:24", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [24, "PONZ 457834", "I - I - 42", "DCLP", "05/26/2026 09:01:40", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [25, "PONZ 456960", "DIRT - DIRT", "DCLP", "05/26/2026 14:14:13", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [26, "DCLZ 405582", "DIRT - DIRT", "DCLP", "05/26/2026 14:42:44", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [27, "DCLZ 404028", "DIRT - DIRT", "DCLP", "05/26/2026 14:10:26", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [28, "DCLZ 413504", "I - I - 7", "DCLP", "05/26/2026 08:53:39", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [29, "MAEC 710520", "L - L - 15", "DCLP", "05/26/2026 09:56:27", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [30, "APMZ 405404", "M - M - 124", "DCLP", "05/26/2026 05:43:23", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [31, "POCZ 400837", "D - D - 29", "DCLP", "05/26/2026 07:15:41", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [32, "DCLZ 420214", "N - N - 19", "DCLP", "05/26/2026 15:54:56", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [33, "MAEC 666017", "06801 - 801", "DCLP", "05/26/2026 09:31:54", "MOVE(Move)", "Q40", "Current(Park - UP Storage)"], [34, "DCSZ 711698", "N - N - 75", "DCLP", "05/26/2026 15:43:15", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [35, "DCNZ 507068", "I - I - 3", "DCLP", "05/26/2026 08:53:17", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [36, "MAEC 734047", "SHOP - SHOP", "DCLP", "05/25/2026 13:42:12", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [37, "IPPZ 400539", "06801 - 801", "DCLP", "05/24/2026 23:44:01", "BARE(Breaking a Container/Chassis pair)", "Q40", "Current(Park - UP Storage)"], [38, "MAEC 450170", "S - S - 31", "DCLP", "05/26/2026 15:33:15", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [39, "MAEC 623989", "M - M - 100", "DCLP", "05/26/2026 05:47:51", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [40, "MSCZ 423300", "DIRT - DIRT", "DCLP", "05/26/2026 14:49:27", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [41, "APMZ 406431", "DIRT - DIRT", "DCLP", "05/26/2026 14:10:41", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [42, "DCLZ 700401", "N - N - 10", "DCLP", "05/26/2026 15:55:40", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [43, "MAEC 731800", "I - I - 24", "DCLP", "05/21/2026 07:56:15", "INUP(Inventory Update)", "Q40", "Current(Park - UP Storage)"], [44, "DCNZ 405302", "DIRT - DIRT", "DCLP", "05/26/2026 14:15:58", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [45, "DCLZ 406511", "DIRT - DIRT", "DCLP", "05/26/2026 14:16:31", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [46, "MSCZ 423689", "DIRT - DIRT", "DCLP", "05/26/2026 14:35:01", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [47, "APMZ 411438", "BOWL - BOWL", "DCLP", "05/18/2026 14:02:53", "MTUP(Match Update)", "Q40", "Current(Park - UP Storage)"], [48, "MSCZ 451085", "06808 - 808", "DCLP", "05/08/2026 20:13:28", "BARE(Breaking a Container/Chassis pair)", "Q40", "Current(Park - UP Storage)"], [49, "DCNZ 498301", "DIRT - DIRT", "DCLP", "05/26/2026 14:21:10", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [50, "DECZ 403469", "K - K - 10", "DCLP", "05/26/2026 09:29:26", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [51, "APMZ 426111", "M - M - 99", "DCLP", "05/26/2026 05:47:55", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [52, "APMZ 701853", "I - I - 28", "DCLP", "05/26/2026 09:00:00", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"]].map(([id,chassis,location,pool,eventDate,event,kind,status])=>({id,chassis,location,pool,eventDate,event,kind,status,hc:"",ce:false,note:""}));
-let tableRows=[...INITIAL_ROWS], query="", filter="all", sortConfig={key:"id",direction:"asc"}, showBanner=true, clearArmed=false, clearTimer=null, importedFileArchives=[], archiveDeleteArmedId=null, archiveDeleteTimer=null, recycleDeleteArmedId=null, recycleDeleteTimer=null, emptyRecycleArmed=false, emptyRecycleTimer=null, recycleExpanded=false, archiveRenameId=null, ceSelectedIds=new Set(), ceDragActive=false, ceDragStartId=null, activeNoteRowId=null, noteDeleteArmed=false, noteDeleteTimer=null;
+let tableRows=[...INITIAL_ROWS], query="", filter="all", sortConfig={key:"id",direction:"asc"}, showBanner=true, editingArchiveId=null, clearArmed=false, clearTimer=null, importedFileArchives=[], archiveDeleteArmedId=null, archiveDeleteTimer=null, recycleDeleteArmedId=null, recycleDeleteTimer=null, emptyRecycleArmed=false, emptyRecycleTimer=null, recycleExpanded=false, archiveRenameId=null, ceSelectedIds=new Set(), ceDragActive=false, ceDragStartId=null, activeNoteRowId=null, noteDeleteArmed=false, noteDeleteTimer=null;
 const filters=[["all","On Hand"],["yardChecked","Yard Checked"],["today","Event Today"],["missingToday","Missing Event Today"],["tenPlus","Flagged for Delete"],["notChecked","Not Yard Checked"]];
 const $=id=>document.getElementById(id);
 
@@ -2979,7 +3151,8 @@ async function loadCloudState(){
     cloudReady=true;
     cloudLoading=false;
     setCloudStatus("Cloud: synced","ok");
-    render();
+    updateArchiveButtonState();
+  render();
 
     // First device safety: if the cloud current_session is empty, push this page state.
     if(!applied && tableRows.length) queueCloudSave();
@@ -3515,6 +3688,7 @@ function exportReport(){
 }
 
 function clearReport(){
+  setArchiveEditMode(null);
   tableRows=[];
   query="";
   filter="all";
@@ -3638,6 +3812,7 @@ function markCurrentDayCheckedFromArchive(){
   renderYardCalendar();
 }
 function openArchiveConfirmModal(){
+  if(editingArchiveId){updateLoadedArchive();return;}
   const modal=$("archiveConfirmModal");
   if(!modal)return archivePage();
 
@@ -3687,6 +3862,71 @@ async function confirmArchiveSave(){
   if(btn){btn.textContent="Confirm Archive";btn.disabled=false}
   closeArchiveConfirmModal();
 }
+
+function setArchiveEditMode(id){
+  editingArchiveId=id||null;
+  updateArchiveButtonState();
+}
+function updateArchiveButtonState(){
+  const btn=$("archiveBtn");
+  if(!btn)return;
+  if(editingArchiveId){
+    btn.textContent="↻ Update";
+    btn.classList.add("update-mode");
+    btn.title="Update the loaded archive instead of creating a new archive";
+  }else{
+    btn.textContent="▣ Archive";
+    btn.classList.remove("update-mode");
+    btn.title="Archive current page";
+  }
+}
+function loadArchiveForEditing(id){
+  const snap=getArchiveList().find(a=>a.id===id);
+  if(!snap)return;
+  restoreSnapshot(snap);
+  setArchiveEditMode(id);
+  closeArchiveModal();
+  if(typeof showArchiveToast==="function")showArchiveToast("Archive loaded for editing. Use Update to save changes.");
+}
+function updateLoadedArchive(){
+  if(!editingArchiveId)return false;
+  const list=getArchiveList();
+  const idx=list.findIndex(a=>a.id===editingArchiveId);
+  if(idx===-1){
+    setArchiveEditMode(null);
+    return false;
+  }
+
+  const old=list[idx];
+  const e=enrich();
+  const updated={
+    ...old,
+    name:old.name||makeArchiveName(),
+    updatedAt:new Date().toISOString(),
+    yardChecked:$("yardSelect")?.value||old.yardChecked||"",
+    tableRows,
+    query,
+    filter,
+    sortConfig,
+    showBanner,
+    importedFileArchives,
+    counts:{
+      onHand:e.length,
+      yardChecked:e.filter(r=>r.yardChecked).length,
+      eventToday:e.filter(r=>r.bucket.key==="today").length,
+      missingToday:e.filter(r=>r.bucket.key!=="today").length,
+      flaggedDelete:e.filter(r=>r.bucket.key==="tenPlus").length
+    }
+  };
+
+  list[idx]=updated;
+  saveArchiveList(list);
+  localStorage.setItem("chassisReconciliationLastArchive",JSON.stringify(updated));
+  saveAllCloudState();
+  if(typeof showArchiveToast==="function")showArchiveToast("Archive updated.");
+  return true;
+}
+
 async function archivePage(options={}){
   const snap=saveSnapshot(options.name);
   try{
@@ -3716,7 +3956,7 @@ function restoreLastArchive(){const snap=getArchiveList()[0];if(!snap){alert("No
 function openArchiveModal(){renderArchiveModal();$("archiveModal").classList.add("show");$("archiveModal").setAttribute("aria-hidden","false")}
 function closeArchiveModal(){$("archiveModal").classList.remove("show");$("archiveModal").setAttribute("aria-hidden","true")}
 function quickViewArchive(id){
-  const snap=getArchiveList().find(a=>a.id===id), box=$("archiveQuickView"), body=$("archiveQuickViewBody"); if(!snap||!box||!body)return;
+  const snap=getArchiveList().find(a=>a.id===id), box=$("archiveQuickView"), body=$("archiveQuickViewBody"); if(!snap||!box||!body)return; closeArchiveEditor();
   const c=snap.counts||{}, rows=(snap.tableRows||[]).slice(0,25);
   body.innerHTML=`<div class="archive-quick-grid"><div class="archive-quick-card"><span>On Hand</span><strong>${c.onHand??(snap.tableRows||[]).length}</strong></div><div class="archive-quick-card"><span>Event Today</span><strong>${c.eventToday??"—"}</strong></div><div class="archive-quick-card"><span>Missing</span><strong>${c.missingToday??"—"}</strong></div><div class="archive-quick-card"><span>Delete Flag</span><strong>${c.flaggedDelete??"—"}</strong></div></div><div class="archive-quick-table"><table><thead><tr><th>Chassis</th><th>Kind</th><th>Location</th><th>Event Date</th><th>Event</th><th>Pool</th></tr></thead><tbody>${rows.map(r=>`<tr><td>${r.chassis||""}</td><td>${r.kind||""}</td><td>${r.location||""}</td><td>${formatDateShort(r.eventDate||"")}</td><td>${r.event||""}</td><td>${r.pool||""}</td></tr>`).join("")}</tbody></table></div>`;
   box.style.display="block";
@@ -3745,7 +3985,7 @@ function quickViewRecycledArchive(id){
   box.style.display="block";
 }
 
-function restoreArchiveById(id){const snap=getArchiveList().find(a=>a.id===id);if(!snap)return;restoreSnapshot(snap);closeArchiveModal();showArchiveToast("Archive restored into the current session.")}
+function restoreArchiveById(id){const snap=getArchiveList().find(a=>a.id===id);if(!snap)return;restoreSnapshot(snap);setArchiveEditMode(null);closeArchiveModal();showArchiveToast("Archive restored into the current session.")}
 
 function getRecycleBin(){
   const raw=localStorage.getItem("chassisReconciliationArchiveRecycleBin");
@@ -3992,6 +4232,7 @@ function renderArchiveSearchResults(){
         </div>
         <div class="archive-search-actions">
           <button class="archive-view-btn" type="button" data-search-quick="${archive.id}">Quick View Archive</button>
+          <button class="archive-edit-btn" type="button" data-search-edit="${archive.id}">Edit</button>
           <button class="archive-restore-btn" type="button" data-search-restore="${archive.id}">Restore</button>
         </div>
       </div>
@@ -4036,6 +4277,9 @@ function renderArchiveSearchResults(){
       else quickViewRecycledArchive(id);
     };
   });
+  box.querySelectorAll("[data-search-edit]").forEach(btn=>{
+    btn.onclick=()=>loadArchiveForEditing(btn.dataset.searchEdit);
+  });
   box.querySelectorAll("[data-search-restore]").forEach(btn=>{
     btn.onclick=()=>{
       const id=btn.dataset.searchRestore;
@@ -4060,6 +4304,142 @@ function setupArchiveSearch(){
     };
   }
   renderArchiveSearchResults();
+}
+
+
+let activeArchiveEditId=null;
+let archiveEditRows=[];
+
+function makeArchiveEditorRow(row={},index=0){
+  const safe=v=>escapeHtml(v ?? "");
+  return `<tr data-archive-edit-row="${index}">
+    <td><input data-edit-field="chassis" value="${safe(row.chassis||"")}"></td>
+    <td><input data-edit-field="kind" value="${safe(row.kind||"")}"></td>
+    <td><input data-edit-field="hc" value="${safe(row.hc||"")}"></td>
+    <td><input data-edit-field="location" value="${safe(row.location||"")}"></td>
+    <td><input data-edit-field="eventDate" value="${safe(row.eventDate||"")}"></td>
+    <td><input data-edit-field="event" value="${safe(row.event||"")}"></td>
+    <td><input data-edit-field="pool" value="${safe(row.pool||"")}"></td>
+    <td><input class="archive-editor-ce" type="checkbox" data-edit-field="ce" ${row.ce?"checked":""}></td>
+    <td><textarea data-edit-field="note">${safe(row.note||"")}</textarea></td>
+    <td><button type="button" class="archive-editor-row-delete" data-edit-row-delete="${index}">Delete</button></td>
+  </tr>`;
+}
+function openArchiveEditor(id){
+  const archive=getArchiveList().find(a=>a.id===id);
+  if(!archive)return;
+  activeArchiveEditId=id;
+  archiveEditRows=(archive.tableRows||[]).map((r,i)=>({...r,id:r.id??i+1}));
+  const panel=$("archiveEditorPanel");
+  const quick=$("archiveQuickView");
+  if(quick)quick.style.display="none";
+  if(!panel)return;
+
+  $("archiveEditorTitle").textContent=archive.name||"Chassis Archive";
+  $("archiveEditName").value=archive.name||"";
+  $("archiveEditYard").value=archive.yardChecked||"";
+  renderArchiveEditorRows();
+  panel.style.display="block";
+  panel.scrollIntoView({behavior:"smooth",block:"start"});
+}
+function closeArchiveEditor(){
+  const panel=$("archiveEditorPanel");
+  if(panel)panel.style.display="none";
+  activeArchiveEditId=null;
+  archiveEditRows=[];
+}
+function renderArchiveEditorRows(){
+  const body=$("archiveEditorRows");
+  if(!body)return;
+  body.innerHTML=archiveEditRows.map((r,i)=>makeArchiveEditorRow(r,i)).join("");
+  body.querySelectorAll("[data-edit-field]").forEach(el=>{
+    const update=()=>{
+      const tr=el.closest("[data-archive-edit-row]");
+      const idx=Number(tr?.dataset.archiveEditRow);
+      const field=el.dataset.editField;
+      if(!Number.isFinite(idx)||!field||!archiveEditRows[idx])return;
+      archiveEditRows[idx][field]=el.type==="checkbox"?el.checked:el.value;
+    };
+    el.oninput=update;
+    el.onchange=update;
+  });
+  body.querySelectorAll("[data-edit-row-delete]").forEach(btn=>{
+    btn.onclick=()=>{
+      const idx=Number(btn.dataset.editRowDelete);
+      if(!Number.isFinite(idx))return;
+      archiveEditRows.splice(idx,1);
+      renderArchiveEditorRows();
+    };
+  });
+}
+function addArchiveEditorRow(){
+  archiveEditRows.push({
+    id:archiveEditRows.length+1,
+    chassis:"",
+    kind:"",
+    hc:"",
+    location:"",
+    eventDate:"",
+    event:"",
+    pool:"",
+    ce:false,
+    note:"",
+    status:""
+  });
+  renderArchiveEditorRows();
+}
+function saveArchiveEditor(){
+  if(!activeArchiveEditId)return;
+  const list=getArchiveList();
+  const idx=list.findIndex(a=>a.id===activeArchiveEditId);
+  if(idx===-1)return;
+
+  const name=String($("archiveEditName")?.value||"").trim()||list[idx].name||"Chassis Archive";
+  const yardChecked=String($("archiveEditYard")?.value||"").trim();
+
+  const rows=archiveEditRows
+    .filter(r=>String(r.chassis||"").trim())
+    .map((r,i)=>({
+      ...r,
+      id:i+1,
+      chassis:String(r.chassis||"").trim(),
+      kind:String(r.kind||"").trim(),
+      hc:String(r.hc||"").trim(),
+      location:String(r.location||"").trim(),
+      eventDate:String(r.eventDate||"").trim(),
+      event:String(r.event||"").trim(),
+      pool:String(r.pool||"").trim(),
+      ce:!!r.ce,
+      note:typeof cleanImportedNoteValue==="function"?cleanImportedNoteValue(r.note):String(r.note||"").trim(),
+      status:String(r.status||"").trim()
+    }));
+
+  const old=list[idx];
+  const currentTable=tableRows;
+  tableRows=rows;
+  const e=enrich();
+  tableRows=currentTable;
+
+  list[idx]={
+    ...old,
+    name,
+    yardChecked,
+    tableRows:rows,
+    editedAt:new Date().toISOString(),
+    counts:{
+      onHand:e.length,
+      yardChecked:e.filter(r=>r.yardChecked).length,
+      eventToday:e.filter(r=>r.bucket.key==="today").length,
+      missingToday:e.filter(r=>r.bucket.key!=="today").length,
+      flaggedDelete:e.filter(r=>r.bucket.key==="tenPlus").length
+    }
+  };
+
+  saveArchiveList(list);
+  saveAllCloudState();
+  renderArchiveModal();
+  openArchiveEditor(activeArchiveEditId);
+  if(typeof showArchiveToast==="function")showArchiveToast("Archive edits saved.");
 }
 
 function renderArchiveModal(){
@@ -4098,6 +4478,7 @@ function renderArchiveModal(){
         <div class="archive-row-actions">
           <button class="archive-view-btn" type="button" data-view="${s.id}">Quick View</button>
           <button class="archive-rename-btn" type="button" data-rename="${s.id}">Rename</button>
+          <button class="archive-edit-btn" type="button" data-edit-archive="${s.id}">Edit</button>
           <button class="archive-restore-btn" type="button" data-restore="${s.id}">Restore</button>
           <button class="archive-delete-btn ${armed?"armed":""}" type="button" data-delete="${s.id}">${armed?"Move to Recycle Bin":"Delete"}</button>
         </div>
@@ -4110,6 +4491,7 @@ function renderArchiveModal(){
       const saveBtn=event.target.closest("[data-rename-save]");
       const cancelBtn=event.target.closest("[data-rename-cancel]");
       const restoreBtn=event.target.closest("[data-restore]");
+      const editBtn=event.target.closest("[data-edit-archive]");
       const deleteBtn=event.target.closest("[data-delete]");
       if(viewBtn){quickViewArchive(viewBtn.dataset.view);return}
       if(renameBtn){startArchiveRename(renameBtn.dataset.rename);return}
@@ -4120,6 +4502,7 @@ function renderArchiveModal(){
       }
       if(cancelBtn){cancelArchiveRename();return}
       if(restoreBtn){restoreArchiveById(restoreBtn.dataset.restore);return}
+      if(editBtn){loadArchiveForEditing(editBtn.dataset.editArchive);return}
       if(deleteBtn){deleteArchiveById(deleteBtn.dataset.delete);return}
     };
     lib.querySelectorAll("[data-rename-input]").forEach(input=>{
@@ -4139,6 +4522,10 @@ function renderArchiveModal(){
   }
 
   setupArchiveSearch();
+  const archiveEditorClose=$("archiveEditorClose"); if(archiveEditorClose)archiveEditorClose.onclick=closeArchiveEditor;
+  const archiveEditorSave=$("archiveEditorSave"); if(archiveEditorSave)archiveEditorSave.onclick=saveArchiveEditor;
+  const archiveEditorAddRow=$("archiveEditorAddRow"); if(archiveEditorAddRow)archiveEditorAddRow.onclick=addArchiveEditorRow;
+
   if(!recycleLib)return;
   if(!recycle.length){
     recycleLib.innerHTML=`<div class="recycle-empty">Recycle Bin is empty. Deleted archives will appear here before they are permanently removed.</div>`;
@@ -4624,7 +5011,7 @@ function init(){
   const noteDeleteBtn=$("noteDeleteBtn"); if(noteDeleteBtn)noteDeleteBtn.onclick=deleteActiveNote;
   const noteModal=$("noteModal"); if(noteModal)noteModal.addEventListener("click",e=>{if(e.target===noteModal)closeNoteModal()});
   $("exportBtn").onclick=async()=>{const b=$("exportBtn");if(b){b.textContent="Exporting...";b.disabled=true}await Promise.resolve(exportReport());if(b){b.textContent="⇩ Export";b.disabled=false}};
-  const archiveBtn=$("archiveBtn"); if(archiveBtn)archiveBtn.onclick=openArchiveConfirmModal;
+  const archiveBtn=$("archiveBtn"); if(archiveBtn)archiveBtn.onclick=()=>{if(editingArchiveId){updateLoadedArchive();return} openArchiveConfirmModal()};
   const archivePageBtn=$("archivePageBtn"); if(archivePageBtn)archivePageBtn.onclick=openArchiveModal;
   const archiveConfirmClose=$("archiveConfirmClose"); if(archiveConfirmClose)archiveConfirmClose.onclick=closeArchiveConfirmModal;
   const archiveConfirmCancel=$("archiveConfirmCancel"); if(archiveConfirmCancel)archiveConfirmCancel.onclick=closeArchiveConfirmModal;
