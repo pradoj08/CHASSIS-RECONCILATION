@@ -2526,6 +2526,18 @@ th button[data-sort="ce"].ce-remove-ready {
   box-shadow: 0 0 0 3px rgba(96,165,250,.14);
 }
 
+
+/* Fix per-row copy tap/click behavior */
+.copy-one-chassis-btn {
+  pointer-events: auto !important;
+  touch-action: manipulation !important;
+  z-index: 2 !important;
+  position: relative !important;
+}
+.chassis-cell-wrap {
+  position: relative !important;
+}
+
 </style>
 <!-- REVIEW FLAGS: 3-4 days = Low Warning | 5-9 days = Moderate Warning | 10+ days = Flagged for Delete -->
 <!-- REVIEW FLAGS ACTIVE: 1 day = Event Recorded Yesterday | 2-4 days = Low Warning | 5-9 days = Moderate Warning | 10+ days = Flagged for Delete -->
@@ -2814,7 +2826,7 @@ th button[data-sort="ce"].ce-remove-ready {
 </main>
 <script>
 const REPORT_TODAY = new Date("2026-05-26T00:00:00");
-const YARD_OPTIONS = ["TGRP 40/45","DCLI 40/45","TGRP & DCLP 20","FLEXI 40/20","SCLU 53/SNBZ 40","UP 53"];
+const YARD_OPTIONS = ["TGRP 40/45","DCLI 40/45","TGRP & DCLP 20","FLEXI 40/20","SCLU 53/SNBZ 40","DCLI/UP 53"];
 const INITIAL_ROWS = [[1, "DCNZ 408123", "DIRT - DIRT", "DCLP", "05/26/2026 14:52:56", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [2, "MSCZ 250233", "DIRT - DIRT", "DCLP", "05/25/2026 10:38:03", "PKUP(Parking Update)", "Q40", "Current(Park - UP Storage)"], [3, "DCNZ 606582", "DIRT - DIRT", "DCLP", "05/26/2026 14:18:03", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [4, "DECZ 405057", "DIRT - DIRT", "DCLP", "05/26/2026 14:26:57", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [5, "DCLZ 710906", "D - D - 31", "DCLP", "05/26/2026 07:15:29", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [6, "APMZ 418007", "L - L - 47", "DCLP", "05/26/2026 10:25:13", "PKUP(Parking Update)", "Q40", "Current(Park - UP Storage)"], [7, "DCLZ 404907", "06801 - 801", "DCLP", "05/25/2026 14:08:49", "PKUP(Parking Update)", "Q40", "Current(Park - UP Storage)"], [8, "MAEC 685232", "R - R - 16", "DCLP", "05/26/2026 15:36:10", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [9, "APMZ 700430", "P - P - 12", "DCLP", "05/26/2026 15:38:54", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [10, "DECZ 403537", "O - O - 19", "DCLP", "05/26/2026 10:27:59", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [11, "DECZ 405061", "I - I - 17", "DCLP", "05/26/2026 08:56:57", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [12, "MSCZ 140062", "06801 - 801", "DCLP", "05/25/2026 13:47:51", "PKUP(Parking Update)", "Q40", "Current(Park - UP Storage)"], [13, "DCNZ 415587", "I - I - 41", "DCLP", "05/26/2026 09:01:30", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [14, "APMZ 406229", "DIRT - DIRT", "DCLP", "05/26/2026 14:39:56", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [15, "APMZ 412267", "M - M - 157", "DCLP", "05/26/2026 05:33:52", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [16, "POCZ 2001", "06802 - 802", "DCLP", "05/13/2026 06:44:05", "BARE(Breaking a Container/Chassis pair)", "Q40", "Current(Park - UP Storage)"], [17, "MSCZ 140374", "N - N - 79", "DCLP", "05/26/2026 15:42:55", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [18, "APMZ 417637", "N - N - 36", "DCLP", "05/26/2026 15:52:09", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [19, "DCLZ 700661", "06802 - 802", "DCLP", "05/05/2026 10:44:55", "MTUP(Match Update)", "Q40", "Current(Park - UP Storage)"], [20, "APMZ 405743", "M - M - 101", "DCLP", "05/26/2026 05:47:46", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [21, "APMZ 400723", "M - M - 7", "DCLP", "05/01/2026 07:22:04", "MTUP(Match Update)", "Q40", "Current(Park - UP Storage)"], [22, "NEDZ 409299", "O - O - 43", "DCLP", "05/26/2026 10:30:39", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [23, "APMZ 410315", "DIRT - DIRT", "DCLP", "05/26/2026 14:54:24", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [24, "PONZ 457834", "I - I - 42", "DCLP", "05/26/2026 09:01:40", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [25, "PONZ 456960", "DIRT - DIRT", "DCLP", "05/26/2026 14:14:13", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [26, "DCLZ 405582", "DIRT - DIRT", "DCLP", "05/26/2026 14:42:44", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [27, "DCLZ 404028", "DIRT - DIRT", "DCLP", "05/26/2026 14:10:26", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [28, "DCLZ 413504", "I - I - 7", "DCLP", "05/26/2026 08:53:39", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [29, "MAEC 710520", "L - L - 15", "DCLP", "05/26/2026 09:56:27", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [30, "APMZ 405404", "M - M - 124", "DCLP", "05/26/2026 05:43:23", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [31, "POCZ 400837", "D - D - 29", "DCLP", "05/26/2026 07:15:41", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [32, "DCLZ 420214", "N - N - 19", "DCLP", "05/26/2026 15:54:56", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [33, "MAEC 666017", "06801 - 801", "DCLP", "05/26/2026 09:31:54", "MOVE(Move)", "Q40", "Current(Park - UP Storage)"], [34, "DCSZ 711698", "N - N - 75", "DCLP", "05/26/2026 15:43:15", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [35, "DCNZ 507068", "I - I - 3", "DCLP", "05/26/2026 08:53:17", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [36, "MAEC 734047", "SHOP - SHOP", "DCLP", "05/25/2026 13:42:12", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [37, "IPPZ 400539", "06801 - 801", "DCLP", "05/24/2026 23:44:01", "BARE(Breaking a Container/Chassis pair)", "Q40", "Current(Park - UP Storage)"], [38, "MAEC 450170", "S - S - 31", "DCLP", "05/26/2026 15:33:15", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [39, "MAEC 623989", "M - M - 100", "DCLP", "05/26/2026 05:47:51", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [40, "MSCZ 423300", "DIRT - DIRT", "DCLP", "05/26/2026 14:49:27", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [41, "APMZ 406431", "DIRT - DIRT", "DCLP", "05/26/2026 14:10:41", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [42, "DCLZ 700401", "N - N - 10", "DCLP", "05/26/2026 15:55:40", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [43, "MAEC 731800", "I - I - 24", "DCLP", "05/21/2026 07:56:15", "INUP(Inventory Update)", "Q40", "Current(Park - UP Storage)"], [44, "DCNZ 405302", "DIRT - DIRT", "DCLP", "05/26/2026 14:15:58", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [45, "DCLZ 406511", "DIRT - DIRT", "DCLP", "05/26/2026 14:16:31", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [46, "MSCZ 423689", "DIRT - DIRT", "DCLP", "05/26/2026 14:35:01", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [47, "APMZ 411438", "BOWL - BOWL", "DCLP", "05/18/2026 14:02:53", "MTUP(Match Update)", "Q40", "Current(Park - UP Storage)"], [48, "MSCZ 451085", "06808 - 808", "DCLP", "05/08/2026 20:13:28", "BARE(Breaking a Container/Chassis pair)", "Q40", "Current(Park - UP Storage)"], [49, "DCNZ 498301", "DIRT - DIRT", "DCLP", "05/26/2026 14:21:10", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [50, "DECZ 403469", "K - K - 10", "DCLP", "05/26/2026 09:29:26", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [51, "APMZ 426111", "M - M - 99", "DCLP", "05/26/2026 05:47:55", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [52, "APMZ 701853", "I - I - 28", "DCLP", "05/26/2026 09:00:00", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"]].map(([id,chassis,location,pool,eventDate,event,kind,status])=>({id,chassis,location,pool,eventDate,event,kind,status,hc:"",ce:false,note:""}));
 let tableRows=[...INITIAL_ROWS], query="", filter="all", sortConfig={key:"id",direction:"asc"}, showBanner=true, clearArmed=false, clearTimer=null, importedFileArchives=[], archiveDeleteArmedId=null, archiveDeleteTimer=null, recycleDeleteArmedId=null, recycleDeleteTimer=null, emptyRecycleArmed=false, emptyRecycleTimer=null, recycleExpanded=false, archiveRenameId=null, ceSelectedIds=new Set(), ceDragActive=false, ceDragStartId=null, activeNoteRowId=null, noteDeleteArmed=false, noteDeleteTimer=null;
 const filters=[["all","On Hand"],["yardChecked","Yard Checked"],["today","Event Today"],["missingToday","Missing Event Today"],["tenPlus","Flagged for Delete"],["notChecked","Not Yard Checked"]];
@@ -3258,45 +3270,66 @@ async function deleteActiveNote(){
 }
 
 
-async function copySingleChassis(id){
+async function copySingleChassis(id, fallbackValue=""){
   const row=tableRows.find(r=>String(r.id)===String(id));
-  const value=String(row?.chassis||"").trim();
+  const value=String(row?.chassis||fallbackValue||"").trim();
   if(!value)return;
+
+  let copied=false;
 
   try{
     if(navigator.clipboard && window.isSecureContext){
       await navigator.clipboard.writeText(value);
-    }else{
-      const ta=document.createElement("textarea");
-      ta.value=value;
-      ta.setAttribute("readonly","");
-      ta.style.position="fixed";
-      ta.style.top="-1000px";
-      ta.style.left="-1000px";
-      document.body.appendChild(ta);
-      ta.focus();
-      ta.select();
-      document.execCommand("copy");
-      ta.remove();
+      copied=true;
     }
-    if(typeof showArchiveToast==="function")showArchiveToast(`Copied ${value}`);
   }catch(err){
-    console.error("Copy chassis failed",err);
-    alert("Copy failed. Browser clipboard access may be blocked.");
+    copied=false;
+  }
+
+  if(!copied){
+    const ta=document.createElement("textarea");
+    ta.value=value;
+    ta.setAttribute("readonly","");
+    ta.style.position="fixed";
+    ta.style.top="-1000px";
+    ta.style.left="-1000px";
+    ta.style.opacity="0";
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try{
+      copied=document.execCommand("copy");
+    }catch(err){
+      copied=false;
+    }
+    ta.remove();
+  }
+
+  if(typeof showArchiveToast==="function")showArchiveToast(copied?`Copied ${value}`:`Copy ready: ${value}`);
+  if(!copied){
+    console.warn("Clipboard copy may have been blocked by the browser.");
   }
 }
-
 function renderTable(rows,total){
   $("showing").textContent=`Showing ${rows.length} of ${total} chassis`;
   $("empty").style.display=rows.length?"none":"block";
   $("tbody").innerHTML=rows.map(r=>`<tr><td>${r.id}</td><td>
   <div class="chassis-cell-wrap">
-    <button type="button" class="copy-one-chassis-btn" data-copy-one="${r.id}" title="Copy chassis">⧉</button>
+    <button type="button" class="copy-one-chassis-btn" data-copy-one="${r.id}" data-copy-value="${String(r.chassis||'').replace(/"/g,'&quot;')}" title="Copy chassis">⧉</button>
     <button type="button" class="chassis-note-btn" data-note-open="${r.id}"><span class="chassis"><span class="chassis-id-text">${r.chassis}</span><span class="kind">${r.kind}${rowHasNote(r)?'<span class="note-badge">N</span>':''}</span></span></button>
   </div>
 </td><td><span class="chip ${r.yardChecked?"yes":"no"}">${r.yardChecked?"⊙ Yes":"No"}</span></td><td><span class="event-age-combo"><strong>${r.daysOld}d</strong><span class="chip ${r.bucket.key}">${r.bucket.label}</span></span></td><td><span class="loc ${locClass(r.location)}">⌾ ${r.location}</span></td><td>◷ ${formatDateShort(r.eventDate)}</td><td><span class="hc-chip ${String(r.hc||"").trim()&&String(r.hc||"").trim()!=="—"?"populated":""}">${r.hc||"—"}</span></td><td><span class="event-type">${r.event}</span></td><td><span class="review ${r.issue.cls}">${r.issue.label}</span></td><td><span class="pool">${r.pool}</span></td><td class="ce-cell ${ceSelectedIds.has(String(r.id))?'selected':''}" data-ce-cell="${r.id}"><button type="button" class="ce-flag ${r.ce?'active':''} ${ceSelectedIds.has(String(r.id))?'selected':''}" data-ce-toggle="${r.id}">${r.ce?'CE':'—'}</button></td></tr>`).join("");
 
-  document.querySelectorAll("[data-copy-one]").forEach(btn=>{btn.onclick=(event)=>{event.preventDefault();event.stopPropagation();copySingleChassis(btn.dataset.copyOne)}});
+  document.querySelectorAll("[data-copy-one]").forEach(btn=>{
+    const runCopy=(event)=>{
+      event.preventDefault();
+      event.stopPropagation();
+      copySingleChassis(btn.dataset.copyOne,btn.dataset.copyValue);
+    };
+    btn.onclick=runCopy;
+    btn.onpointerup=runCopy;
+    btn.ontouchend=runCopy;
+  });
 
   document.querySelectorAll("[data-note-open]").forEach(btn=>{btn.onclick=()=>openNoteModal(btn.dataset.noteOpen)});
 
@@ -3531,7 +3564,14 @@ function showArchiveToast(message){
 function getArchiveList(){try{return JSON.parse(localStorage.getItem("chassisReconciliationArchiveList")||"[]")||[]}catch{return[]}}
 function saveArchiveList(list){localStorage.setItem("chassisReconciliationArchiveList",JSON.stringify(list));cloudUpsert(CLOUD_KEYS.archives,list).then(()=>setCloudStatus("Cloud: saved","ok")).catch(err=>{console.error(err);setCloudStatus("Cloud: save failed","err")})}
 function makeArchiveId(){return "archive_"+Date.now()+"_"+Math.random().toString(16).slice(2)}
-function makeArchiveName(){const d=new Date();return `Chassis Archive ${String(d.getMonth()+1).padStart(2,"0")}/${String(d.getDate()).padStart(2,"0")}/${d.getFullYear()} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`}
+function makeArchiveName(){
+  const d=new Date();
+  const mm=String(d.getMonth()+1).padStart(2,"0");
+  const dd=String(d.getDate()).padStart(2,"0");
+  const hh=String(d.getHours()).padStart(2,"0");
+  const min=String(d.getMinutes()).padStart(2,"0");
+  return `Chassis Archive ${mm}/${dd} ${hh}:${min}`;
+}
 function makeSnapshot(){
   const e=enrich();
   return {id:makeArchiveId(),name:makeArchiveName(),savedAt:new Date().toISOString(),reportDate:getReportBaseDate().toISOString(),yardChecked:$("yardSelect")?.value||"",tableRows,query,filter,sortConfig,showBanner,importedFileArchives,counts:{onHand:e.length,yardChecked:e.filter(r=>r.yardChecked).length,eventToday:e.filter(r=>r.bucket.key==="today").length,missingToday:e.filter(r=>r.bucket.key!=="today").length,flaggedDelete:e.filter(r=>r.bucket.key==="tenPlus").length}};
