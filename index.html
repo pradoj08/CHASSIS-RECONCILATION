@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="app-booting">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,6 +8,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 <style>
+html.app-booting body{visibility:hidden}
 :root {
   --bg:#040916; --panel:#0b1326; --panel2:#111a2e; --line:#22304a; --text:#f8fafc; --muted:#8fa3c4;
   --gold:#fbbf24; --green:#34d399; --blue:#60a5fa; --red:#fb7185; --orange:#fb923c; --purple:#a855f7;
@@ -4738,7 +4739,7 @@ body.forecast-view .forecast-bottom-controls {
 }
 
 
-/* Forecast controls final layout: slicer left, compact 3x2 action bank on the right */
+/* Forecast controls final layout: slicer left, compact 5x2 action bank on the right */
 #forecastModal .forecast-controls{
   grid-template-columns:minmax(190px,220px) minmax(360px,1fr) minmax(430px,520px) !important;
   align-items:stretch !important;
@@ -4750,7 +4751,7 @@ body.forecast-view .forecast-bottom-controls {
 .forecast-primary-actions {
   grid-column:auto !important;
   display:grid !important;
-  grid-template-columns:repeat(3, minmax(120px,1fr)) !important;
+  grid-template-columns:repeat(5, minmax(92px,1fr)) !important;
   grid-template-rows:repeat(2, 32px) !important;
   gap:7px !important;
   width:100% !important;
@@ -4772,17 +4773,23 @@ body.forecast-view .forecast-bottom-controls {
   font-size:10px !important;
   line-height:1 !important;
 }
-#forecastInventoryImportBtn {
+#forecastInventoryImportBtn,
+#forecastMismatchImportBtn,
+#forecastAuthorizedImportBtn {
   background:rgba(16,185,129,.22) !important;
   border-color:rgba(52,211,153,.48) !important;
   color:#d1fae5 !important;
   box-shadow:0 8px 18px rgba(16,185,129,.12) !important;
 }
-#forecastInventoryImportBtn:hover {
+#forecastInventoryImportBtn:hover,
+#forecastMismatchImportBtn:hover,
+#forecastAuthorizedImportBtn:hover {
   border-color:rgba(167,243,208,.72) !important;
   filter:brightness(1.08);
 }
-#forecastInventoryClearBtn {
+#forecastInventoryClearBtn,
+#forecastMismatchClearBtn,
+#forecastAuthorizedClearBtn {
   background:rgba(225,29,72,.16) !important;
   border-color:rgba(251,113,133,.38) !important;
   color:#ffe4e6 !important;
@@ -4793,7 +4800,7 @@ body.forecast-view .forecast-bottom-controls {
   }
   #forecastModal .forecast-primary-actions,
   .forecast-primary-actions{
-    grid-template-columns:repeat(3,minmax(110px,1fr)) !important;
+    grid-template-columns:repeat(5,minmax(92px,1fr)) !important;
   }
 }
 @media(max-width:680px){
@@ -5520,9 +5527,9 @@ body.forecast-view .forecast-bottom-controls {
 
   <div id="scaledArea" class="scaled">
     <section class="metrics">
-      <div class="metric"><div class="icon">🛻</div><div class="label">On Hand</div><div id="mOnHand" class="value">0</div><div class="hint">Reported on hand</div></div>
-      <div class="metric cyan"><div class="icon">🗓️</div><div class="label">Event Today</div><div id="mToday" class="value">0/0</div><div class="hint">Event recorded today vs reported on hand</div></div>
-      <div class="metric green"><div class="icon">🛡️</div><div class="label">Yard Checked</div><div id="mYard" class="value">0</div><div class="hint">YCCO / TCCO</div></div>
+      <div class="metric"><div class="icon">🔍</div><div class="label">On Hand</div><div id="mOnHand" class="value">0</div><div class="hint">Reported on hand</div></div>
+      <div class="metric cyan"><div class="icon">🗓️</div><div class="label">Event Today</div><div id="mToday" class="value">0/0</div><div class="hint">Event recorded today vs on hand</div></div>
+      <div class="metric green"><div class="icon">🛡️</div><div class="label yard-checked-today-label">Yard Checked Today</div><div id="mYard" class="value">0</div><div class="hint">Yard Checked By Gate/Ops</div></div>
       <button type="button" id="missingEventTodayCard" class="metric amber missing-event-metric missing-event-click-card"><div class="icon">🕘</div><div class="label">Missing Event Today</div><div id="mMissing" class="value">0</div><div id="mMissingBreakdown" class="missing-metric-breakdown"></div></button>
     </section>
 
@@ -5828,7 +5835,9 @@ body.forecast-view .forecast-bottom-controls {
     <div class="forecast-head">
       <div class="forecast-head-actions">
         <button id="forecastToolsToggleBtn" type="button" class="forecast-tools-toggle-btn" aria-expanded="true">Hide Tools</button>
+        <button id="forecastDifferenceToggleBtn" type="button" class="forecast-tools-toggle-btn forecast-difference-top-toggle">Hide +/-</button>
         <button id="closeForecastModal" class="forecast-close" type="button">Back to Chassis Reconciliation</button>
+        <button id="openForecastExcelViewBtn" class="forecast-close forecast-excel-open-btn" type="button">Excel View</button>
       </div>
     </div>
     <div class="forecast-controls">
@@ -5848,14 +5857,20 @@ body.forecast-view .forecast-bottom-controls {
       
 
       <div class="forecast-import-actions forecast-primary-actions">
-        <button id="forecastImportBtn" type="button">Import Inbound List</button>
+        <button id="forecastImportBtn" type="button">Import Inbound</button>
         <button id="forecastTracklistImportBtn" type="button">Import Tracklist</button>
-        <button id="forecastInventoryImportBtn" type="button">Import Chassis Inventory</button>
-        <button id="forecastClearImportBtn" type="button">Clear Imported Chassis</button>
-        <button id="forecastInventoryClearBtn" type="button">Clear Inventory</button>
+        <button id="forecastInventoryImportBtn" type="button">Import Chassis</button>
+        <button id="forecastMismatchImportBtn" type="button">Import Mismatch</button>
+        <button id="forecastAuthorizedImportBtn" type="button">Import Authorized</button>
         <button id="forecastClearBtn" type="button">Clear Forecast</button>
+        <button id="forecastInventoryClearBtn" type="button">Clear Inventory</button>
+        <button id="forecastClearImportBtn" type="button">Clear Chassis</button>
+        <button id="forecastMismatchClearBtn" type="button">Clear Mismatch</button>
+        <button id="forecastAuthorizedClearBtn" type="button">Clear Authorized</button>
         <input id="forecastFileInput" type="file" accept=".csv,.xlsx,.xls" multiple hidden>
         <input id="forecastInventoryFileInput" type="file" accept=".csv,.xlsx,.xls" multiple hidden>
+        <input id="forecastMismatchFileInput" type="file" accept=".csv,.xlsx,.xls" multiple hidden>
+        <input id="forecastAuthorizedFileInput" type="file" accept=".csv,.xlsx,.xls" multiple hidden>
       </div>
     </div>
 
@@ -5919,21 +5934,19 @@ body.forecast-view .forecast-bottom-controls {
     </div>
 
 <div class="forecast-import-card forecast-status-card-section">
-      <div class="forecast-table-head">
-        <div>
-          <h3>Train Status Cards</h3>
-        </div>
-      </div>
       <div id="forecastStatusCards" class="forecast-status-cards"></div>
     </div>
 
-<div class="forecast-import-card forecast-train-summary-card">
+<div id="forecastTrainSummaryCard" class="forecast-import-card forecast-train-summary-card collapsed">
       <div class="forecast-table-head">
         <div>
           <h3>Train Arrival Summary</h3>
           <p>Sorted by earliest ETA. Units with no train are grouped together under the editable No Train Group Name.</p>
         </div>
-        <div id="forecastTrainSummaryPill" class="forecast-import-summary">No imported units yet.</div>
+        <div class="forecast-train-summary-head-actions">
+          <div id="forecastTrainSummaryPill" class="forecast-import-summary">No imported units yet.</div>
+          <button id="forecastTrainSummaryToggle" type="button">Show</button>
+        </div>
       </div>
       <div class="forecast-table-wrap">
         <table class="forecast-table forecast-summary-table">
@@ -6050,6 +6063,50 @@ body.forecast-view .forecast-bottom-controls {
       </div>
     </div>
 
+    <div id="forecastMismatchPreviewModal" class="forecast-mismatch-preview-modal" aria-hidden="true">
+      <div class="forecast-mismatch-preview-card">
+        <div class="forecast-mismatch-preview-head">
+          <div>
+            <h3>Review Equipment</h3>
+          </div>
+        </div>
+        <div class="forecast-mismatch-preview-counts">
+          <div class="mismatch-count-card"><span class="preview-metric-icon">⚠</span><div><span>Mismatches</span><small>Conflicting pools</small></div><strong id="forecastMismatchPreviewMismatchCount">0</strong></div>
+          <div class="nomate-count-card"><span class="preview-metric-icon">i</span><div><span>No Mates</span><small>No chassis paired</small></div><strong id="forecastMismatchPreviewNoMateCount">0</strong></div>
+          <div class="stacked-count-card"><span class="preview-metric-icon">▱</span><div><span>Stacked</span><small>Stack locations</small></div><strong id="forecastMismatchPreviewStackedCount">0</strong></div>
+          <div class="paid-count-card"><span class="preview-metric-icon">✓</span><div><span>Paid</span><small>Authorized matches</small></div><strong id="forecastMismatchPreviewPaidCount">0</strong></div>
+        </div>
+        <div id="forecastMismatchPreviewSections" class="forecast-mismatch-preview-sections"></div>
+        <div class="forecast-mismatch-preview-actions">
+          <button id="forecastMismatchPreviewCancelBtn" type="button">Cancel</button>
+          <button id="forecastMismatchPreviewConfirmBtn" type="button">Import Stacked &amp; Mismatches</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="forecastAuthorizedPreviewModal" class="forecast-authorized-preview-modal" aria-hidden="true">
+      <div class="forecast-authorized-preview-card">
+        <div class="forecast-authorized-preview-head">
+          <div>
+            <span>Authorized Import Preview</span>
+            <h3>Review Paid Equipment</h3>
+            <p id="forecastAuthorizedPreviewSummary">No authorized report selected.</p>
+          </div>
+          <button id="forecastAuthorizedPreviewCloseBtn" type="button">Cancel</button>
+        </div>
+        <div class="forecast-authorized-preview-table-wrap">
+          <table>
+            <thead><tr><th>Equipment ID</th><th>Chassis Pool</th><th>Matched Chassis</th><th>Direction</th><th>Length</th><th>Authorized</th><th>Expires</th></tr></thead>
+            <tbody id="forecastAuthorizedPreviewRows"></tbody>
+          </table>
+        </div>
+        <div class="forecast-authorized-preview-actions">
+          <button id="forecastAuthorizedPreviewCancelBtn" type="button">Cancel</button>
+          <button id="forecastAuthorizedPreviewConfirmBtn" type="button">Import Authorized</button>
+        </div>
+      </div>
+    </div>
+
     <div class="forecast-import-data-hidden" aria-hidden="true" style="display:none">
       <div id="forecastImportSummary" class="forecast-import-summary">No imported units yet.</div>
       <table><tbody id="forecastImportRows"></tbody></table>
@@ -6113,6 +6170,16 @@ body.forecast-view .forecast-bottom-controls {
         <input id="textSizeSlider" type="range" min="90" max="115" step="5" value="100">
       </div>
     </section>
+  </div>
+</section>
+
+<section id="forecastExcelView" class="forecast-excel-view" aria-hidden="true">
+  <div class="forecast-excel-page">
+    <div class="forecast-excel-toolbar">
+      <h2>Chassis Forecast (72H)</h2>
+      <button id="closeForecastExcelViewBtn" type="button">Back to Chassis Forecast</button>
+    </div>
+    <div id="forecastExcelContent" class="forecast-excel-content"></div>
   </div>
 </section>
 
@@ -6180,7 +6247,7 @@ body.forecast-view .forecast-bottom-controls {
 </main>
 <script>
 const REPORT_TODAY = new Date("2026-05-26T00:00:00");
-const YARD_OPTIONS = ["TGRP 40/45","DCLI 40/45","TGRP & DCLP 20","FLEXI 40/20","SCNZ 53/SNBZ 40","DCLI/UP 53"];
+const YARD_OPTIONS = ["[M] TGRP 40/45","[T] DCLI 40/45","[W] TGRP & DCLP 20","[TH] FLEXI 40/20","[F] SCNZ 53/SNBZ 40","[S] DCLI/UP 53"];
 const INITIAL_ROWS = [[1, "DCNZ 408123", "DIRT - DIRT", "DCLP", "05/26/2026 14:52:56", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [2, "MSCZ 250233", "DIRT - DIRT", "DCLP", "05/25/2026 10:38:03", "PKUP(Parking Update)", "Q40", "Current(Park - UP Storage)"], [3, "DCNZ 606582", "DIRT - DIRT", "DCLP", "05/26/2026 14:18:03", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [4, "DECZ 405057", "DIRT - DIRT", "DCLP", "05/26/2026 14:26:57", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [5, "DCLZ 710906", "D - D - 31", "DCLP", "05/26/2026 07:15:29", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [6, "APMZ 418007", "L - L - 47", "DCLP", "05/26/2026 10:25:13", "PKUP(Parking Update)", "Q40", "Current(Park - UP Storage)"], [7, "DCLZ 404907", "06801 - 801", "DCLP", "05/25/2026 14:08:49", "PKUP(Parking Update)", "Q40", "Current(Park - UP Storage)"], [8, "MAEC 685232", "R - R - 16", "DCLP", "05/26/2026 15:36:10", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [9, "APMZ 700430", "P - P - 12", "DCLP", "05/26/2026 15:38:54", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [10, "DECZ 403537", "O - O - 19", "DCLP", "05/26/2026 10:27:59", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [11, "DECZ 405061", "I - I - 17", "DCLP", "05/26/2026 08:56:57", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [12, "MSCZ 140062", "06801 - 801", "DCLP", "05/25/2026 13:47:51", "PKUP(Parking Update)", "Q40", "Current(Park - UP Storage)"], [13, "DCNZ 415587", "I - I - 41", "DCLP", "05/26/2026 09:01:30", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [14, "APMZ 406229", "DIRT - DIRT", "DCLP", "05/26/2026 14:39:56", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [15, "APMZ 412267", "M - M - 157", "DCLP", "05/26/2026 05:33:52", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [16, "POCZ 2001", "06802 - 802", "DCLP", "05/13/2026 06:44:05", "BARE(Breaking a Container/Chassis pair)", "Q40", "Current(Park - UP Storage)"], [17, "MSCZ 140374", "N - N - 79", "DCLP", "05/26/2026 15:42:55", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [18, "APMZ 417637", "N - N - 36", "DCLP", "05/26/2026 15:52:09", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [19, "DCLZ 700661", "06802 - 802", "DCLP", "05/05/2026 10:44:55", "MTUP(Match Update)", "Q40", "Current(Park - UP Storage)"], [20, "APMZ 405743", "M - M - 101", "DCLP", "05/26/2026 05:47:46", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [21, "APMZ 400723", "M - M - 7", "DCLP", "05/01/2026 07:22:04", "MTUP(Match Update)", "Q40", "Current(Park - UP Storage)"], [22, "NEDZ 409299", "O - O - 43", "DCLP", "05/26/2026 10:30:39", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [23, "APMZ 410315", "DIRT - DIRT", "DCLP", "05/26/2026 14:54:24", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [24, "PONZ 457834", "I - I - 42", "DCLP", "05/26/2026 09:01:40", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [25, "PONZ 456960", "DIRT - DIRT", "DCLP", "05/26/2026 14:14:13", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [26, "DCLZ 405582", "DIRT - DIRT", "DCLP", "05/26/2026 14:42:44", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [27, "DCLZ 404028", "DIRT - DIRT", "DCLP", "05/26/2026 14:10:26", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [28, "DCLZ 413504", "I - I - 7", "DCLP", "05/26/2026 08:53:39", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [29, "MAEC 710520", "L - L - 15", "DCLP", "05/26/2026 09:56:27", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [30, "APMZ 405404", "M - M - 124", "DCLP", "05/26/2026 05:43:23", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [31, "POCZ 400837", "D - D - 29", "DCLP", "05/26/2026 07:15:41", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [32, "DCLZ 420214", "N - N - 19", "DCLP", "05/26/2026 15:54:56", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [33, "MAEC 666017", "06801 - 801", "DCLP", "05/26/2026 09:31:54", "MOVE(Move)", "Q40", "Current(Park - UP Storage)"], [34, "DCSZ 711698", "N - N - 75", "DCLP", "05/26/2026 15:43:15", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [35, "DCNZ 507068", "I - I - 3", "DCLP", "05/26/2026 08:53:17", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [36, "MAEC 734047", "SHOP - SHOP", "DCLP", "05/25/2026 13:42:12", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [37, "IPPZ 400539", "06801 - 801", "DCLP", "05/24/2026 23:44:01", "BARE(Breaking a Container/Chassis pair)", "Q40", "Current(Park - UP Storage)"], [38, "MAEC 450170", "S - S - 31", "DCLP", "05/26/2026 15:33:15", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [39, "MAEC 623989", "M - M - 100", "DCLP", "05/26/2026 05:47:51", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [40, "MSCZ 423300", "DIRT - DIRT", "DCLP", "05/26/2026 14:49:27", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [41, "APMZ 406431", "DIRT - DIRT", "DCLP", "05/26/2026 14:10:41", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [42, "DCLZ 700401", "N - N - 10", "DCLP", "05/26/2026 15:55:40", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [43, "MAEC 731800", "I - I - 24", "DCLP", "05/21/2026 07:56:15", "INUP(Inventory Update)", "Q40", "Current(Park - UP Storage)"], [44, "DCNZ 405302", "DIRT - DIRT", "DCLP", "05/26/2026 14:15:58", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [45, "DCLZ 406511", "DIRT - DIRT", "DCLP", "05/26/2026 14:16:31", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [46, "MSCZ 423689", "DIRT - DIRT", "DCLP", "05/26/2026 14:35:01", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [47, "APMZ 411438", "BOWL - BOWL", "DCLP", "05/18/2026 14:02:53", "MTUP(Match Update)", "Q40", "Current(Park - UP Storage)"], [48, "MSCZ 451085", "06808 - 808", "DCLP", "05/08/2026 20:13:28", "BARE(Breaking a Container/Chassis pair)", "Q40", "Current(Park - UP Storage)"], [49, "DCNZ 498301", "DIRT - DIRT", "DCLP", "05/26/2026 14:21:10", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [50, "DECZ 403469", "K - K - 10", "DCLP", "05/26/2026 09:29:26", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [51, "APMZ 426111", "M - M - 99", "DCLP", "05/26/2026 05:47:55", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"], [52, "APMZ 701853", "I - I - 28", "DCLP", "05/26/2026 09:00:00", "YCCO(Yard Check)", "Q40", "Current(Park - UP Storage)"]].map(([id,chassis,location,pool,eventDate,event,kind,status])=>({id,chassis,location,pool,eventDate,event,kind,status,hc:"",ce:false,note:""}));
 let tableRows=[...INITIAL_ROWS], query="", filter="all", sortConfig={key:"id",direction:"asc"}, showBanner=true, editingArchiveId=null, clearArmed=false, clearTimer=null, importedFileArchives=[], archiveDeleteArmedId=null, archiveDeleteTimer=null, recycleDeleteArmedId=null, recycleDeleteTimer=null, emptyRecycleArmed=false, emptyRecycleTimer=null, recycleExpanded=false, archiveRenameId=null, archiveGroupExpanded={}, archiveGroupVisibleCounts={}, archiveAdminUnlocked=false, ceSelectedIds=new Set(), ceDragActive=false, ceDragStartId=null, activeNoteRowId=null, noteDeleteArmed=false, noteDeleteTimer=null;
 const filters=[["all","On Hand"],["yardChecked","Yard Checked"],["today","Event Today"],["missingToday","Missing Event Today"],["tenPlus","Flagged for Delete"],["notChecked","Not Yard Checked"],["ceDeleted","CE Deleted"]];
@@ -6431,6 +6498,12 @@ function ageBucket(r){
   return{key:"tenPlus",label:"10+ Days"};
 }
 function isYardChecked(r){const e=String(r.event||"").toLowerCase();return e.includes("ycco")||e.includes("tcco")||e.includes("yard check")}
+function isYardCheckedOnReportDate(r){
+  if(!isYardChecked(r))return false;
+  const eventDate=dateOnly(parseEventDate(r.eventDate));
+  const reportDate=getReportBaseDate();
+  return eventDate.getTime()===reportDate.getTime();
+}
 function issueTag(r){
   const d=daysOld(r);
   const has=!!(r.event&&r.eventDate);
@@ -6520,7 +6593,7 @@ function renderMetrics(e){
   const today=e.filter(r=>r.bucket.key==="today").length;
   const missing=e.filter(r=>r.bucket.key!=="today");
   if($("mOnHand"))$("mOnHand").textContent=total;
-  if($("mYard"))$("mYard").textContent=e.filter(r=>r.yardChecked).length;
+  if($("mYard"))$("mYard").textContent=e.filter(isYardCheckedOnReportDate).length;
   if($("mToday"))$("mToday").textContent=`${today}/${total}`;
   if($("mMissing"))$("mMissing").textContent=missing.length;
   if($("mDelete"))$("mDelete").textContent=e.filter(r=>r.bucket.key==="tenPlus").length;
@@ -6534,16 +6607,24 @@ function renderMetrics(e){
       return a;
     },{});
     const shortLabel={
-      "Event Recorded / Yesterday":"Yesterday 1d",
-      "Low Warning":"Low 2–4d",
-      "Moderate Warning":"Moderate 5–9d",
-      "Flagged for Delete":"10+ Days",
+      "Event Recorded / Yesterday":"1 DAY",
+      "Low Warning":"2-4 DAYS",
+      "Moderate Warning":"5-9 DAYS",
+      "Flagged for Delete":"10+ DAYS",
       "Not Yard Checked":"Yard"
     };
     const order=["Event Recorded / Yesterday","Low Warning","Moderate Warning","Not Yard Checked","Flagged for Delete"];
     const labels=order.filter(l=>counts[l]);
     breakdown.innerHTML=labels.length
-      ? labels.map(l=>`<div class="missing-metric-pill" title="${l}"><span>${shortLabel[l]||l}</span><strong>${counts[l]}</strong></div>`).join("")
+      ? labels.map(l=>{
+          const colorClass={
+            "Event Recorded / Yesterday":"range-green",
+            "Low Warning":"range-green",
+            "Moderate Warning":"range-yellow",
+            "Flagged for Delete":"range-red"
+          }[l]||"";
+          return `<div class="missing-metric-pill ${colorClass}" title="${l}"><span>${shortLabel[l]||l}</span><strong>${counts[l]}</strong></div>`;
+        }).join("")
       : `<div class="missing-metric-pill clean"><span>Clear</span><strong>0</strong></div>`;
   }
 }
@@ -9125,7 +9206,7 @@ async function copyFilteredChassisList(){
 }
 
 
-let yardCalendarMonth = new Date(REPORT_TODAY.getFullYear(), REPORT_TODAY.getMonth(), 1);
+let yardCalendarMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
 
 function getYardCalendarState(){
   try{
@@ -9151,6 +9232,8 @@ function setYardCheckStatus(key,status){
 function openYardCalendar(){
   const modal=$("yardCalendarModal");
   if(!modal)return;
+  const now=new Date();
+  yardCalendarMonth=new Date(now.getFullYear(),now.getMonth(),1);
   renderYardCalendar();
   modal.classList.add("show");
   modal.setAttribute("aria-hidden","false");
@@ -9407,6 +9490,9 @@ function saveForecastState(){
     noTrainName:$("forecastNoTrainName")?.value||"No Train Listed",
     rows:forecastRows,
     importedUnits:forecastImportedUnits,
+    stackedUnits:forecastStackedUnits,
+    mismatchUnits:forecastMismatchUnits,
+    authorizedRows:forecastAuthorizedRows,
     inventoryRows:forecastInventoryRows,
     chassisRequests:forecastChassisRequests,
     selectedDays:[...forecastSelectedDays],
@@ -9421,6 +9507,9 @@ function loadForecastState(){
   const state=getForecastState();
   forecastRows=Array.isArray(state.rows)?state.rows:[];
   forecastImportedUnits=Array.isArray(state.importedUnits)?state.importedUnits:[];
+  forecastStackedUnits=Array.isArray(state.stackedUnits)?state.stackedUnits:[];
+  forecastMismatchUnits=Array.isArray(state.mismatchUnits)?state.mismatchUnits:[];
+  forecastAuthorizedRows=Array.isArray(state.authorizedRows)?state.authorizedRows:[];
   forecastInventoryRows=Array.isArray(state.inventoryRows)?state.inventoryRows:[];
   forecastChassisRequests=(state.chassisRequests && typeof state.chassisRequests==="object") ? state.chassisRequests : {};
   reapplyForecastPoolBankToImportedUnits();
@@ -9442,9 +9531,9 @@ function setForceSaveButtonPresentation(temporaryText=""){
     return;
   }
   btn.innerHTML=isForecast
-    ? `<span class="force-save-split-half force-save-split-top" data-force-action="save"><span class="hero-action-icon">💾</span><span class="hero-action-label">Save to Archive</span></span><span class="force-save-split-half force-save-split-bottom" data-force-action="open"><span class="hero-action-label">Open Archive</span></span>`
-    : `<span class="hero-action-icon">💾</span><span class="hero-action-label">Force Save</span>`;
-  btn.title=isForecast ? "Save the Chassis Forecast to archive/cloud state" : "Force save reconciliation state to cloud";
+    ? `<span class="force-save-split-half force-save-split-top" data-force-action="save"><span class="hero-action-icon">💾</span><span class="hero-action-label">Save Archive</span></span><span class="force-save-split-half force-save-split-bottom" data-force-action="print"><span class="hero-action-icon">🖨️</span><span class="hero-action-label">Print</span></span>`
+    : `<span class="force-save-split-half force-save-split-top" data-force-action="save"><span class="hero-action-icon">💾</span><span class="hero-action-label">Force Save</span></span><span class="force-save-split-half force-save-split-bottom" data-force-action="print"><span class="hero-action-icon">🖨️</span><span class="hero-action-label">Print</span></span>`;
+  btn.title=isForecast ? "Save the Chassis Forecast to archive/cloud state" : "Force save reconciliation state or print";
 }
 
 function openForecastArchiveFromTopButton(){
@@ -9469,8 +9558,8 @@ async function handleTopForceSaveClick(e){
   }
   if(document.body.classList.contains("forecast-view")){
     const action=e?.target?.closest?.("[data-force-action]")?.dataset?.forceAction || "save";
-    if(action==="open"){
-      openForecastArchiveFromTopButton();
+    if(action==="print"){
+      document.body.classList.toggle("forecast-print-clean-view");
       return;
     }
     let savedArchive=null;
@@ -9478,6 +9567,11 @@ async function handleTopForceSaveClick(e){
     await saveAllCloudState();
     if(typeof showArchiveToast==="function")showArchiveToast(savedArchive?`Chassis Forecast archive saved: ${savedArchive.name}`:"Chassis Forecast saved.");
     setForceSaveButtonPresentation();
+    return;
+  }
+  const action=e?.target?.closest?.("[data-force-action]")?.dataset?.forceAction || "save";
+  if(action==="print"){
+    document.body.classList.toggle("print-clean-view");
     return;
   }
   await saveAllCloudState();
@@ -9526,6 +9620,184 @@ function openForecastModal(){
 }
 function closeForecastModal(){
   setAppPage("reconciliation");
+}
+
+function forecastExcelPoolColumn(pool){
+  const p=String(pool||"").toUpperCase();
+  if(p==="TGRP")return "TRAC";
+  if(p==="FGCP")return "FGCP";
+  if(p==="SNCZ"||p==="SNBZ")return "SNCZ";
+  if(p==="DCLI"||p==="DCLP")return "DCLI";
+  return "";
+}
+function forecastExcelDateKey(date){
+  return date instanceof Date&&!Number.isNaN(date.getTime())
+    ? `${date.getFullYear()}-${String(date.getMonth()+1).padStart(2,"0")}-${String(date.getDate()).padStart(2,"0")}`
+    : "";
+}
+function forecastExcelUnitDate(unit){
+  return forecastDateFromEtaDay(getForecastUnitDay(unit));
+}
+function getForecastExcelWindowUnits(days){
+  const today=new Date();
+  const allowed=new Set(Array.from({length:days},(_,offset)=>{
+    const d=new Date(today.getFullYear(),today.getMonth(),today.getDate()+offset);
+    return forecastExcelDateKey(d);
+  }));
+  return getVisibleForecastUnits().filter(unit=>allowed.has(forecastExcelDateKey(forecastExcelUnitDate(unit))));
+}
+function getForecastExcelArrivalLabel(day){
+  const arrival=forecastDateFromEtaDay(day);
+  if(!arrival)return "";
+  const now=new Date();
+  const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+  const arrivalDay=new Date(arrival.getFullYear(),arrival.getMonth(),arrival.getDate());
+  const offset=Math.round((arrivalDay-today)/86400000);
+  return offset===0?"Today":offset===1?"Tomorrow":offset===2?"2 Days Out":"";
+}
+function getForecastExcelArrivalClass(label){
+  return label==="Today"?"arrival-today":label==="Tomorrow"?"arrival-tomorrow":label==="2 Days Out"?"arrival-two-days":"";
+}
+function buildForecastExcelTrainRows(units){
+  const sizes=["53","45","40","20"];
+  const groupMap=new Map();
+  units.forEach(unit=>{
+    const train=getForecastTrainGroupName(unit);
+    const day=getForecastUnitDay(unit);
+    const key=`${train}|${day}`;
+    if(!groupMap.has(key))groupMap.set(key,{train,day,units:[]});
+    groupMap.get(key).units.push(unit);
+  });
+  const groups=[...groupMap.values()].sort((a,b)=>compareForecastUnitsByArrival(a.units[0],b.units[0]));
+  const rows=groups.flatMap(group=>{
+    return sizes.map((size,index)=>{
+      const counts={TRAC:0,FGCP:0,SNCZ:0,DCLI:0};
+      group.units.forEach(unit=>{
+        const pair=normalizeForecastDemandPoolSizePair(unit);
+        if(!pair||String(pair.size)!==size)return;
+        const col=forecastExcelPoolColumn(pair.pool);
+        if(col)counts[col]+=1;
+      });
+      return {train:index===0?group.train:"",arrivalLabel:index===0?getForecastExcelArrivalLabel(group.day):"",size,counts,total:Object.values(counts).reduce((a,b)=>a+b,0),rowspan:index===0?sizes.length:0};
+    });
+  });
+  ["---","---"].forEach(train=>{
+    sizes.forEach((size,index)=>rows.push({train:index===0?train:"",size,counts:{TRAC:0,FGCP:0,SNCZ:0,DCLI:0},total:0,rowspan:index===0?sizes.length:0,placeholder:true}));
+  });
+  [["STACKED",forecastStackedUnits],["MISMATCH",forecastMismatchUnits]].forEach(([label,sourceUnits])=>{
+    sizes.forEach((size,index)=>{
+      const counts={TRAC:0,FGCP:0,SNCZ:0,DCLI:0};
+      sourceUnits.forEach(unit=>{
+        const pair=normalizeForecastDemandPoolSizePair(unit);
+        if(!pair||String(pair.size)!==size)return;
+        const col=forecastExcelPoolColumn(pair.pool);
+        if(col)counts[col]+=1;
+      });
+      rows.push({train:index===0?label:"",size,counts,total:Object.values(counts).reduce((a,b)=>a+b,0),rowspan:index===0?sizes.length:0});
+    });
+  });
+  return rows;
+}
+function buildForecastExcelCalculatorRows(units){
+  const layout=[
+    ["TGRP",["45","40","20"]],
+    ["FGCP",["45","40","20"]],
+    ["SNCZ",["53","40"]],
+    ["DCLI",["53","45","40","20"]]
+  ];
+  return layout.flatMap(([pool,sizes])=>sizes.map((size,index)=>{
+    const inbound=units.filter(unit=>{
+      const pair=normalizeForecastDemandPoolSizePair(unit);
+      return pair&&forecastExcelPoolColumn(pair.pool)===forecastExcelPoolColumn(pool)&&String(pair.size)===size;
+    }).length;
+    const onHand=getForecastRequestOnHandCount(pool,size);
+    const target=getForecastRequestBoardPair(pool,size);
+    const inventory=buildForecastOnHandChassisSummary();
+    const hit=(inventory.mix||[]).find(g=>String(g.pool).toUpperCase()===target.pool&&String(g.size)===String(target.size));
+    const badOrder=hit?Number(hit.held)||0:0;
+    return {pool:index===0?pool:"",poolCode:pool,size,inbound,onHand,badOrder,total:onHand-(inbound+badOrder),rowspan:index===0?sizes.length:0};
+  }));
+}
+function buildForecastExcelShortageNotes(rows){
+  const byKey=new Map(rows.map(r=>[`${r.poolCode}|${r.size}`,r]));
+  const checks=[
+    ["TGRP","45",3,"TRAC"],["TGRP","40",15,"TRAC"],
+    ["FGCP","45",3,"FLEXI"],["FGCP","40",15,"FLEXI"],
+    ["SNCZ","53",15,"SNCZ"],["SNCZ","40",5,"SNCZ"],
+    ["DCLI","53",15,"DCLI/DCLP"],["DCLI","40",15,"DCLI/DCLP"],["DCLI","20",15,"DCLI/DCLP"]
+  ];
+  return checks.flatMap(([pool,size,limit,label])=>{
+    const row=byKey.get(`${pool}|${size}`);
+    return row&&row.total<limit?[`Running low ${label} ${size}'`]:[];
+  });
+}
+function renderForecastExcelTable(headers,rows,rowRenderer,className=""){
+  const columns=className.includes("forecast-excel-main-table")
+    ? `<colgroup><col style="width:22%"><col style="width:13%"><col style="width:12.75%"><col style="width:12.75%"><col style="width:12.75%"><col style="width:12.75%"><col style="width:14%"></colgroup>`
+    : "";
+  return `<table class="forecast-excel-table ${className}">${columns}<thead><tr>${headers.map(h=>`<th>${h}</th>`).join("")}</tr></thead><tbody>${rows.map(rowRenderer).join("")}</tbody></table>`;
+}
+function renderForecastExcelValue(value){
+  return Number(value)===0?`<span class="forecast-excel-zero">0</span>`:String(value);
+}
+function renderForecastExcelView(){
+  const content=$("forecastExcelContent");
+  if(!content)return;
+  const units72=getForecastExcelWindowUnits(3).sort(compareForecastUnitsByArrival);
+  const units24=getForecastExcelWindowUnits(1).sort(compareForecastUnitsByArrival);
+  const trainRows=buildForecastExcelTrainRows(units72);
+  const calc72Rows=buildForecastExcelCalculatorRows(units72);
+  const calc24Rows=buildForecastExcelCalculatorRows(units24);
+  const totals=["53","45","40","20"].map(size=>{
+    const counts={TRAC:0,FGCP:0,SNCZ:0,DCLI:0};
+    units72.forEach(unit=>{
+      const pair=normalizeForecastDemandPoolSizePair(unit);
+      if(!pair||String(pair.size)!==size)return;
+      const col=forecastExcelPoolColumn(pair.pool);
+      if(col)counts[col]+=1;
+    });
+    return {train:size==="53"?"TOTAL":"",size,counts,total:Object.values(counts).reduce((a,b)=>a+b,0),rowspan:size==="53"?4:0,totalRow:true};
+  });
+  trainRows.push(...totals);
+  const trainTable=renderForecastExcelTable(
+    ["Train ID","Size","TRAC","FGCP","SNCZ","DCLI","TOTAL"],
+    trainRows,
+    r=>`<tr class="${r.totalRow?"excel-total-row":r.placeholder?"excel-placeholder-row":""}">${r.rowspan?`<th rowspan="${r.rowspan}" class="excel-train-name">${escapeHtml(r.train)}${r.arrivalLabel?`<small class="${getForecastExcelArrivalClass(r.arrivalLabel)}">${escapeHtml(r.arrivalLabel)}</small>`:""}</th>`:""}<th>${r.size}</th>${["TRAC","FGCP","SNCZ","DCLI"].map(k=>{const value=r.counts[k]||0;return `<td class="${!r.totalRow&&value>50?"excel-over-50":""}">${renderForecastExcelValue(value)}</td>`}).join("")}<th>${renderForecastExcelValue(r.total)}</th></tr>`,
+    "forecast-excel-main-table"
+  );
+  const calcTable=(title,rows,cls)=>`<section class="forecast-excel-block ${cls}"><h3>${title}</h3>${renderForecastExcelTable(
+    ["Pool","Size","Inbound","On Hand","Bad Order","Total"],
+    rows,
+    r=>`<tr class="calculator-pool-${r.poolCode.toLowerCase()}">${r.rowspan?`<th rowspan="${r.rowspan}">${r.pool}</th>`:""}<th>${r.size}'</th><td>${renderForecastExcelValue(r.inbound)}</td><td>${renderForecastExcelValue(r.onHand)}</td><td>${renderForecastExcelValue(r.badOrder)}</td><th class="${r.total<0?"forecast-excel-negative":""}">${renderForecastExcelValue(r.total)}</th></tr>`
+  )}</section>`;
+  const requestOrder=["TGRP","FGCP","SNCZ","DCLI"];
+  const requestGroups=[...FORECAST_CHASSIS_REQUEST_LAYOUT].sort((a,b)=>requestOrder.indexOf(a.pool)-requestOrder.indexOf(b.pool));
+  const requestRows=requestGroups.flatMap(group=>group.sizes.map((size,index)=>({
+    pool:index===0?group.pool:"",rowspan:index===0?group.sizes.length:0,size,
+    poolCode:group.pool,
+    baseTotal:(calc72Rows.find(row=>row.poolCode===group.pool&&String(row.size)===String(size).replace(/'+$/,""))?.total)||0,
+    drayIn:Number(getForecastChassisRequestValue(group.pool,size,"drayIn"))||0,
+    drayOut:Number(getForecastChassisRequestValue(group.pool,size,"drayOut"))||0,
+    get net(){return this.baseTotal+this.drayIn-this.drayOut}
+  })));
+  const requestTable=`<section class="forecast-excel-block request"><h3>Chassis Request</h3>${renderForecastExcelTable(
+    ["Pool","Size","Dray In","Dray Out","Net"],requestRows,
+    r=>`<tr class="request-pool-${r.poolCode.toLowerCase()}">${r.rowspan?`<th rowspan="${r.rowspan}">${r.pool}</th>`:""}<th>${String(r.size).replace(/'+$/,"")}'</th><td>${renderForecastExcelValue(r.drayIn)}</td><td>${renderForecastExcelValue(r.drayOut)}</td><th>${renderForecastExcelValue(r.net)}</th></tr>`
+  )}</section>`;
+  const todayNotes=buildForecastExcelShortageNotes(calc24Rows);
+  const futureNotes=buildForecastExcelShortageNotes(calc72Rows);
+  const notes=`<section class="forecast-excel-notes"><h3>Notes</h3><div><strong>Today</strong><span>${todayNotes.length?todayNotes.map(escapeHtml).join("<br>"):"No Shortages"}</span><strong>Next Few Days</strong><span>${futureNotes.length?futureNotes.map(escapeHtml).join("<br>"):"No Shortages"}</span></div></section>`;
+  content.innerHTML=`<div class="forecast-excel-columns"><div class="forecast-excel-left"><h1>Chassis Forecast (24H and 72H Window)</h1>${trainTable}</div><div class="forecast-excel-right">${calcTable("Chassis Calculator (72H)",calc72Rows,"hours48")}${calcTable("Chassis Calculator (24H)",calc24Rows,"hours24")}${requestTable}</div></div>${notes}`;
+}
+function openForecastExcelView(){
+  renderForecastExcelView();
+  document.body.classList.add("forecast-excel-view-open");
+  $("forecastExcelView")?.setAttribute("aria-hidden","false");
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+function closeForecastExcelView(){
+  document.body.classList.remove("forecast-excel-view-open");
+  $("forecastExcelView")?.setAttribute("aria-hidden","true");
 }
 
 
@@ -9607,6 +9879,9 @@ function clearForecast(){
   if($("forecastNoTrainName"))$("forecastNoTrainName").value="No Train Listed";
   localStorage.removeItem("chassisForecastReport");
   forecastImportedUnits=[];
+  forecastStackedUnits=[];
+  forecastMismatchUnits=[];
+  forecastAuthorizedRows=[];
   forecastInventoryRows=[];
   forecastSelectedDays=new Set();
   forecastHiddenTrainDays=new Set();
@@ -9650,6 +9925,11 @@ const FORECAST_CONSIGNEE_POOL_BANK = {
 };
 
 let forecastImportedUnits=[];
+let forecastStackedUnits=[];
+let forecastMismatchUnits=[];
+let forecastAuthorizedRows=[];
+let forecastPendingMismatchPreview=null;
+let forecastPendingAuthorizedPreview=null;
 let forecastInventoryRows=[];
 let forecastSelectedDays=new Set();
 let forecastHiddenTrainDays=new Set();
@@ -9902,6 +10182,347 @@ async function importForecastFiles(files){
   saveForecastState();
   renderForecastImportedUnits();
   if(typeof showArchiveToast==="function")showArchiveToast(`${incoming.length} forecast units imported.`);
+}
+async function importForecastMismatchFiles(files){
+  const stacked=[];
+  const mismatched=[];
+  const noMates=[];
+  const excluded=[];
+  let unsupported=0;
+  let matching=0;
+  const normalizeMismatchPool=raw=>{
+    const pool=String(raw||"").trim().toUpperCase().replace(/[^A-Z0-9]/g,"");
+    if(pool==="TGRP" || pool==="TRGP")return "TGRP";
+    if(pool==="FGCP")return "FGCP";
+    if(pool==="SNCZ" || pool==="SNBZ")return "SNCZ";
+    if(pool==="DCLI" || pool==="DCLP")return "DCLI";
+    return "";
+  };
+  for(const file of Array.from(files||[])){
+    const data=await file.arrayBuffer();
+    const wb=XLSX.read(data,{type:"array"});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const rows=XLSX.utils.sheet_to_json(ws,{defval:""});
+    rows.forEach(row=>{
+      const containerId=String(getForecastCell(row,["Container ID","Van/Container ID"])).trim();
+      const chassisId=String(getForecastCell(row,["Chassis ID","Chassis"])).trim();
+      const rawEquipmentPool=getForecastCell(row,["Eqmt Pool ID","Equipment Pool ID","Eqmt Pool"]);
+      const rawChassisPool=getForecastCell(row,["Chassis Pool ID","Chassis Pool"]);
+      const location=String(getForecastCell(row,["Location"])).trim();
+      const carType=String(getForecastCell(row,["Car Kind","Car Type","CarType"])).trim();
+      if(!containerId && !chassisId && !String(rawEquipmentPool).trim() && !String(rawChassisPool).trim() && !location && !carType)return;
+      const isStacked=location.toUpperCase().includes("STACK");
+      if(!chassisId && !isStacked){
+        noMates.push({
+          sourceFile:file.name,
+          unitId:containerId,
+          chassisId:"",
+          carType,
+          consignee:String(getForecastCell(row,["Consignee"])).trim()||"BLANK",
+          pool:normalizeMismatchPool(rawEquipmentPool)||String(rawEquipmentPool||"").trim().toUpperCase()||"UNKNOWN",
+          chassisPool:"",
+          location,
+          size:inferForecastSizeFromCarType(carType),
+          status:"No Mate"
+        });
+        return;
+      }
+      const equipmentPool=normalizeMismatchPool(rawEquipmentPool);
+      if(!equipmentPool){
+        unsupported+=1;
+        excluded.push({unitId:containerId,chassisId,carType,pool:String(rawEquipmentPool||"").trim().toUpperCase()||"UNKNOWN",chassisPool:String(rawChassisPool||"").trim().toUpperCase()||"UNKNOWN",location,size:inferForecastSizeFromCarType(carType),reason:"Unsupported equipment pool",sourceFile:file.name});
+        return;
+      }
+      const chassisPool=normalizeMismatchPool(rawChassisPool);
+      const size=inferForecastSizeFromCarType(carType);
+      if(size==="Needs Rule"){
+        unsupported+=1;
+        excluded.push({unitId:containerId,chassisId,carType,pool:equipmentPool,chassisPool:chassisPool||String(rawChassisPool||"").trim().toUpperCase()||"UNKNOWN",location,size,reason:"Unknown chassis size",sourceFile:file.name});
+        return;
+      }
+      const unit={
+        sourceFile:file.name,
+        trainId:"",
+        carType,
+        unitId:containerId,
+        chassisId,
+        consignee:String(getForecastCell(row,["Consignee"])).trim()||"BLANK",
+        pool:equipmentPool,
+        chassisPool,
+        location,
+        size,
+        status:"Imported mismatch report"
+      };
+      if(isStacked){
+        stacked.push({...unit,trainId:"STACKED",status:"Stacked"});
+      }else if(!chassisPool){
+        unsupported+=1;
+        excluded.push({...unit,chassisPool:String(rawChassisPool||"").trim().toUpperCase()||"UNKNOWN",reason:"Unsupported chassis pool"});
+      }else if(chassisPool && chassisPool!==equipmentPool){
+        mismatched.push({...unit,trainId:"MISMATCH",status:"Mismatched"});
+      }else{
+        matching+=1;
+        excluded.push({...unit,reason:"Equipment and chassis pools match"});
+      }
+    });
+  }
+  forecastPendingMismatchPreview={stacked,mismatched,noMates,excluded,unsupported,matching};
+  renderForecastMismatchPreview();
+  openForecastMismatchPreview();
+}
+function renderForecastMismatchPreview(){
+  const preview=forecastPendingMismatchPreview;
+  if(!preview)return;
+  const mismatchCount=$("forecastMismatchPreviewMismatchCount");
+  const stackedCount=$("forecastMismatchPreviewStackedCount");
+  const noMateCount=$("forecastMismatchPreviewNoMateCount");
+  const paidCount=$("forecastMismatchPreviewPaidCount");
+  if(mismatchCount)mismatchCount.textContent=preview.mismatched.length;
+  if(stackedCount)stackedCount.textContent=preview.stacked.length;
+  if(noMateCount)noMateCount.textContent=preview.noMates.length;
+  if(paidCount){
+    const paidKeys=new Set([...preview.mismatched,...preview.noMates,...preview.excluded].filter(row=>isForecastEquipmentPaid(row.unitId)).map(row=>normalizeForecastEquipmentId(row.unitId)));
+    paidCount.textContent=paidKeys.size;
+  }
+  const summary=$("forecastMismatchPreviewSummary");
+  if(summary)summary.textContent=`${preview.excluded.length} excluded records are listed below. No Mates are preview-only.`;
+  const sections=$("forecastMismatchPreviewSections");
+  if(!sections)return;
+  const equipmentCell=(row,allowPaid=true)=>{
+    const paid=allowPaid&&isForecastEquipmentPaid(row.unitId);
+    return paid
+      ? `<span class="forecast-paid-cell"><span class="forecast-paid-equipment-id">${escapeHtml(row.unitId||"—")}</span><span class="forecast-paid-flag">PAID</span></span>`
+      : escapeHtml(row.unitId||"—");
+  };
+  const table=(title,rows,type)=>{
+    const meta={
+      mismatch:{icon:`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5"/><path d="M12 17.5h.01"/></svg>`,subtitle:"Conflicting or unmatchable details.",action:"View details"},
+      "no-mate":{icon:`<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 10v6"/><path d="M12 7h.01"/></svg>`,subtitle:"No matching equipment found in the target pool. These records are not imported.",action:"Export list"},
+      stacked:{icon:`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 16 9 5 9-5"/></svg>`,subtitle:"Already stacked in target pool.",action:""}
+    }[type.toLowerCase().replace(/\s+/g,"-")]||{icon:"",subtitle:"",action:""};
+    const body=rows.length?rows.map(row=>`<tr>
+      <td>${equipmentCell(row,type!=="stacked")}</td>
+      <td>${escapeHtml(row.chassisId||"No Mate")}</td>
+      <td>${escapeHtml(row.pool||"—")}</td>
+      <td>${escapeHtml(row.chassisPool||"—")}</td>
+      <td>${escapeHtml(String(row.size||"").replace(/'+$/,""))}'</td>
+      <td>${escapeHtml(row.location||"—")}</td>
+    </tr>`).join(""):`<tr><td colspan="6" class="forecast-mismatch-preview-empty">No ${escapeHtml(type)} records found.</td></tr>`;
+    const typeClass=type.toLowerCase().replace(/\s+/g,"-");
+    return `<section class="forecast-mismatch-preview-section preview-${typeClass}">
+      <div class="forecast-preview-section-head">
+        <span class="forecast-preview-section-icon">${meta.icon}</span>
+        <div><h4>${escapeHtml(title)} (${rows.length})</h4><p>${escapeHtml(meta.subtitle)}</p></div>
+        ${meta.action?`<button type="button" data-mismatch-preview-action="${typeClass}">${escapeHtml(meta.action)}</button>`:""}
+      </div>
+      <table><colgroup><col class="preview-col-container"><col class="preview-col-chassis"><col class="preview-col-required"><col class="preview-col-chassis-pool"><col class="preview-col-size"><col class="preview-col-location"></colgroup><thead><tr><th data-sort-column="0">Container</th><th data-sort-column="1">Chassis</th><th data-sort-column="2">Required Pool</th><th data-sort-column="3">Chassis Pool</th><th data-sort-column="4" data-sort-type="number">Size</th><th data-sort-column="5">Location</th></tr></thead><tbody>${body}</tbody></table>
+    </section>`;
+  };
+  const excludedTable=()=>{
+    const rows=preview.excluded||[];
+    const body=rows.length?rows.map(row=>`<tr>
+      <td>${equipmentCell(row,true)}</td>
+      <td>${escapeHtml(row.chassisId||"—")}</td>
+      <td>${escapeHtml(row.pool||"—")}</td>
+      <td>${escapeHtml(row.chassisPool||"—")}</td>
+      <td>${escapeHtml(String(row.size||"").replace(/'+$/,""))}${row.size&&row.size!=="Needs Rule"?"'":""}</td>
+      <td>${escapeHtml(row.location||"—")}</td>
+      <td>${escapeHtml(row.reason||"Not imported")}</td>
+    </tr>`).join(""):`<tr><td colspan="7" class="forecast-mismatch-preview-empty">No additional excluded records.</td></tr>`;
+    return `<section class="forecast-mismatch-preview-section forecast-mismatch-excluded-section">
+      <div class="forecast-preview-section-head">
+        <span class="forecast-preview-section-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6"/><path d="m15 9-6 6"/></svg></span>
+        <div><h4>Not Included / Other (${rows.length})</h4><p>Unsupported equipment pools or other exclusions.</p></div>
+        <button type="button" data-mismatch-preview-action="excluded">View reasons</button>
+      </div>
+      <table><colgroup><col class="preview-col-container"><col class="preview-col-chassis"><col class="preview-col-required"><col class="preview-col-chassis-pool"><col class="preview-col-size"><col class="preview-col-location"><col class="preview-col-reason"></colgroup><thead><tr><th data-sort-column="0">Container</th><th data-sort-column="1">Chassis</th><th data-sort-column="2">Required Pool</th><th data-sort-column="3">Chassis Pool</th><th data-sort-column="4" data-sort-type="number">Size</th><th data-sort-column="5">Location</th><th data-sort-column="6">Reason</th></tr></thead><tbody>${body}</tbody></table>
+    </section>`;
+  };
+  sections.innerHTML=[
+    table("Mismatches",preview.mismatched,"mismatch"),
+    table("No Mates",preview.noMates,"No Mate"),
+    preview.stacked.length?table("Stacked",preview.stacked,"stacked"):"",
+    excludedTable()
+  ].join("");
+  sections.querySelectorAll("th[data-sort-column]").forEach(header=>{
+    header.tabIndex=0;
+    header.setAttribute("role","button");
+    header.setAttribute("aria-sort","none");
+    const sortTable=()=>{
+      const table=header.closest("table");
+      const tbody=table?.querySelector("tbody");
+      if(!tbody)return;
+      const rows=[...tbody.querySelectorAll("tr")].filter(row=>!row.querySelector(".forecast-mismatch-preview-empty"));
+      if(rows.length<2)return;
+      const column=Number(header.dataset.sortColumn);
+      const direction=header.dataset.sortDirection==="asc"?"desc":"asc";
+      const numeric=header.dataset.sortType==="number";
+      table.querySelectorAll("th[data-sort-column]").forEach(other=>{
+        other.removeAttribute("data-sort-direction");
+        other.setAttribute("aria-sort","none");
+      });
+      header.dataset.sortDirection=direction;
+      header.setAttribute("aria-sort",direction==="asc"?"ascending":"descending");
+      rows.sort((a,b)=>{
+        const aText=(a.cells[column]?.textContent||"").trim();
+        const bText=(b.cells[column]?.textContent||"").trim();
+        const result=numeric
+          ? (Number.parseFloat(aText)||0)-(Number.parseFloat(bText)||0)
+          : aText.localeCompare(bText,undefined,{numeric:true,sensitivity:"base"});
+        return direction==="asc"?result:-result;
+      });
+      rows.forEach(row=>tbody.appendChild(row));
+    };
+    header.addEventListener("click",sortTable);
+    header.addEventListener("keydown",event=>{
+      if(event.key==="Enter"||event.key===" "){
+        event.preventDefault();
+        sortTable();
+      }
+    });
+  });
+  sections.querySelectorAll("[data-mismatch-preview-action]").forEach(btn=>{
+    btn.onclick=()=>{
+      const action=btn.dataset.mismatchPreviewAction;
+      if(action==="no-mate"){
+        exportForecastMismatchPreviewRows(preview.noMates,"no-mates");
+        return;
+      }
+      const section=btn.closest(".forecast-mismatch-preview-section");
+      section?.querySelector("tbody")?.scrollIntoView({behavior:"smooth",block:"nearest"});
+    };
+  });
+}
+function exportForecastMismatchPreviewRows(rows,name){
+  const headers=["Container","Chassis","Required Pool","Chassis Pool","Size","Location"];
+  const escapeCsv=value=>`"${String(value??"").replace(/"/g,'""')}"`;
+  const csv=[headers,...rows.map(row=>[row.unitId,row.chassisId||"No Mate",row.pool,row.chassisPool,row.size,row.location])].map(line=>line.map(escapeCsv).join(",")).join("\r\n");
+  const blob=new Blob([csv],{type:"text/csv;charset=utf-8"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;
+  a.download=`${name}.csv`;
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),500);
+}
+function openForecastMismatchPreview(){
+  const modal=$("forecastMismatchPreviewModal");
+  if(!modal)return;
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden","false");
+}
+function closeForecastMismatchPreview(){
+  const modal=$("forecastMismatchPreviewModal");
+  if(!modal)return;
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden","true");
+  forecastPendingMismatchPreview=null;
+}
+function confirmForecastMismatchImport(){
+  const preview=forecastPendingMismatchPreview;
+  if(!preview)return;
+  forecastStackedUnits=[...forecastStackedUnits,...preview.stacked];
+  forecastMismatchUnits=[...forecastMismatchUnits,...preview.mismatched];
+  saveForecastState();
+  renderForecastImportedUnits();
+  if(document.body.classList.contains("forecast-excel-view-open"))renderForecastExcelView();
+  const message=`Imported ${preview.stacked.length} stacked and ${preview.mismatched.length} mismatched. Previewed ${preview.noMates.length} No Mates.`;
+  closeForecastMismatchPreview();
+  if(typeof showArchiveToast==="function")showArchiveToast(message);
+}
+function clearForecastMismatchUnits(){
+  forecastStackedUnits=[];
+  forecastMismatchUnits=[];
+  saveForecastState();
+  renderForecastImportedUnits();
+  if(document.body.classList.contains("forecast-excel-view-open"))renderForecastExcelView();
+  if(typeof showArchiveToast==="function")showArchiveToast("Stacked and mismatch units cleared.");
+}
+async function importForecastAuthorizedFiles(files){
+  const incoming=[];
+  for(const file of Array.from(files||[])){
+    const data=await file.arrayBuffer();
+    const wb=XLSX.read(data,{type:"array"});
+    wb.SheetNames.forEach(sheetName=>{
+      const ws=wb.Sheets[sheetName];
+      const rows=XLSX.utils.sheet_to_json(ws,{defval:""});
+      rows.forEach(row=>{
+        const equipmentId=String(getForecastCell(row,["Equipment ID","Equipment","Container ID","Unit ID"])).trim();
+        if(!equipmentId)return;
+        incoming.push({
+          equipmentId,
+          equipmentKey:normalizeForecastEquipmentId(equipmentId),
+          chassisPool:String(getForecastCell(row,["ChassisPool ID","Chassis Pool ID","Chassis Pool"])).trim(),
+          matchedChassis:String(getForecastCell(row,["MatchedChassis","Matched Chassis"])).trim(),
+          direction:String(getForecastCell(row,["Inbound/Outbound","Direction"])).trim(),
+          length:String(getForecastCell(row,["LengthContainer","Length Container","Length"])).trim(),
+          authorizedAt:String(getForecastCell(row,["AuthorizedDate /Time","Authorized Date/Time","Authorized Date"])).trim(),
+          expiresAt:String(getForecastCell(row,["ExpirationDate /Time","Expiration Date/Time","Expiration Date"])).trim(),
+          sourceFile:file.name,
+          sheetName
+        });
+      });
+    });
+  }
+  forecastPendingAuthorizedPreview=incoming;
+  renderForecastAuthorizedPreview();
+  openForecastAuthorizedPreview();
+}
+function normalizeForecastEquipmentId(value){
+  return String(value||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
+}
+function getForecastAuthorizedEquipmentKeys(){
+  return new Set((forecastAuthorizedRows||[]).map(row=>row.equipmentKey||normalizeForecastEquipmentId(row.equipmentId||getForecastCell(row,["Equipment ID","Equipment","Container ID","Unit ID"]))).filter(Boolean));
+}
+function isForecastEquipmentPaid(value){
+  const key=normalizeForecastEquipmentId(value);
+  return !!key && getForecastAuthorizedEquipmentKeys().has(key);
+}
+function renderForecastAuthorizedPreview(){
+  const rows=forecastPendingAuthorizedPreview||[];
+  const summary=$("forecastAuthorizedPreviewSummary");
+  if(summary)summary.textContent=`${rows.length} authorized equipment record${rows.length===1?"":"s"} ready to import.`;
+  const body=$("forecastAuthorizedPreviewRows");
+  if(!body)return;
+  body.innerHTML=rows.length?rows.slice(0,250).map(row=>`<tr>
+    <td>${escapeHtml(row.equipmentId)}</td>
+    <td>${escapeHtml(row.chassisPool||"—")}</td>
+    <td>${escapeHtml(row.matchedChassis||"—")}</td>
+    <td>${escapeHtml(row.direction||"—")}</td>
+    <td>${escapeHtml(row.length||"—")}</td>
+    <td>${escapeHtml(row.authorizedAt||"—")}</td>
+    <td>${escapeHtml(row.expiresAt||"—")}</td>
+  </tr>`).join(""):`<tr><td colspan="7">No equipment IDs found.</td></tr>`;
+}
+function openForecastAuthorizedPreview(){
+  const modal=$("forecastAuthorizedPreviewModal");
+  if(!modal)return;
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden","false");
+}
+function closeForecastAuthorizedPreview(){
+  const modal=$("forecastAuthorizedPreviewModal");
+  if(!modal)return;
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden","true");
+  forecastPendingAuthorizedPreview=null;
+}
+function confirmForecastAuthorizedImport(){
+  const incoming=forecastPendingAuthorizedPreview||[];
+  if(!incoming.length)return;
+  const byId=new Map((forecastAuthorizedRows||[]).map(row=>[row.equipmentKey||normalizeForecastEquipmentId(row.equipmentId),row]));
+  incoming.forEach(row=>byId.set(row.equipmentKey,row));
+  forecastAuthorizedRows=[...byId.values()];
+  saveForecastState();
+  if(forecastPendingMismatchPreview)renderForecastMismatchPreview();
+  closeForecastAuthorizedPreview();
+  if(typeof showArchiveToast==="function")showArchiveToast(`${incoming.length} authorized records imported.`);
+}
+function clearForecastAuthorizedRows(){
+  forecastAuthorizedRows=[];
+  saveForecastState();
+  if(forecastPendingMismatchPreview)renderForecastMismatchPreview();
+  if(typeof showArchiveToast==="function")showArchiveToast("Authorized records cleared.");
 }
 function clearForecastImportedUnits(){
   forecastImportedUnits=[];
@@ -10248,7 +10869,11 @@ function buildForecastTrainSummary(){
 
 
 function normalizeForecastPoolLabel(pool){
-  const p=String(pool||"").trim().toLowerCase();
+  const p=String(pool||"")
+    .normalize("NFKD")
+    .toLowerCase()
+    .replace(/[^a-z]/g,"");
+  if(p==="trgp")return "tgrp";
   if(p==="tgro")return "tgrp";
   if(p==="dclk" || p==="dcki")return "dcli";
   if(p==="trailers" || p==="trlr")return "trailer";
@@ -10304,7 +10929,7 @@ function normalizeForecastDemandPoolSizePair(unit){
   if(isForecastTrailerUnit(unit))return null;
   const pool=normalizeForecastPoolLabel(unit?.pool||"").toUpperCase();
   const size=normalizeForecastSizeLabel(unit?.size).replace("'","");
-  if(!pool || pool==="UNKNOWN" || size==="Needs Rule")return null;
+  if(!pool || pool==="UNKNOWN" || pool==="NONE" || size==="Needs Rule")return null;
   return normalizeInventoryPoolSizePair(pool,size);
 }
 function buildForecastShortageSurplusSummary(visibleUnits){
@@ -10371,7 +10996,7 @@ function buildForecastConcernBreakdown(visibleUnits){
 
         // Deficits by Train should only show known chassis pools.
         // Do not list UNKNOWN, unresolved Needs Rule items, or TRAILER buckets here.
-        if(pool==="UNKNOWN" || pool==="TRAILER" || /UNKNOWN/i.test(size) || /Needs Rule/i.test(size) || /^UNKNOWN\b/i.test(String(label||"")))return;
+        if(pool==="UNKNOWN" || pool==="NONE" || pool==="TRAILER" || /UNKNOWN/i.test(size) || /Needs Rule/i.test(size) || /^UNKNOWN\b/i.test(String(label||"")))return;
 
         const cleanSize=size;
         const cleanTrain=g.train||getForecastNoTrainName();
@@ -10496,12 +11121,34 @@ function renderForecastStatusCards(){
   };
   const getLabelRank=(label)=>labelRankMap[String(label||"").trim()] ?? 50;
   const getQuadrantId=(label)=>{
-    const pool=String(label||"").trim().split(/\s+/)[0].toUpperCase();
+    const clean=String(label||"").toUpperCase().replace(/[^A-Z0-9]+/g," ").trim();
+    const pool=clean.split(" ")[0]||"";
+    if(pool==="TGRP" || clean.startsWith("TGRP"))return "tgrp";
+    if(pool==="FGCP" || clean.startsWith("FGCP"))return "fgcp";
+    if(pool==="SNCZ" || pool==="SNBZ" || clean.startsWith("SNCZ") || clean.startsWith("SNBZ"))return "sncz";
+    if(pool==="DCLI" || pool==="DCLP" || clean.startsWith("DCLI") || clean.startsWith("DCLP"))return "dcli";
+    if(pool==="TRAILER" || clean.startsWith("TRAILER"))return "trailer";
+    return "other";
+  };
+  const getQuadrantIdFromCoverageKey=(coverageKey,label)=>{
+    const pool=String(coverageKey||"").split("|")[0].toUpperCase();
     if(pool==="TGRP")return "tgrp";
     if(pool==="FGCP")return "fgcp";
     if(pool==="SNCZ" || pool==="SNBZ")return "sncz";
     if(pool==="DCLI" || pool==="DCLP")return "dcli";
     if(pool==="TRAILER")return "trailer";
+    return getQuadrantId(label);
+  };
+  const getCanonicalQuadrantId=(label,coverageKey="")=>{
+    const source=`${coverageKey} ${label}`
+      .normalize("NFKD")
+      .toUpperCase()
+      .replace(/[^A-Z]/g,"");
+    if(source.includes("TGRP"))return "tgrp";
+    if(source.includes("FGCP"))return "fgcp";
+    if(source.includes("SNCZ") || source.includes("SNBZ"))return "sncz";
+    if(source.includes("DCLI") || source.includes("DCLP"))return "dcli";
+    if(source.includes("TRAILER"))return "trailer";
     return "other";
   };
 
@@ -10534,7 +11181,18 @@ function renderForecastStatusCards(){
       <div class="forecast-status-cards-grid">
         ${dayGroups.map(g=>{
           const units=unitsForForecastGroup(g.train,g.day);
-          const mix=buildForecastPoolSizeCounts(units);
+          const mix={};
+          units.forEach(unit=>{
+            if(isForecastTrailerUnit(unit)){
+              mix.TRAILER=(mix.TRAILER||0)+1;
+              return;
+            }
+            const pair=normalizeForecastDemandPoolSizePair(unit);
+            const key=pair
+              ? `${String(pair.pool).toUpperCase()} ${String(pair.size)}`
+              : getForecastUnitPoolSizeLabel(unit);
+            mix[key]=(mix[key]||0)+1;
+          });
           const mixKeys=Object.keys(mix).sort((a,b)=>{
             const ra=getLabelRank(a), rb=getLabelRank(b);
             if(ra!==rb)return ra-rb;
@@ -10566,18 +11224,30 @@ function renderForecastStatusCards(){
               mixCount,
               covered,
               deficit,
-              quadrantId:getQuadrantId(key),
+              quadrantId:getCanonicalQuadrantId(key,coverageKey),
               isMixHighVolume,
               coverageTitle
             };
           });
 
           const concernKeys=itemDetails.filter(x=>!x.covered).map(x=>x.key);
-          const compactDeficits=itemDetails.filter(x=>x.deficit>0).map(x=>`-${x.deficit} ${x.key}`);
-          const compactConcern=compactDeficits.length ? `Deficit: ${compactDeficits.slice(0,2).join(", ")}${compactDeficits.length>2?" +"+(compactDeficits.length-2):""}` : "All covered";
 
+          const itemBelongsToQuadrant=(item,id)=>{
+            const label=String(item?.key||"").toUpperCase();
+            const fingerprint=label.replace(/[^A-Z0-9]/g,"");
+            if(id==="tgrp")return /^(?:TGRP|TRGP)(?:20|40)/.test(fingerprint);
+            if(id==="fgcp")return fingerprint.includes("FGCP");
+            if(id==="sncz")return fingerprint.includes("SNCZ")||fingerprint.includes("SNBZ");
+            if(id==="dcli")return fingerprint.includes("DCLI")||fingerprint.includes("DCLP");
+            if(id==="trailer")return fingerprint.includes("TRAILER");
+            return false;
+          };
+          const tgrpItems=itemDetails.filter(item=>{
+            const fingerprint=String(item?.key||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
+            return /^(?:TGRP|TRGP)(?:20|40)/.test(fingerprint);
+          });
           const quadrantsHtml=quadrantDefinitions.map(def=>{
-            const items=itemDetails.filter(x=>x.quadrantId===def.id);
+            const items=def.id==="tgrp" ? tgrpItems : itemDetails.filter(x=>itemBelongsToQuadrant(x,def.id));
             const quadrantTotal=items.reduce((sum,x)=>sum+x.mixCount,0);
 
             // Do not show the trailer card if this train has no trailer units.
@@ -10599,7 +11269,10 @@ function renderForecastStatusCards(){
             </div>`;
           }).join("");
 
-          const otherItems=itemDetails.filter(x=>x.quadrantId==="other");
+          const otherItems=itemDetails.filter(item=>{
+            if(tgrpItems.includes(item))return false;
+            return !quadrantDefinitions.some(def=>itemBelongsToQuadrant(item,def.id));
+          });
           const otherStrip=otherItems.length ? `<div class="forecast-other-strip">
             <span class="forecast-other-title">Other / Unknown</span>
             <div class="forecast-other-list">
@@ -10614,7 +11287,7 @@ function renderForecastStatusCards(){
             <div class="forecast-train-card-glow"></div>
             <div class="forecast-compact-train-head">
               <div class="forecast-compact-train-main">
-                <span class="forecast-train-name">${escapeHtml(g.train)}</span>
+                <button type="button" class="forecast-train-name forecast-train-hide-toggle" data-forecast-train-hide-toggle="${escapeHtml(g.train)}" data-forecast-hide-day="${escapeHtml(g.day)}" data-train-label="${escapeHtml(g.train)}">${escapeHtml(g.train)}</button>
                 <span class="forecast-compact-eta-wrap">
                   <button type="button" class="forecast-compact-eta forecast-inline-date-trigger" data-forecast-date-open="${escapeHtml(g.train)}" data-forecast-old-day="${escapeHtml(g.day)}">${escapeHtml(getForecastEtaDisplay(g.day,hours))}</button>
                   <span class="forecast-inline-date-editor" hidden>
@@ -10625,16 +11298,10 @@ function renderForecastStatusCards(){
               </div>
               <div class="forecast-compact-total"><span>Total</span><strong>${g.total}</strong></div>
             </div>
-            <div class="forecast-compact-meta-row">
-              <em class="${concernKeys.length?"has-concern":"all-covered"}">${escapeHtml(compactConcern)}</em>
-            </div>
             <div class="forecast-pool-size-grid forecast-four-quadrant-grid">
               ${quadrantsHtml}
             </div>
             ${otherStrip}
-            <div class="forecast-train-card-actions">
-              <button type="button" class="forecast-hide-train-btn" data-forecast-hide-train="${escapeHtml(g.train)}" data-forecast-hide-day="${escapeHtml(g.day)}">Hide this train</button>
-            </div>
           </div>`;
         }).join("")}
       </div>
@@ -10683,8 +11350,24 @@ function renderForecastStatusCards(){
       }
     });
   });
-  box.querySelectorAll("[data-forecast-hide-train]").forEach(btn=>{
-    btn.onclick=()=>hideForecastTrainDay(btn.dataset.forecastHideTrain,btn.dataset.forecastHideDay);
+  box.querySelectorAll("[data-forecast-train-hide-toggle]").forEach(btn=>{
+    btn.onclick=()=>{
+      if(btn.classList.contains("armed")){
+        hideForecastTrainDay(btn.dataset.forecastTrainHideToggle,btn.dataset.forecastHideDay);
+        return;
+      }
+      box.querySelectorAll("[data-forecast-train-hide-toggle].armed").forEach(other=>{
+        other.classList.remove("armed");
+        other.textContent=other.dataset.trainLabel||"Train";
+      });
+      btn.classList.add("armed");
+      btn.textContent="Hide this train";
+    };
+    btn.onblur=()=>setTimeout(()=>{
+      if(!btn.isConnected)return;
+      btn.classList.remove("armed");
+      btn.textContent=btn.dataset.trainLabel||"Train";
+    },120);
   });
   box.querySelectorAll("[data-forecast-jump-unknown-train]").forEach(btn=>{
     btn.onclick=()=>jumpForecastUnknownToResolver(btn.dataset.forecastJumpUnknownTrain,btn.dataset.forecastJumpUnknownDay,btn.dataset.forecastJumpUnknownLabel);
@@ -11649,6 +12332,9 @@ function getForecastRuntimeState(){
     noTrainName:$("forecastNoTrainName")?.value||"No Train Listed",
     rows:Array.isArray(forecastRows)?forecastRows:[],
     importedUnits:Array.isArray(forecastImportedUnits)?forecastImportedUnits:[],
+    stackedUnits:Array.isArray(forecastStackedUnits)?forecastStackedUnits:[],
+    mismatchUnits:Array.isArray(forecastMismatchUnits)?forecastMismatchUnits:[],
+    authorizedRows:Array.isArray(forecastAuthorizedRows)?forecastAuthorizedRows:[],
     inventoryRows:Array.isArray(forecastInventoryRows)?forecastInventoryRows:[],
     chassisRequests:forecastChassisRequests&&typeof forecastChassisRequests==="object"?forecastChassisRequests:{},
     selectedDays:[...forecastSelectedDays],
@@ -11660,6 +12346,9 @@ function applyForecastRuntimeState(state){
   if(!state || typeof state!=="object")return false;
   forecastRows=Array.isArray(state.rows)?state.rows:[];
   forecastImportedUnits=Array.isArray(state.importedUnits)?state.importedUnits:[];
+  forecastStackedUnits=Array.isArray(state.stackedUnits)?state.stackedUnits:[];
+  forecastMismatchUnits=Array.isArray(state.mismatchUnits)?state.mismatchUnits:[];
+  forecastAuthorizedRows=Array.isArray(state.authorizedRows)?state.authorizedRows:[];
   forecastInventoryRows=Array.isArray(state.inventoryRows)?state.inventoryRows:[];
   forecastChassisRequests=(state.chassisRequests&&typeof state.chassisRequests==="object")?state.chassisRequests:{};
   forecastSelectedDays=new Set(Array.isArray(state.selectedDays)?state.selectedDays:[]);
@@ -11895,7 +12584,12 @@ function renderForecastChassisRequestBoard(){
               <tr>
                 <td class="forecast-request-size">${escapeHtml(size)}</td>
                 <td class="forecast-request-count expected">${getForecastRequestExpectedCount(group.pool,size)}</td>
-                <td class="forecast-request-count onhand">${getForecastRequestOnHandCount(group.pool,size)}</td>
+                <td class="forecast-request-count onhand">${(()=>{
+                  const onHand=getForecastRequestOnHandCount(group.pool,size);
+                  const expected=getForecastRequestExpectedCount(group.pool,size);
+                  const difference=onHand-expected;
+                  return `${onHand} <small class="forecast-onhand-difference ${difference>=0?"positive":"negative"}">(${difference>0?"+":""}${difference})</small>`;
+                })()}</td>
                 <td>
                   <input class="${getForecastChassisRequestValue(group.pool,size,"drayIn") ? "forecast-request-has-value" : ""}" type="number" inputmode="numeric" min="0" step="1" placeholder="" value="${escapeHtml(getForecastChassisRequestValue(group.pool,size,"drayIn"))}" data-forecast-request-pool="${escapeHtml(group.pool)}" data-forecast-request-size="${escapeHtml(size)}" data-forecast-request-field="drayIn">
                 </td>
@@ -11966,7 +12660,7 @@ function renderForecastImportedUnits(){
         const pool=String(c.pool||"").toUpperCase();
         const size=String(c.size||"");
         const label=String(c.label||"");
-        return pool && pool!=="UNKNOWN" && pool!=="TRAILER" && !/UNKNOWN/i.test(size) && !/Needs Rule/i.test(size) && !/^UNKNOWN\b/i.test(label);
+        return pool && pool!=="UNKNOWN" && pool!=="NONE" && pool!=="TRAILER" && !/UNKNOWN/i.test(size) && !/Needs Rule/i.test(size) && !/^UNKNOWN\b/i.test(label);
       });
       const shown=knownConcerns.slice(0,8);
       $("forecastTrainGroups").innerHTML=`<span class="forecast-deficit-list">
@@ -12014,7 +12708,7 @@ if($("forecastNeedsSizeRule"))$("forecastNeedsSizeRule").textContent=needsSize;
 }
 
 
-function init(){
+async function init(){
   document.body.classList.add("reconciliation-view");
   $("yardSelect").innerHTML=YARD_OPTIONS.map(o=>`<option>${o}</option>`).join("");
   updateReportDateLabel();setupDisplaySliders();
@@ -12051,6 +12745,20 @@ function init(){
   const forecastModal=$("forecastModal"); if(forecastModal)forecastModal.addEventListener("click",e=>{if(e.target===forecastModal)closeForecastModal()});
   const forecastAddRowBtn=$("forecastAddRowBtn"); if(forecastAddRowBtn)forecastAddRowBtn.onclick=()=>addForecastRow(true);
   const forecastToolsToggleBtn=$("forecastToolsToggleBtn"); if(forecastToolsToggleBtn)forecastToolsToggleBtn.onclick=toggleForecastTools;
+  const openForecastExcelViewBtn=$("openForecastExcelViewBtn"); if(openForecastExcelViewBtn)openForecastExcelViewBtn.onclick=openForecastExcelView;
+  const closeForecastExcelViewBtn=$("closeForecastExcelViewBtn"); if(closeForecastExcelViewBtn)closeForecastExcelViewBtn.onclick=closeForecastExcelView;
+  const forecastTrainSummaryCard=$("forecastTrainSummaryCard");
+  const forecastTrainSummaryToggle=$("forecastTrainSummaryToggle");
+  const forecastPage=document.querySelector("#forecastModal .forecast-page");
+  if(forecastPage&&forecastTrainSummaryCard)forecastPage.appendChild(forecastTrainSummaryCard);
+  if(forecastTrainSummaryToggle&&forecastTrainSummaryCard)forecastTrainSummaryToggle.onclick=()=>{
+    const collapsed=forecastTrainSummaryCard.classList.toggle("collapsed");
+    forecastTrainSummaryToggle.textContent=collapsed?"Show":"Hide";
+  };
+  const forecastDifferenceToggleBtn=$("forecastDifferenceToggleBtn"); if(forecastDifferenceToggleBtn)forecastDifferenceToggleBtn.onclick=()=>{
+    document.body.classList.toggle("hide-forecast-differences");
+    forecastDifferenceToggleBtn.textContent=document.body.classList.contains("hide-forecast-differences")?"Show +/-":"Hide +/-";
+  };
   const forecastArchiveSortSelect=$("forecastArchiveSortSelect"); if(forecastArchiveSortSelect)forecastArchiveSortSelect.onchange=()=>{forecastArchiveSortMode=forecastArchiveSortSelect.value||"newest";renderForecastArchiveList();};
   const forecastArchivePopupCloseBtn=$("forecastArchivePopupCloseBtn"); if(forecastArchivePopupCloseBtn)forecastArchivePopupCloseBtn.onclick=closeForecastArchivePopup;
   const forecastArchivePopup=$("forecastArchivePopup"); if(forecastArchivePopup)forecastArchivePopup.addEventListener("click",e=>{if(e.target===forecastArchivePopup)closeForecastArchivePopup();});
@@ -12083,6 +12791,20 @@ function init(){
     input.click();
   };
   const forecastInventoryFileInput=$("forecastInventoryFileInput"); if(forecastInventoryFileInput)forecastInventoryFileInput.onchange=e=>{if(e.target.files?.length)importChassisInventoryFiles(e.target.files);e.target.value=""};
+  const forecastMismatchImportBtn=$("forecastMismatchImportBtn"); if(forecastMismatchImportBtn)forecastMismatchImportBtn.onclick=()=>$("forecastMismatchFileInput")?.click();
+  const forecastMismatchFileInput=$("forecastMismatchFileInput"); if(forecastMismatchFileInput)forecastMismatchFileInput.onchange=e=>{if(e.target.files?.length)importForecastMismatchFiles(e.target.files);e.target.value=""};
+  const forecastMismatchClearBtn=$("forecastMismatchClearBtn"); if(forecastMismatchClearBtn)forecastMismatchClearBtn.onclick=clearForecastMismatchUnits;
+  const forecastMismatchPreviewCloseBtn=$("forecastMismatchPreviewCloseBtn"); if(forecastMismatchPreviewCloseBtn)forecastMismatchPreviewCloseBtn.onclick=closeForecastMismatchPreview;
+  const forecastMismatchPreviewCancelBtn=$("forecastMismatchPreviewCancelBtn"); if(forecastMismatchPreviewCancelBtn)forecastMismatchPreviewCancelBtn.onclick=closeForecastMismatchPreview;
+  const forecastMismatchPreviewConfirmBtn=$("forecastMismatchPreviewConfirmBtn"); if(forecastMismatchPreviewConfirmBtn)forecastMismatchPreviewConfirmBtn.onclick=confirmForecastMismatchImport;
+  const forecastMismatchPreviewModal=$("forecastMismatchPreviewModal"); if(forecastMismatchPreviewModal)forecastMismatchPreviewModal.addEventListener("click",e=>{if(e.target===forecastMismatchPreviewModal)closeForecastMismatchPreview()});
+  const forecastAuthorizedImportBtn=$("forecastAuthorizedImportBtn"); if(forecastAuthorizedImportBtn)forecastAuthorizedImportBtn.onclick=()=>$("forecastAuthorizedFileInput")?.click();
+  const forecastAuthorizedFileInput=$("forecastAuthorizedFileInput"); if(forecastAuthorizedFileInput)forecastAuthorizedFileInput.onchange=e=>{if(e.target.files?.length)importForecastAuthorizedFiles(e.target.files);e.target.value=""};
+  const forecastAuthorizedClearBtn=$("forecastAuthorizedClearBtn"); if(forecastAuthorizedClearBtn)forecastAuthorizedClearBtn.onclick=clearForecastAuthorizedRows;
+  const forecastAuthorizedPreviewCloseBtn=$("forecastAuthorizedPreviewCloseBtn"); if(forecastAuthorizedPreviewCloseBtn)forecastAuthorizedPreviewCloseBtn.onclick=closeForecastAuthorizedPreview;
+  const forecastAuthorizedPreviewCancelBtn=$("forecastAuthorizedPreviewCancelBtn"); if(forecastAuthorizedPreviewCancelBtn)forecastAuthorizedPreviewCancelBtn.onclick=closeForecastAuthorizedPreview;
+  const forecastAuthorizedPreviewConfirmBtn=$("forecastAuthorizedPreviewConfirmBtn"); if(forecastAuthorizedPreviewConfirmBtn)forecastAuthorizedPreviewConfirmBtn.onclick=confirmForecastAuthorizedImport;
+  const forecastAuthorizedPreviewModal=$("forecastAuthorizedPreviewModal"); if(forecastAuthorizedPreviewModal)forecastAuthorizedPreviewModal.addEventListener("click",e=>{if(e.target===forecastAuthorizedPreviewModal)closeForecastAuthorizedPreview()});
   const forecastInventoryClearBtn=$("forecastInventoryClearBtn"); if(forecastInventoryClearBtn)forecastInventoryClearBtn.onclick=clearChassisInventoryRows;
   const forecastClearImportBtn=$("forecastClearImportBtn"); if(forecastClearImportBtn)forecastClearImportBtn.onclick=clearForecastImportedUnits;
   const forecastResolvePoolsBtn=$("forecastResolvePoolsBtn"); if(forecastResolvePoolsBtn)forecastResolvePoolsBtn.onclick=toggleForecastPoolResolver;
@@ -12134,11 +12856,18 @@ function init(){
   const calendarReportsClose=$("calendarReportsClose"); if(calendarReportsClose)calendarReportsClose.onclick=()=>{$("calendarReportsPanel").style.display="none"};
   const calendarPreviewClose=$("calendarPreviewClose"); if(calendarPreviewClose)calendarPreviewClose.onclick=()=>{$("calendarReportPreview").style.display="none"};
   render();
+  requestAnimationFrame(()=>document.documentElement.classList.remove("app-booting"));
   loadCloudState();
 }
 
-window.addEventListener("beforeunload",()=>{try{saveAllCloudState()}catch{}});
-init();
+window.addEventListener("beforeunload",()=>{try{saveCurrentSessionToCloud()}catch{}});
+window.addEventListener("DOMContentLoaded",async()=>{
+  try{
+    await init();
+  }finally{
+    document.documentElement.classList.remove("app-booting");
+  }
+},{once:true});
 </script>
 
 <style id="inventory-equal-half-panels-patch">
@@ -13833,6 +14562,49 @@ init();
   text-overflow: clip !important;
   line-height: 1.05 !important;
 }
+#forecastStatusCards .forecast-train-hide-toggle{
+  width:max-content!important;
+  max-width:100%!important;
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:inherit!important;
+  text-align:left!important;
+  cursor:pointer!important;
+  box-shadow:none!important;
+}
+#forecastStatusCards .forecast-train-hide-toggle.armed{
+  padding:6px 10px!important;
+  border:1px solid rgba(251,113,133,.62)!important;
+  border-radius:999px!important;
+  background:rgba(127,29,29,.38)!important;
+  color:#ffe4e6!important;
+  font-size:12px!important;
+}
+#forecastStatusCards .forecast-compact-train-head{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+}
+#forecastStatusCards .forecast-compact-train-main{
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  flex-wrap:nowrap!important;
+  min-width:0!important;
+}
+#forecastStatusCards .forecast-compact-train-main .forecast-train-name,
+#forecastStatusCards .forecast-compact-eta{
+  white-space:nowrap!important;
+}
+#forecastStatusCards .forecast-compact-total{
+  flex:0 0 auto!important;
+  align-self:center!important;
+}
 #forecastStatusCards .forecast-compact-eta{
   display: block !important;
   white-space: normal !important;
@@ -14194,6 +14966,386 @@ init();
   color:#f8fafc!important;
   font-size:13px!important;
   font-weight:850!important;
+}
+.forecast-mismatch-preview-modal{
+  position:fixed;
+  inset:0;
+  z-index:100000;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:22px;
+  background:rgba(2,6,23,.78);
+  backdrop-filter:blur(10px);
+}
+.forecast-mismatch-preview-modal.open{display:flex}
+.forecast-mismatch-preview-card{
+  width:min(1180px,97vw);
+  max-height:92vh;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  border:1px solid rgba(168,85,247,.48);
+  border-radius:22px;
+  background:linear-gradient(180deg,#111827,#020617);
+  box-shadow:0 30px 90px rgba(0,0,0,.6);
+}
+.forecast-mismatch-preview-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  padding:17px 20px;
+  border-bottom:1px solid rgba(148,163,184,.18);
+}
+.forecast-mismatch-preview-head span{
+  color:#d8b4fe;
+  font-size:10px;
+  font-weight:1000;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+.forecast-mismatch-preview-head h3{margin:3px 0;color:#fff;font-size:25px}
+.forecast-mismatch-preview-head p{margin:0;color:#cbd5e1;font-size:12px;font-weight:800}
+.forecast-mismatch-preview-head button,
+.forecast-mismatch-preview-actions button{
+  border-radius:999px;
+  padding:9px 14px;
+  font-weight:1000;
+}
+.forecast-mismatch-preview-head button,
+#forecastMismatchPreviewCancelBtn{
+  border:1px solid rgba(251,113,133,.42);
+  background:rgba(127,29,29,.25);
+  color:#ffe4e6;
+}
+.forecast-mismatch-preview-counts{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:12px;
+  padding:12px 20px 0;
+}
+.forecast-mismatch-preview-counts>div{
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  align-items:center;
+  gap:11px;
+  padding:12px 14px;
+  min-height:76px;
+  border:2px solid transparent;
+  border-radius:14px;
+  font-weight:1000;
+  box-shadow:0 12px 28px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.12);
+}
+.mismatch-count-card{
+  background:linear-gradient(135deg,rgba(190,24,93,.44),rgba(76,5,25,.78));
+  border-color:rgba(251,113,133,.62)!important;
+  color:#ffe4e6;
+}
+.stacked-count-card{
+  background:linear-gradient(135deg,rgba(202,138,4,.44),rgba(69,26,3,.80));
+  border-color:rgba(250,204,21,.65)!important;
+  color:#fef08a;
+}
+.nomate-count-card{
+  background:linear-gradient(135deg,rgba(37,99,235,.45),rgba(23,37,84,.82));
+  border-color:rgba(96,165,250,.65)!important;
+  color:#dbeafe;
+}
+.paid-count-card{
+  background:linear-gradient(135deg,rgba(5,150,105,.45),rgba(6,78,59,.82));
+  border-color:rgba(52,211,153,.68)!important;
+  color:#d1fae5;
+}
+.forecast-mismatch-preview-counts .preview-metric-icon{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:36px;
+  height:36px;
+  border:2px solid currentColor;
+  border-radius:50%;
+  font-size:19px;
+  line-height:1;
+}
+.forecast-mismatch-preview-counts>div>div{display:grid;gap:2px;min-width:0}
+.forecast-mismatch-preview-counts>div>div>span{font-size:15px;letter-spacing:.02em}
+.forecast-mismatch-preview-counts small{color:currentColor;font-size:10px;font-weight:800;opacity:.72;white-space:nowrap}
+.forecast-mismatch-preview-counts strong{font-size:34px;line-height:1}
+.forecast-mismatch-preview-sections{
+  overflow:auto;
+  display:grid;
+  gap:12px;
+  padding:12px 20px;
+}
+.forecast-mismatch-preview-section{
+  overflow:hidden;
+  border:1px solid rgba(148,163,184,.22);
+  border-radius:14px;
+  background:rgba(2,6,23,.44);
+  padding-left:18px;
+  padding-right:18px;
+}
+.forecast-mismatch-preview-section .forecast-preview-section-head{
+  margin-left:-18px;
+  margin-right:-18px;
+}
+.forecast-preview-section-head{
+  display:grid;
+  grid-template-columns:auto 1fr auto;
+  align-items:center;
+  gap:12px;
+  padding:12px 14px;
+}
+.forecast-preview-section-head h4{margin:0;color:#fff;font-size:16px;text-align:left}
+.forecast-preview-section-head p{margin:2px 0 0;color:#cbd5e1;font-size:11px;font-weight:700}
+.forecast-preview-section-icon{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  width:32px;
+  height:32px;
+  border:2px solid currentColor;
+  border-radius:50%;
+  font-size:20px;
+  font-weight:1000;
+}
+.forecast-preview-section-icon svg{
+  width:25px;
+  height:25px;
+  fill:none;
+  stroke:currentColor;
+  stroke-width:2;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.preview-stacked .forecast-preview-section-icon{
+  border:0;
+}
+.forecast-preview-section-head button{
+  border-radius:9px;
+  padding:8px 12px;
+  background:rgba(15,23,42,.64);
+  color:#f8fafc;
+  font-size:11px;
+  font-weight:1000;
+}
+.forecast-mismatch-preview-section.preview-mismatch{border-color:rgba(244,63,94,.72)}
+.forecast-mismatch-preview-section.preview-mismatch .forecast-preview-section-head{background:linear-gradient(90deg,rgba(127,29,29,.36),rgba(76,5,25,.12))}
+.forecast-mismatch-preview-section.preview-mismatch .forecast-preview-section-icon{color:#fb7185}
+.forecast-mismatch-preview-section.preview-mismatch th{background:rgba(127,29,29,.66);color:#fee2e2}
+.forecast-mismatch-preview-section.preview-mismatch thead tr{background:rgba(127,29,29,.66);box-shadow:-18px 0 rgba(127,29,29,.66),18px 0 rgba(127,29,29,.66)}
+.forecast-mismatch-preview-section.preview-mismatch .forecast-preview-section-head button{border-color:rgba(244,63,94,.45)}
+.forecast-mismatch-preview-section.preview-no-mate{border-color:rgba(59,130,246,.72)}
+.forecast-mismatch-preview-section.preview-no-mate .forecast-preview-section-head{background:linear-gradient(90deg,rgba(30,64,175,.35),rgba(23,37,84,.12))}
+.forecast-mismatch-preview-section.preview-no-mate .forecast-preview-section-icon{color:#60a5fa}
+.forecast-mismatch-preview-section.preview-no-mate th{background:rgba(30,64,175,.58);color:#dbeafe}
+.forecast-mismatch-preview-section.preview-no-mate thead tr{background:rgba(30,64,175,.58);box-shadow:-18px 0 rgba(30,64,175,.58),18px 0 rgba(30,64,175,.58)}
+.forecast-mismatch-preview-section.preview-no-mate .forecast-preview-section-head button{border-color:rgba(96,165,250,.5)}
+.forecast-mismatch-preview-section.preview-stacked{border-color:rgba(245,158,11,.7)}
+.forecast-mismatch-preview-section.preview-stacked .forecast-preview-section-head{background:linear-gradient(90deg,rgba(146,64,14,.38),rgba(69,26,3,.12))}
+.forecast-mismatch-preview-section.preview-stacked .forecast-preview-section-icon{color:#f59e0b}
+.forecast-mismatch-preview-section.preview-stacked th{background:rgba(146,64,14,.62);color:#fff7ed}
+.forecast-mismatch-preview-section.preview-stacked thead tr{background:rgba(146,64,14,.62);box-shadow:-18px 0 rgba(146,64,14,.62),18px 0 rgba(146,64,14,.62)}
+.forecast-mismatch-excluded-section{border-color:rgba(168,85,247,.72)}
+.forecast-mismatch-excluded-section .forecast-preview-section-head{background:linear-gradient(90deg,rgba(88,28,135,.38),rgba(46,16,101,.12))}
+.forecast-mismatch-excluded-section .forecast-preview-section-icon{color:#a855f7}
+.forecast-mismatch-excluded-section th{background:rgba(88,28,135,.62);color:#f3e8ff}
+.forecast-mismatch-excluded-section thead tr{background:rgba(88,28,135,.62);box-shadow:-18px 0 rgba(88,28,135,.62),18px 0 rgba(88,28,135,.62)}
+.forecast-mismatch-excluded-section .forecast-preview-section-head button{border-color:rgba(168,85,247,.5)}
+.forecast-mismatch-preview-section table{
+  width:100%;
+  margin:0;
+  border-collapse:collapse;
+  table-layout:fixed;
+}
+.forecast-mismatch-preview-section thead tr{
+  position:relative;
+}
+.forecast-mismatch-preview-section .preview-col-container{width:22%}
+.forecast-mismatch-preview-section .preview-col-chassis{width:19%}
+.forecast-mismatch-preview-section .preview-col-required{width:19%}
+.forecast-mismatch-preview-section .preview-col-chassis-pool{width:19%}
+.forecast-mismatch-preview-section .preview-col-size{width:9%}
+.forecast-mismatch-preview-section .preview-col-location{width:12%}
+.forecast-mismatch-excluded-section .preview-col-container{width:17%}
+.forecast-mismatch-excluded-section .preview-col-chassis{width:15%}
+.forecast-mismatch-excluded-section .preview-col-required{width:14%}
+.forecast-mismatch-excluded-section .preview-col-chassis-pool{width:14%}
+.forecast-mismatch-excluded-section .preview-col-size{width:7%}
+.forecast-mismatch-excluded-section .preview-col-location{width:10%}
+.forecast-mismatch-excluded-section .preview-col-reason{width:23%}
+.forecast-mismatch-preview-section th{
+  position:sticky;
+  top:0;
+  padding:7px 9px;
+  background:#0b3954;
+  color:#e0f2fe;
+  text-align:center;
+  font-size:10px;
+  text-transform:uppercase;
+}
+.forecast-mismatch-preview-section th[data-sort-column]{
+  cursor:pointer;
+  user-select:none;
+  white-space:nowrap;
+}
+.forecast-mismatch-preview-section th[data-sort-column]::after{
+  content:" ↕";
+  display:inline-block;
+  margin-left:4px;
+  font-size:9px;
+  opacity:.55;
+}
+.forecast-mismatch-preview-section th[data-sort-direction="asc"]::after{
+  content:" ▲";
+  opacity:1;
+}
+.forecast-mismatch-preview-section th[data-sort-direction="desc"]::after{
+  content:" ▼";
+  opacity:1;
+}
+.forecast-mismatch-preview-section th[data-sort-column]:hover,
+.forecast-mismatch-preview-section th[data-sort-column]:focus-visible{
+  filter:brightness(1.18);
+  outline:none;
+}
+.forecast-mismatch-preview-section td{
+  padding:7px 9px;
+  border-top:1px solid rgba(148,163,184,.12);
+  color:#f8fafc;
+  font-size:11px;
+  font-weight:800;
+  text-align:center;
+  vertical-align:middle;
+}
+.forecast-mismatch-excluded-section td:last-child{
+  white-space:normal;
+  overflow-wrap:anywhere;
+  line-height:1.2;
+}
+.forecast-mismatch-preview-section.forecast-mismatch-excluded-section thead tr,
+.forecast-mismatch-preview-section.forecast-mismatch-excluded-section thead th{
+  background:#581c87!important;
+  color:#f3e8ff!important;
+}
+.forecast-mismatch-preview-section.forecast-mismatch-excluded-section thead tr{
+  box-shadow:-18px 0 #581c87,18px 0 #581c87!important;
+}
+.forecast-mismatch-preview-section.preview-mismatch thead tr,
+.forecast-mismatch-preview-section.preview-mismatch thead th{
+  background:#7f1d1d!important;
+}
+.forecast-mismatch-preview-section.preview-mismatch thead tr{
+  box-shadow:-18px 0 #7f1d1d,18px 0 #7f1d1d!important;
+}
+.forecast-mismatch-preview-section.preview-no-mate thead tr,
+.forecast-mismatch-preview-section.preview-no-mate thead th{
+  background:#1e3a8a!important;
+}
+.forecast-mismatch-preview-section.preview-no-mate thead tr{
+  box-shadow:-18px 0 #1e3a8a,18px 0 #1e3a8a!important;
+}
+.forecast-mismatch-preview-section.preview-stacked thead tr,
+.forecast-mismatch-preview-section.preview-stacked thead th{
+  background:#92400e!important;
+}
+.forecast-mismatch-preview-section.preview-stacked thead tr{
+  box-shadow:-18px 0 #92400e,18px 0 #92400e!important;
+}
+.forecast-mismatch-preview-empty{padding:18px;color:#94a3b8;text-align:center}
+.forecast-mismatch-preview-actions{
+  display:flex;
+  justify-content:flex-end;
+  gap:10px;
+  padding:12px 20px 16px;
+  border-top:1px solid rgba(148,163,184,.18);
+}
+#forecastMismatchPreviewConfirmBtn{
+  border:1px solid rgba(52,211,153,.45);
+  background:rgba(5,150,105,.28);
+  color:#d1fae5;
+}
+.forecast-paid-cell{
+  position:relative;
+  display:inline-block;
+}
+.forecast-paid-equipment-id{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:3px 7px;
+  border-radius:7px;
+  border:1px solid #facc15;
+  background:rgba(250,204,21,.10);
+  color:#fef08a!important;
+  font-weight:1000;
+}
+.forecast-paid-flag{
+  position:absolute;
+  left:calc(100% + 7px);
+  top:50%;
+  transform:translateY(-50%);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin-left:0;
+  padding:2px 6px;
+  border-radius:999px;
+  background:#15803d;
+  color:#fff!important;
+  font-size:9px;
+  font-weight:1000;
+  letter-spacing:.04em;
+}
+.forecast-authorized-preview-modal{
+  position:fixed;
+  inset:0;
+  z-index:100001;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:22px;
+  background:rgba(2,6,23,.78);
+  backdrop-filter:blur(10px);
+}
+.forecast-authorized-preview-modal.open{display:flex}
+.forecast-authorized-preview-card{
+  width:min(980px,96vw);
+  max-height:88vh;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  border:1px solid rgba(52,211,153,.48);
+  border-radius:22px;
+  background:linear-gradient(180deg,#10221c,#020617);
+  box-shadow:0 30px 90px rgba(0,0,0,.6);
+}
+.forecast-authorized-preview-head{
+  display:flex;
+  justify-content:space-between;
+  gap:16px;
+  padding:17px 20px;
+  border-bottom:1px solid rgba(148,163,184,.18);
+}
+.forecast-authorized-preview-head span{color:#6ee7b7;font-size:10px;font-weight:1000;letter-spacing:.12em;text-transform:uppercase}
+.forecast-authorized-preview-head h3{margin:3px 0;color:#fff;font-size:25px}
+.forecast-authorized-preview-head p{margin:0;color:#cbd5e1;font-size:12px;font-weight:800}
+.forecast-authorized-preview-head button,
+.forecast-authorized-preview-actions button{border-radius:999px;padding:9px 14px;font-weight:1000}
+.forecast-authorized-preview-head button,
+#forecastAuthorizedPreviewCancelBtn{border:1px solid rgba(251,113,133,.42);background:rgba(127,29,29,.25);color:#ffe4e6}
+.forecast-authorized-preview-table-wrap{overflow:auto;padding:12px 20px}
+.forecast-authorized-preview-table-wrap table{width:100%;border-collapse:collapse}
+.forecast-authorized-preview-table-wrap th{padding:8px;background:#065f46;color:#d1fae5;text-align:center;font-size:10px;text-transform:uppercase}
+.forecast-authorized-preview-table-wrap td{padding:8px;border-bottom:1px solid rgba(148,163,184,.14);color:#f8fafc;text-align:center;font-size:11px;font-weight:800}
+.forecast-authorized-preview-actions{display:flex;justify-content:flex-end;gap:10px;padding:12px 20px 16px;border-top:1px solid rgba(148,163,184,.18)}
+#forecastAuthorizedPreviewConfirmBtn{border:1px solid rgba(52,211,153,.5);background:rgba(5,150,105,.32);color:#d1fae5}
+@media(max-width:720px){
+  .forecast-mismatch-preview-counts{grid-template-columns:1fr}
+}
+@media(min-width:721px) and (max-width:1050px){
+  .forecast-mismatch-preview-counts{grid-template-columns:repeat(2,1fr)}
 }
 
 
@@ -17412,6 +18564,45 @@ body.forecast-view #forceSaveBtn .force-save-split-top .hero-action-icon{
 body.forecast-view #forceSaveBtn .force-save-split-bottom .hero-action-label{
   font-size:10px!important;
 }
+body.reconciliation-view #forceSaveBtn{
+  display:grid!important;
+  grid-template-rows:1fr 1fr!important;
+  align-items:stretch!important;
+  justify-content:stretch!important;
+  gap:0!important;
+  padding:0!important;
+  overflow:hidden!important;
+  min-width:132px!important;
+}
+body.reconciliation-view #forceSaveBtn .force-save-split-half{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  gap:4px!important;
+  min-width:0!important;
+  padding:6px 8px!important;
+  text-align:center!important;
+  cursor:pointer!important;
+  user-select:none!important;
+}
+body.reconciliation-view #forceSaveBtn .force-save-split-top{
+  border-bottom:1px solid rgba(255,255,255,.18)!important;
+}
+body.reconciliation-view #forceSaveBtn .force-save-split-bottom{
+  background:rgba(2,6,23,.16)!important;
+  justify-content:flex-start!important;
+  padding-left:18px!important;
+}
+body.reconciliation-view #forceSaveBtn .force-save-split-half:hover{
+  background:rgba(255,255,255,.08)!important;
+}
+body.reconciliation-view #forceSaveBtn .force-save-split-half .hero-action-label{
+  font-size:11px!important;
+  line-height:1.05!important;
+  font-weight:1000!important;
+  letter-spacing:.04em!important;
+  text-transform:uppercase!important;
+}
 .forecast-archive-focus-pulse{
   animation:forecastArchivePulse 1.25s ease-out 1!important;
 }
@@ -17634,6 +18825,742 @@ body.forecast-view #forceSaveBtn .force-save-split-top .hero-action-label{
   .forecast-request-history-split{
     grid-template-columns:1fr!important;
   }
+}
+
+/* Day-range status colors */
+#missingEventTodayCard .missing-metric-pill.range-green{
+  background:rgba(56,189,248,.25)!important;
+  border-color:rgba(125,211,252,.68)!important;
+}
+#missingEventTodayCard .missing-metric-pill.range-green strong{
+  background:rgba(2,132,199,.55)!important;
+  border-color:rgba(186,230,253,.75)!important;
+}
+#missingEventTodayCard .missing-metric-pill.range-yellow{
+  background:rgba(234,179,8,.28)!important;
+  border-color:rgba(253,224,71,.68)!important;
+}
+#missingEventTodayCard .missing-metric-pill.range-yellow strong{
+  background:rgba(202,138,4,.58)!important;
+  border-color:rgba(254,240,138,.75)!important;
+}
+#missingEventTodayCard .missing-metric-pill.range-red{
+  background:rgba(220,38,38,.30)!important;
+  border-color:rgba(252,165,165,.68)!important;
+}
+#missingEventTodayCard .missing-metric-pill.range-red strong{
+  background:rgba(185,28,28,.62)!important;
+  border-color:rgba(254,202,202,.75)!important;
+}
+
+body.print-clean-view .controls,
+body.print-clean-view .table-head .actions,
+body.print-clean-view #calendarTopBtn,
+body.print-clean-view #forecastHeroBtn{
+  display:none!important;
+}
+body.print-clean-view .hero-actions,
+body.print-clean-view #forceSaveBtn{
+  display:grid!important;
+}
+body.print-clean-view .hero-actions{
+  margin-left:auto!important;
+  justify-content:end!important;
+  justify-items:end!important;
+  grid-template-columns:auto auto!important;
+}
+body.print-clean-view #forceSaveBtn{
+  grid-column:1!important;
+}
+body.print-clean-view .hero-yard-card{
+  grid-column:2!important;
+}
+body.forecast-view.forecast-print-clean-view .forecast-head,
+body.forecast-view.forecast-print-clean-view .forecast-controls,
+body.forecast-view.forecast-print-clean-view .hero-yard-card,
+body.forecast-view.forecast-print-clean-view #calendarTopBtn,
+body.forecast-view.forecast-print-clean-view #forecastHeroBtn{
+  display:none!important;
+}
+body.forecast-view.forecast-print-clean-view .hero-actions{
+  margin-left:auto!important;
+  justify-content:end!important;
+}
+body.forecast-view #forceSaveBtn .force-save-split-bottom{
+  justify-content:flex-start!important;
+  padding-left:18px!important;
+}
+body.forecast-view #forceSaveBtn .force-save-split-top .hero-action-icon{
+  font-size:23px!important;
+}
+.yard-checked-today-label{
+  white-space:nowrap!important;
+  font-size:10px!important;
+  letter-spacing:.02em!important;
+}
+.metrics .metric .hint{
+  position:absolute!important;
+  left:20px!important;
+  bottom:18px!important;
+  margin:0!important;
+  text-align:left!important;
+  font-size:18px!important;
+  line-height:1.15!important;
+  font-weight:1000!important;
+  letter-spacing:.02em!important;
+}
+
+/* Final metric-card design */
+.metrics{
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:18px!important;
+}
+.metrics .metric{
+  min-height:240px!important;
+  padding:22px 24px!important;
+  border-radius:20px!important;
+  overflow:hidden!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 18px 45px rgba(0,0,0,.24)!important;
+}
+.metrics .metric:not(.cyan):not(.green):not(.amber){
+  border-color:rgba(59,130,246,.55)!important;
+  background:radial-gradient(circle at 18% 12%,rgba(37,99,235,.20),transparent 42%),linear-gradient(145deg,#101b38,#071124)!important;
+}
+.metrics .metric.cyan{
+  border-color:rgba(6,182,212,.55)!important;
+  background:radial-gradient(circle at 18% 12%,rgba(6,182,212,.20),transparent 42%),linear-gradient(145deg,#07313c,#071724)!important;
+}
+.metrics .metric.green{
+  border-color:rgba(74,222,128,.55)!important;
+  background:radial-gradient(circle at 18% 12%,rgba(34,197,94,.19),transparent 42%),linear-gradient(145deg,#123125,#081b19)!important;
+}
+#missingEventTodayCard{
+  border-color:rgba(239,68,68,.85)!important;
+  background:radial-gradient(circle at 18% 12%,rgba(239,68,68,.23),transparent 42%),linear-gradient(145deg,#321316,#1b0c16)!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06),0 0 20px rgba(239,68,68,.20)!important;
+}
+#missingEventTodayCard:hover,
+#missingEventTodayCard:focus,
+#missingEventTodayCard:active{
+  transform:none!important;
+}
+.metrics .metric .icon{
+  display:grid!important;
+  visibility:visible!important;
+  opacity:1!important;
+  position:absolute!important;
+  top:18px!important;
+  left:20px!important;
+  width:48px!important;
+  height:48px!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:visible!important;
+  border-radius:999px!important;
+  place-items:center!important;
+  font-size:25px!important;
+  background:rgba(59,130,246,.30)!important;
+}
+.metrics .metric.cyan .icon{background:rgba(6,182,212,.32)!important}
+.metrics .metric.green .icon{background:rgba(34,197,94,.32)!important}
+#missingEventTodayCard .icon{background:rgba(239,68,68,.55)!important}
+.metrics .metric .label{
+  position:absolute!important;
+  top:34px!important;
+  left:82px!important;
+  right:18px!important;
+  width:auto!important;
+  max-width:none!important;
+  padding:0!important;
+  color:#f8fafc!important;
+  font-size:15px!important;
+  line-height:1!important;
+  font-weight:1000!important;
+  letter-spacing:.04em!important;
+  white-space:nowrap!important;
+}
+.metrics .metric:after{
+  content:""!important;
+  position:absolute!important;
+  top:82px!important;
+  left:20px!important;
+  right:20px!important;
+  height:1px!important;
+  background:rgba(148,163,184,.20)!important;
+}
+.metrics .metric .value{
+  top:106px!important;
+  left:24px!important;
+  right:auto!important;
+  font-size:58px!important;
+  line-height:.9!important;
+  text-align:left!important;
+  letter-spacing:-.06em!important;
+}
+#mToday{font-size:54px!important}
+#missingEventTodayCard .value{
+  top:28px!important;
+  left:auto!important;
+  right:24px!important;
+  color:#ff5148!important;
+  font-size:48px!important;
+}
+.metrics .metric:not(#missingEventTodayCard):before{
+  display:none!important;
+}
+.metrics .metric .hint{
+  left:24px!important;
+  bottom:28px!important;
+  color:#94a3b8!important;
+  font-size:15px!important;
+  line-height:1.1!important;
+  font-weight:600!important;
+  letter-spacing:0!important;
+  white-space:nowrap!important;
+}
+#missingEventTodayCard .missing-metric-breakdown{
+  position:absolute!important;
+  top:100px!important;
+  left:20px!important;
+  right:20px!important;
+  margin:0!important;
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  gap:12px!important;
+}
+#missingEventTodayCard .missing-metric-pill{
+  min-height:48px!important;
+  padding:8px 12px!important;
+  border-radius:7px!important;
+}
+#missingEventTodayCard .missing-metric-pill span{
+  font-size:13px!important;
+}
+#missingEventTodayCard .missing-metric-pill strong{
+  min-width:24px!important;
+  height:24px!important;
+  border:0!important;
+  background:transparent!important;
+  font-size:19px!important;
+}
+@media(max-width:1100px){
+  .metrics{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+@media(max-width:620px){
+  .metrics{grid-template-columns:1fr!important}
+}
+
+/* Compact metric-card height */
+.metrics .metric{
+  min-height:145px!important;
+  height:145px!important;
+  padding:12px 16px!important;
+}
+.metrics .metric .icon{
+  top:10px!important;
+  left:16px!important;
+  width:38px!important;
+  height:38px!important;
+  font-size:20px!important;
+}
+.metrics .metric .label{
+  top:23px!important;
+  left:66px!important;
+  font-size:13px!important;
+}
+.metrics .metric:after{
+  top:58px!important;
+  left:16px!important;
+  right:16px!important;
+}
+.metrics .metric .value{
+  top:70px!important;
+  left:18px!important;
+  font-size:42px!important;
+}
+#mToday{font-size:39px!important}
+.metrics .metric .hint{
+  left:18px!important;
+  bottom:10px!important;
+  font-size:12px!important;
+}
+#missingEventTodayCard .value{
+  top:13px!important;
+  right:16px!important;
+  font-size:34px!important;
+}
+#missingEventTodayCard .missing-metric-breakdown{
+  top:68px!important;
+  left:14px!important;
+  right:14px!important;
+  gap:8px 10px!important;
+}
+#missingEventTodayCard .missing-metric-pill{
+  min-height:27px!important;
+  height:27px!important;
+  padding:3px 9px!important;
+}
+#missingEventTodayCard .missing-metric-pill span{
+  font-size:11px!important;
+}
+#missingEventTodayCard .missing-metric-pill strong{
+  min-width:20px!important;
+  height:20px!important;
+  font-size:13px!important;
+}
+#mOnHand{
+  display:flex!important;
+  align-items:baseline!important;
+  gap:9px!important;
+  white-space:nowrap!important;
+}
+#mOnHand .on-hand-difference{
+  font-size:20px!important;
+  line-height:1!important;
+  font-weight:1000!important;
+  letter-spacing:0!important;
+}
+#mOnHand .on-hand-difference.positive{color:#4ade80!important}
+#mOnHand .on-hand-difference.negative{color:#fb7185!important}
+.forecast-request-count.onhand{
+  white-space:nowrap!important;
+}
+.forecast-onhand-difference{
+  margin-left:4px!important;
+  font-size:.72em!important;
+  line-height:1!important;
+  font-weight:1000!important;
+}
+.forecast-onhand-difference.positive{color:#4ade80!important}
+.forecast-onhand-difference.negative{color:#fb7185!important}
+.forecast-difference-toggle{
+  margin-left:4px!important;
+  padding:2px 5px!important;
+  border:1px solid rgba(148,163,184,.35)!important;
+  border-radius:6px!important;
+  background:rgba(15,23,42,.75)!important;
+  color:#dbeafe!important;
+  font-size:8px!important;
+  line-height:1!important;
+  font-weight:1000!important;
+  white-space:nowrap!important;
+  cursor:pointer!important;
+}
+body.hide-forecast-differences .forecast-onhand-difference{
+  display:none!important;
+}
+.forecast-train-summary-card.collapsed .forecast-table-wrap{
+  display:none!important;
+}
+.forecast-train-summary-head-actions{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:flex-end!important;
+  gap:10px!important;
+  flex-wrap:wrap!important;
+}
+#forecastTrainSummaryToggle{
+  padding:7px 14px!important;
+  border:1px solid rgba(196,181,253,.48)!important;
+  border-radius:999px!important;
+  background:rgba(88,28,135,.48)!important;
+  color:#f5f3ff!important;
+  font-size:11px!important;
+  font-weight:1000!important;
+  cursor:pointer!important;
+}
+.forecast-excel-view{
+  display:none;
+}
+body.forecast-excel-view-open main.app > :not(#forecastExcelView){
+  display:none!important;
+}
+body.forecast-excel-view-open .forecast-excel-view{
+  display:block!important;
+  grid-column:1/-1!important;
+}
+.forecast-excel-page{
+  width:818px;
+  min-height:774px;
+  max-width:calc(100vw - 16px);
+  margin:0 auto;
+  padding:6px;
+  background:#fff;
+  color:#000;
+  font-family:"Aptos Narrow","Arial Narrow",Arial,sans-serif;
+  font-weight:700;
+}
+.forecast-excel-page,
+.forecast-excel-page *{
+  color:#000!important;
+}
+.forecast-excel-toolbar{
+  position:fixed;
+  top:10px;
+  right:10px;
+  z-index:50;
+}
+.forecast-excel-toolbar h2{display:none}
+.forecast-excel-toolbar button,.forecast-excel-open-btn{
+  border:1px solid #64748b!important;
+  border-radius:8px!important;
+  padding:8px 12px!important;
+  background:#e2e8f0!important;
+  color:#0f172a!important;
+  font-weight:900!important;
+}
+.forecast-excel-content{
+  display:block;
+}
+.forecast-excel-columns{
+  display:grid;
+  grid-template-columns:minmax(0, 56%) minmax(0, 44%);
+  gap:6px;
+  align-items:stretch;
+}
+.forecast-excel-left,
+.forecast-excel-block{
+  border:1px solid #e5e7eb;
+  border-radius:6px;
+  padding:6px;
+  box-shadow:0 1px 5px rgba(0,0,0,.12);
+  background:#fff;
+}
+.forecast-excel-left{
+  display:flex;
+  flex-direction:column;
+  height:100%;
+}
+.forecast-excel-left .forecast-excel-main-table{
+  flex:1;
+  height:100%;
+}
+.forecast-excel-left>h1{
+  margin:0 0 8px;
+  text-align:center;
+  font-size:18px;
+}
+.forecast-excel-right{
+  display:grid;
+  gap:6px;
+}
+.forecast-excel-block h3{
+  margin:0 0 6px;
+  padding:4px 6px;
+  text-align:center;
+  background:#fff600;
+  font-size:17px;
+}
+.forecast-excel-block.hours24 h3{background:#d9f2cf}
+.forecast-excel-block.hours48 h3{background:#fff600}
+.forecast-excel-table{
+  width:100%;
+  border-collapse:collapse;
+  table-layout:auto;
+  font-size:10px;
+}
+.forecast-excel-table th,.forecast-excel-table td{
+  border:2px solid #111;
+  padding:2px 3px;
+  text-align:center;
+  height:17px;
+  min-width:0;
+  white-space:nowrap;
+  overflow-wrap:normal;
+  word-break:normal;
+  line-height:1.05;
+}
+.forecast-excel-table thead th{
+  background:#fff;
+  border-top:0;
+  border-left:0;
+  border-right:0;
+  border-bottom:0;
+  font-size:9px;
+  letter-spacing:-.02em;
+}
+.forecast-excel-table thead{
+  position:relative;
+  z-index:2;
+  background:#fff;
+}
+.forecast-excel-table thead::before,
+.forecast-excel-table thead::after{
+  content:"";
+  position:absolute;
+  top:0;
+  bottom:0;
+  width:3px;
+  background:#fff;
+}
+.forecast-excel-table thead::before{left:-2px}
+.forecast-excel-table thead::after{right:-2px}
+.forecast-excel-main-table thead tr > :nth-child(1),
+.forecast-excel-main-table thead tr > :nth-child(2),
+.forecast-excel-main-table thead tr > :last-child{
+  border-left:0!important;
+  border-right:0!important;
+}
+.forecast-excel-main-table{table-layout:fixed}
+.forecast-excel-main-table thead th:nth-child(1){width:22%}
+.forecast-excel-main-table thead th:nth-child(2){width:13%}
+.forecast-excel-main-table thead th:nth-child(n+3):nth-child(-n+6){width:12.75%}
+.forecast-excel-main-table thead th:last-child{width:14%}
+.forecast-excel-main-table th,
+.forecast-excel-main-table td{
+  border-left:0;
+  border-right:0;
+  border-top:1px solid #d1d5db;
+  border-bottom:1px solid #d1d5db;
+}
+.forecast-excel-main-table{
+  border:2px solid #111;
+  border-top:0;
+  position:relative;
+}
+.forecast-excel-main-table::after{
+  content:"";
+  position:absolute;
+  top:17px;
+  bottom:0;
+  left:22%;
+  width:2px;
+  background:#111;
+  z-index:20;
+  pointer-events:none;
+}
+.forecast-excel-main-table thead tr > :nth-child(1),
+.forecast-excel-main-table thead tr > :nth-child(2),
+.forecast-excel-main-table tbody .excel-train-name,
+.forecast-excel-main-table tbody tr > th:first-child:not(.excel-train-name){
+  border-right:0;
+}
+.forecast-excel-main-table tbody tr > th:first-child:not(.excel-train-name){
+  border-right:2px solid #111;
+}
+.forecast-excel-main-table tbody tr > .excel-train-name + th{
+  border-right:2px solid #111;
+}
+.forecast-excel-main-table tr > :last-child{
+  border-left:2px solid #111;
+}
+.forecast-excel-right .forecast-excel-table th,
+.forecast-excel-right .forecast-excel-table td{
+  font-size:9px;
+  padding:2px;
+  border-top:1px solid #d1d5db;
+  border-bottom:1px solid #d1d5db;
+}
+.forecast-excel-right .forecast-excel-table th{width:1%}
+.forecast-excel-right .forecast-excel-table tbody th{
+  font-size:12px;
+}
+.forecast-excel-right .forecast-excel-table{
+  border:2px solid #111;
+  border-top:0;
+}
+.forecast-excel-main-table tbody tr:nth-child(8n+1) > *,
+.forecast-excel-main-table tbody tr:nth-child(8n+2) > *,
+.forecast-excel-main-table tbody tr:nth-child(8n+3) > *,
+.forecast-excel-main-table tbody tr:nth-child(8n+4) > *{
+  background:#e9e9e9;
+}
+.forecast-excel-main-table tbody tr:nth-child(8n+5) > *,
+.forecast-excel-main-table tbody tr:nth-child(8n+6) > *,
+.forecast-excel-main-table tbody tr:nth-child(8n+7) > *,
+.forecast-excel-main-table tbody tr:nth-child(8n+8) > *{
+  background:#fff;
+}
+.forecast-excel-main-table td{color:#111}
+.forecast-excel-main-table td.excel-over-50{
+  background:#f59e0b!important;
+  color:#000!important;
+}
+.forecast-excel-zero{
+  opacity:.07;
+}
+.forecast-excel-main-table td:empty{color:#bbb}
+.forecast-excel-main-table .excel-train-name{
+  font-size:16px;
+}
+.forecast-excel-main-table .excel-train-name small{
+  display:block;
+  width:max-content;
+  margin:4px auto 0;
+  padding:3px 8px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:700;
+}
+.forecast-excel-main-table .arrival-today{
+  background:#dcfce7;
+  color:#166534!important;
+}
+.forecast-excel-main-table .arrival-tomorrow{
+  background:#fef3c7;
+  color:#92400e!important;
+}
+.forecast-excel-main-table .arrival-two-days{
+  background:#dbeafe;
+  color:#1d4ed8!important;
+}
+.forecast-excel-main-table tbody tr:nth-child(4n+1) th,
+.forecast-excel-main-table tbody tr:nth-child(4n+1) td{
+  border-top:2px solid #111;
+}
+.forecast-excel-block:not(.request) tbody tr.calculator-pool-tgrp{background:#f4d1f0}
+.forecast-excel-block:not(.request) tbody tr.calculator-pool-fgcp{background:#ffe5d4}
+.forecast-excel-block:not(.request) tbody tr.calculator-pool-sncz{background:#d9f2cf}
+.forecast-excel-block:not(.request) tbody tr.calculator-pool-dcli{background:#f2f2f2}
+.forecast-excel-block.hours24 tbody tr.calculator-pool-tgrp,
+.forecast-excel-block.hours24 tbody tr.calculator-pool-sncz{
+  background:#e9e9e9;
+}
+.forecast-excel-block.hours24 tbody tr.calculator-pool-fgcp,
+.forecast-excel-block.hours24 tbody tr.calculator-pool-dcli{
+  background:#fff;
+}
+.forecast-excel-block:not(.request) .forecast-excel-table{
+  border:2px solid #111;
+  border-top:0;
+}
+.forecast-excel-block:not(.request) .forecast-excel-table thead th{
+  border:0;
+  border-bottom:2px solid #111;
+  background:#fff;
+}
+.forecast-excel-block:not(.request) .forecast-excel-table tbody th,
+.forecast-excel-block:not(.request) .forecast-excel-table tbody td{
+  border-top:0;
+  border-bottom:0;
+  border-left:0;
+  border-right:0;
+}
+.forecast-excel-block:not(.request) .forecast-excel-table tbody tr > :last-child{
+  border-right:0;
+}
+.forecast-excel-block:not(.request) .forecast-excel-table tbody th[rowspan]{
+  border-right:2px solid #111;
+}
+.forecast-excel-block:not(.request) .forecast-excel-table tbody tr > :last-child{
+  border-left:2px solid #111;
+}
+.forecast-excel-block:not(.request) .forecast-excel-table tbody tr[class^="calculator-pool-"]:has(th[rowspan]) > *{
+  border-top:2px solid #111;
+}
+.forecast-excel-block:not(.request) .forecast-excel-table tbody tr:first-child > *{
+  border-top:0!important;
+}
+.forecast-excel-table .forecast-excel-negative{
+  background:#ffff00!important;
+  color:#000!important;
+}
+.forecast-excel-block.request h3{background:#fff600}
+.forecast-excel-block.request tbody tr.request-pool-tgrp{background:#f4d1f0}
+.forecast-excel-block.request tbody tr.request-pool-fgcp{background:#ffe5d4}
+.forecast-excel-block.request tbody tr.request-pool-sncz{background:#d9f2cf}
+.forecast-excel-block.request tbody tr.request-pool-dcli{background:#f2f2f2}
+.forecast-excel-block.request .forecast-excel-table{
+  border:2px solid #111;
+  border-top:0;
+}
+.forecast-excel-block.request .forecast-excel-table thead th{
+  border:0;
+  border-bottom:2px solid #111;
+  background:#fff;
+}
+.forecast-excel-block.request .forecast-excel-table tbody th,
+.forecast-excel-block.request .forecast-excel-table tbody td{
+  border-top:0;
+  border-bottom:0;
+  border-left:0;
+  border-right:0;
+}
+.forecast-excel-block.request .forecast-excel-table tbody th[rowspan]{
+  border:1px solid rgba(15,23,42,.12);
+  border-right:2px solid #111;
+  border-radius:7px;
+  font-size:14px;
+  text-align:center;
+  padding-left:3px;
+  padding-right:3px;
+  vertical-align:middle;
+  box-shadow:0 1px 3px rgba(15,23,42,.08);
+}
+.forecast-excel-block.request .forecast-excel-table tbody tr > :last-child{
+  border-left:2px solid #111;
+}
+.forecast-excel-block.request .forecast-excel-table tbody tr > :last-child{
+  border-right:0;
+}
+.forecast-excel-block.request .forecast-excel-table tbody tr[class^="request-pool-"]:has(th[rowspan]) > *{
+  border-top:2px solid #111;
+}
+.forecast-excel-block.request .forecast-excel-table tbody tr:first-child > *{
+  border-top:0!important;
+}
+.forecast-excel-main-table .excel-placeholder-row td,
+.forecast-excel-main-table .excel-placeholder-row th:not(.excel-train-name){color:#c7c7c7}
+.forecast-excel-main-table .excel-total-row th,
+.forecast-excel-main-table .excel-total-row td{
+  font-weight:700;
+  font-size:inherit;
+  padding-top:2px;
+  padding-bottom:2px;
+}
+.forecast-excel-main-table .excel-total-row .excel-train-name{
+  font-size:16px;
+  font-weight:700;
+  line-height:1;
+  vertical-align:middle;
+}
+.forecast-excel-notes{
+  margin-top:8px;
+  width:100%;
+  max-width:100%;
+  border:1px solid #e5e7eb;
+  border-radius:6px;
+  padding:6px;
+  box-shadow:0 1px 5px rgba(0,0,0,.12);
+}
+.forecast-excel-notes h3{
+  margin:0;
+  padding:3px;
+  background:#000!important;
+  color:#fff!important;
+  text-align:center;
+  font-size:12px;
+}
+.forecast-excel-notes>div{
+  display:grid;
+  grid-template-columns:84px 1fr 96px 1fr;
+  min-height:68px;
+  border:2px solid #111;
+}
+.forecast-excel-notes strong,
+.forecast-excel-notes span{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:5px;
+  border:0;
+  text-align:center;
+  font-size:12px;
+  line-height:1.25;
+  overflow-wrap:normal;
+  word-break:normal;
+}
+.forecast-excel-notes span:nth-child(2){
+  background:#d9f2cf;
+  border-right:2px solid #111;
+}
+.forecast-excel-notes span:nth-child(4){background:#dbe9f8}
+.forecast-excel-notes span{
+  font-size:14px;
+  line-height:1.35;
+}
+@media(max-width:1000px){
+  .forecast-excel-page{transform-origin:top left}
 }
 
 </style>
