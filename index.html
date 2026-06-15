@@ -4094,6 +4094,14 @@ body.forecast-view .forecast-hero-card {
   text-transform: uppercase;
   letter-spacing: .07em;
 }
+.forecast-pool-resolver-head .forecast-pool-resolver-title{
+  color:#fff7ed!important;
+  font-size:24px!important;
+  line-height:1!important;
+  font-weight:1000!important;
+  letter-spacing:-.04em!important;
+  text-transform:none!important;
+}
 .forecast-pool-resolver-head button,
 .forecast-pool-save-btn,
 .forecast-pool-close-btn {
@@ -4965,7 +4973,7 @@ body.forecast-view .forecast-bottom-controls {
 .forecast-compact-meta-row em{
   font-style:normal;
   border-radius:999px;
-  padding:3px 8px;
+  padding:3px 10px;
   border:1px solid rgba(148,163,184,.20);
   white-space:nowrap;
 }
@@ -5058,7 +5066,7 @@ body.forecast-view .forecast-bottom-controls {
   gap:7px!important;
 }
 .forecast-compact-train-main .forecast-train-name{
-  font-size:14px!important;
+  font-size:16px!important;
   line-height:.95!important;
 }
 .forecast-compact-eta{
@@ -5837,6 +5845,7 @@ body.forecast-view .forecast-bottom-controls {
         <button id="forecastToolsToggleBtn" type="button" class="forecast-tools-toggle-btn" aria-expanded="true">Hide Tools</button>
         <button id="forecastDifferenceToggleBtn" type="button" class="forecast-tools-toggle-btn forecast-difference-top-toggle">Hide +/-</button>
         <button id="closeForecastModal" class="forecast-close" type="button">Back to Chassis Reconciliation</button>
+        <button id="forecastSummaryVisibilityToggle" type="button" aria-expanded="false">Show Deficits &amp; Request Summary</button>
         <button id="openForecastExcelViewBtn" class="forecast-close forecast-excel-open-btn" type="button">Excel View</button>
       </div>
     </div>
@@ -5874,7 +5883,7 @@ body.forecast-view .forecast-bottom-controls {
       </div>
     </div>
 
-    <div class="forecast-summary-grid">
+    <div class="forecast-summary-grid" id="forecastSummaryGrid" hidden>
       <div class="forecast-summary-card" id="forecastConcernGroupsCard"><span>Deficits by Train</span><strong id="forecastTrainGroups">0</strong></div>
       <div class="forecast-summary-card forecast-request-summary-card">
         <div class="forecast-request-summary-head">
@@ -6084,6 +6093,16 @@ body.forecast-view .forecast-bottom-controls {
       </div>
     </div>
 
+    <div id="forecastMismatchDetailsModal" class="forecast-mismatch-details-modal" aria-hidden="true">
+      <div class="forecast-mismatch-details-card">
+        <div class="forecast-mismatch-details-head">
+          <h3 id="forecastMismatchDetailsTitle">View Details</h3>
+          <button id="forecastMismatchDetailsCloseBtn" type="button">Close</button>
+        </div>
+        <div id="forecastMismatchDetailsContent" class="forecast-mismatch-details-content"></div>
+      </div>
+    </div>
+
     <div id="forecastAuthorizedPreviewModal" class="forecast-authorized-preview-modal" aria-hidden="true">
       <div class="forecast-authorized-preview-card">
         <div class="forecast-authorized-preview-head">
@@ -6116,7 +6135,7 @@ body.forecast-view .forecast-bottom-controls {
     <!-- Moved below Imported Forecast Units -->
     <div class="forecast-pool-resolver-card">
         <div class="forecast-pool-resolver-head">
-          <span>Resolve Unknown Pools</span>
+          <span class="forecast-pool-resolver-title">Resolve Unknown Pools</span>
           <div class="forecast-pool-resolver-actions">
             <button id="forecastPoolResolverModeBtn" type="button">Edit Saved</button>
             <button id="forecastResolvePoolsBtn" type="button">Resolve / Save Bank</button>
@@ -6140,9 +6159,7 @@ body.forecast-view .forecast-bottom-controls {
     <div id="forecastHiddenTrainIsland" class="forecast-hidden-island">
       <div id="forecastHiddenToggleHeader" class="forecast-hidden-toggle-head" role="button" tabindex="0" aria-expanded="true">
         <span class="forecast-hidden-title-wrap">
-          <span class="forecast-hidden-kicker">Hidden Train Groups</span>
           <strong>Hidden Trains</strong>
-          <small id="forecastHiddenCountText">0 hidden groups</small>
         </span>
         <span class="forecast-hidden-head-actions">
           <span id="forecastHiddenCollapseText" class="forecast-hidden-collapse-text">Collapse</span>
@@ -6178,6 +6195,82 @@ body.forecast-view .forecast-bottom-controls {
     <div class="forecast-excel-toolbar">
       <h2>Chassis Forecast (72H)</h2>
       <button id="closeForecastExcelViewBtn" type="button">Back to Chassis Forecast</button>
+      <div class="forecast-excel-view-controls">
+        <label for="forecastExcelMainHeaderSizeSlider">
+          <span>Main Header</span>
+          <strong id="forecastExcelMainHeaderSizeValue">100%</strong>
+        </label>
+        <input id="forecastExcelMainHeaderSizeSlider" type="range" min="60" max="180" step="5" value="100">
+        <label for="forecastExcelSecondaryHeaderSizeSlider">
+          <span>Secondary Headers</span>
+          <strong id="forecastExcelSecondaryHeaderSizeValue">100%</strong>
+        </label>
+        <input id="forecastExcelSecondaryHeaderSizeSlider" type="range" min="60" max="180" step="5" value="100">
+        <label for="forecastExcelTableTextSizeSlider">
+          <span>Table Text</span>
+          <strong id="forecastExcelTableTextSizeValue">100%</strong>
+        </label>
+        <input id="forecastExcelTableTextSizeSlider" type="range" min="60" max="180" step="5" value="100">
+        <label for="forecastExcelArrivalFlagSizeSlider">
+          <span>Arrival Flags</span>
+          <strong id="forecastExcelArrivalFlagSizeValue">8px</strong>
+        </label>
+        <input id="forecastExcelArrivalFlagSizeSlider" type="range" min="5" max="14" step="0.5" value="8">
+        <label for="forecastExcelNetTextSizeSlider">
+          <span>Net Text</span>
+          <strong id="forecastExcelNetTextSizeValue">8.3px</strong>
+        </label>
+        <input id="forecastExcelNetTextSizeSlider" type="range" min="5" max="16" step="0.1" value="8.3">
+        <label for="forecastExcelNetPaddingSlider">
+          <span>Net Flag Padding</span>
+          <strong id="forecastExcelNetPaddingValue">10px</strong>
+        </label>
+        <input id="forecastExcelNetPaddingSlider" type="range" min="0" max="20" step="1" value="10">
+        <label for="forecastExcelNotesLabelSizeSlider">
+          <span>Notes Labels</span>
+          <strong id="forecastExcelNotesLabelSizeValue">10px</strong>
+        </label>
+        <input id="forecastExcelNotesLabelSizeSlider" type="range" min="6" max="18" step="0.5" value="10">
+        <label for="forecastExcelNotesTextSizeSlider">
+          <span>Shortages Text</span>
+          <strong id="forecastExcelNotesTextSizeValue">14px</strong>
+        </label>
+        <input id="forecastExcelNotesTextSizeSlider" type="range" min="7" max="22" step="0.5" value="14">
+        <label for="forecastExcelNotesTrainSizeSlider">
+          <span>Train Totals Text</span>
+          <strong id="forecastExcelNotesTrainSizeValue">16px</strong>
+        </label>
+        <input id="forecastExcelNotesTrainSizeSlider" type="range" min="8" max="24" step="0.5" value="16">
+        <label for="forecastExcelNotesHeightSlider">
+          <span>Notes Height</span>
+          <strong id="forecastExcelNotesHeightValue">90px</strong>
+        </label>
+        <input id="forecastExcelNotesHeightSlider" type="range" min="54" max="240" step="2" value="90">
+        <label for="forecastExcelWidthSlider">
+          <span>Table Width</span>
+          <strong id="forecastExcelWidthValue">100%</strong>
+        </label>
+        <input id="forecastExcelWidthSlider" type="range" min="30" max="140" step="5" value="100">
+        <label for="forecastExcelHeightSlider">
+          <span>Table Height</span>
+          <strong id="forecastExcelHeightValue">100%</strong>
+        </label>
+        <input id="forecastExcelHeightSlider" type="range" min="20" max="180" step="5" value="100">
+        <button id="forecastExcelFontToggle" class="forecast-excel-empty-toggle" type="button" aria-expanded="false">Change Fonts</button>
+        <button id="forecastExcelEmptyInboundToggle" class="forecast-excel-empty-toggle" type="button" aria-pressed="false">Hide No Inbound Sections</button>
+        <button id="forecastExcelTestCopyToggle" class="forecast-excel-empty-toggle" type="button" aria-pressed="false">Open Test Copy</button>
+        <button id="forecastExcelTrainTotalsToggle" class="forecast-excel-empty-toggle" type="button" aria-pressed="false">Show Train Totals</button>
+        <button id="forecastExcelPreviousSubmissionToggle" class="forecast-excel-empty-toggle" type="button" aria-pressed="false">Show Previous Submission</button>
+        <button id="forecastExcelResetRequestsBtn" class="forecast-excel-empty-toggle forecast-excel-reset-requests" type="button">Reset Requests to 0</button>
+        <div id="forecastExcelFontControls" class="forecast-excel-font-controls" hidden>
+          <label for="forecastExcelTableFont"><span>Table Font</span></label>
+          <select id="forecastExcelTableFont"></select>
+          <label for="forecastExcelHeaderFont"><span>Header Font</span></label>
+          <select id="forecastExcelHeaderFont"></select>
+          <label for="forecastExcelTitleFont"><span>Main Title Font</span></label>
+          <select id="forecastExcelTitleFont"></select>
+        </div>
+      </div>
     </div>
     <div id="forecastExcelContent" class="forecast-excel-content"></div>
   </div>
@@ -9471,6 +9564,7 @@ function renderYardCalendar(){
 
 
 let forecastRows=[];
+let forecastPageHydrated=false;
 function getDefaultForecastName(){
   const d=new Date();
   const mm=String(d.getMonth()+1).padStart(2,"0");
@@ -9604,15 +9698,18 @@ function setAppPage(page){
   if(forecast){
     const drop=$("forecastYardDrop");
     if(drop && !drop.innerHTML)drop.innerHTML=YARD_OPTIONS.map(o=>`<option>${o}</option>`).join("");
-    loadForecastState();
-    renderForecastImportedUnits();
-    renderForecastOnHandChassis();
-    renderForecastRequestHistoryPreview();
-    renderForecastArchiveList();
+    if(!forecastPageHydrated){
+      loadForecastState();
+      renderForecastImportedUnits();
+      renderForecastOnHandChassis();
+      renderForecastRequestHistoryPreview();
+      renderForecastArchiveList();
+      forecastPageHydrated=true;
+    }
     applyForecastToolsVisibility();
-    $("forecastModal")?.scrollIntoView({behavior:"smooth",block:"start"});
+    $("forecastModal")?.scrollIntoView({behavior:"auto",block:"start"});
   }else{
-    document.querySelector(".table-card")?.scrollIntoView({behavior:"smooth",block:"start"});
+    document.querySelector(".table-card")?.scrollIntoView({behavior:"auto",block:"start"});
   }
 }
 function openForecastModal(){
@@ -9624,11 +9721,22 @@ function closeForecastModal(){
 
 function forecastExcelPoolColumn(pool){
   const p=String(pool||"").toUpperCase();
-  if(p==="TGRP")return "TRAC";
+  if(p==="TGRP"||p==="TRGP"||p==="TRAC")return "TRAC";
   if(p==="FGCP")return "FGCP";
   if(p==="SNCZ"||p==="SNBZ")return "SNCZ";
   if(p==="DCLI"||p==="DCLP")return "DCLI";
   return "";
+}
+function normalizeForecastExcelSpecialPair(unit){
+  let pair=normalizeForecastDemandPoolSizePair(unit);
+  if(pair&&forecastExcelPoolColumn(pair.pool)&&["20","40","45","53"].includes(String(pair.size)))return pair;
+  const rawPool=unit?.pool||unit?.equipmentPool||unit?.requiredPool||unit?.eqmtPoolId||"";
+  const pool=String(rawPool).trim().toUpperCase().replace(/[^A-Z0-9]/g,"");
+  const rawSize=normalizeForecastSizeLabel(unit?.size).replace("'","");
+  const inferredSize=inferForecastSizeFromCarType(unit?.carType||unit?.carKind||"").replace("'","");
+  const size=["20","40","45","53"].includes(rawSize)?rawSize:inferredSize;
+  if(!forecastExcelPoolColumn(pool)||!["20","40","45","53"].includes(size))return null;
+  return normalizeInventoryPoolSizePair(pool,size);
 }
 function forecastExcelDateKey(date){
   return date instanceof Date&&!Number.isNaN(date.getTime())
@@ -9670,6 +9778,8 @@ function buildForecastExcelTrainRows(units){
   });
   const groups=[...groupMap.values()].sort((a,b)=>compareForecastUnitsByArrival(a.units[0],b.units[0]));
   const rows=groups.flatMap(group=>{
+    const arrivalLabel=getForecastExcelArrivalLabel(group.day);
+    const groupClass=`excel-arrival-${getForecastExcelArrivalClass(arrivalLabel).replace(/^arrival-/,"")}`;
     return sizes.map((size,index)=>{
       const counts={TRAC:0,FGCP:0,SNCZ:0,DCLI:0};
       group.units.forEach(unit=>{
@@ -9678,7 +9788,7 @@ function buildForecastExcelTrainRows(units){
         const col=forecastExcelPoolColumn(pair.pool);
         if(col)counts[col]+=1;
       });
-      return {train:index===0?group.train:"",arrivalLabel:index===0?getForecastExcelArrivalLabel(group.day):"",size,counts,total:Object.values(counts).reduce((a,b)=>a+b,0),rowspan:index===0?sizes.length:0};
+      return {train:index===0?group.train:"",sourceTrain:group.train,sourceDay:group.day,trainTotal:group.units.length,arrivalLabel:index===0?arrivalLabel:"",groupClass,size,counts,total:Object.values(counts).reduce((a,b)=>a+b,0),rowspan:index===0?sizes.length:0};
     });
   });
   ["---","---"].forEach(train=>{
@@ -9688,12 +9798,12 @@ function buildForecastExcelTrainRows(units){
     sizes.forEach((size,index)=>{
       const counts={TRAC:0,FGCP:0,SNCZ:0,DCLI:0};
       sourceUnits.forEach(unit=>{
-        const pair=normalizeForecastDemandPoolSizePair(unit);
+        const pair=normalizeForecastExcelSpecialPair(unit);
         if(!pair||String(pair.size)!==size)return;
         const col=forecastExcelPoolColumn(pair.pool);
         if(col)counts[col]+=1;
       });
-      rows.push({train:index===0?label:"",size,counts,total:Object.values(counts).reduce((a,b)=>a+b,0),rowspan:index===0?sizes.length:0});
+      rows.push({train:index===0?label:"",groupClass:label==="STACKED"?"excel-stacked-row":"excel-mismatch-row",size,counts,total:Object.values(counts).reduce((a,b)=>a+b,0),rowspan:index===0?sizes.length:0});
     });
   });
   return rows;
@@ -9723,7 +9833,7 @@ function buildForecastExcelShortageNotes(rows){
   const checks=[
     ["TGRP","45",3,"TRAC"],["TGRP","40",15,"TRAC"],
     ["FGCP","45",3,"FLEXI"],["FGCP","40",15,"FLEXI"],
-    ["SNCZ","53",15,"SNCZ"],["SNCZ","40",5,"SNCZ"],
+    ["SNCZ","53",15,"SNCZ"],["SNBZ","40",5,"SNCZ"],
     ["DCLI","53",15,"DCLI/DCLP"],["DCLI","40",15,"DCLI/DCLP"],["DCLI","20",15,"DCLI/DCLP"]
   ];
   return checks.flatMap(([pool,size,limit,label])=>{
@@ -9740,12 +9850,50 @@ function renderForecastExcelTable(headers,rows,rowRenderer,className=""){
 function renderForecastExcelValue(value){
   return Number(value)===0?`<span class="forecast-excel-zero">0</span>`:String(value);
 }
+function getForecastRequestNetClass(pool,size,value){
+  const thresholds={
+    TGRP:{"45":2,"40":15,"20":15},
+    FGCP:{"45":2,"40":15,"20":15},
+    SNCZ:{"53":25,"40":7},
+    DCLI:{"53":15,"45":2,"40":15,"20":15}
+  };
+  const net=Number(value)||0;
+  const limit=thresholds[String(pool).toUpperCase()]?.[String(size).replace(/'+$/,"")];
+  if(net<=0)return "request-net-red";
+  if(limit!=null&&net<=limit)return "request-net-yellow";
+  return "request-net-green";
+}
+let forecastExcelHideEmptyInbounds=localStorage.getItem("forecastExcelHideEmptyInbounds")==="true";
+let forecastExcelTestCopy=localStorage.getItem("forecastExcelTestCopy")==="true";
+let forecastExcelShowTrainTotals=localStorage.getItem("forecastExcelShowTrainTotals")==="true";
+let forecastExcelShowPreviousSubmission=false;
+function getForecastPreviousSubmissionValues(){
+  const latest=getForecastRequestHistory()[0];
+  const values=new Map();
+  (Array.isArray(latest?.lines)?latest.lines:[]).forEach(line=>{
+    const pool=String(line.pool||"").trim().toUpperCase();
+    const size=String(line.size||"").replace(/[^0-9]/g,"");
+    const type=String(line.type||"").toUpperCase();
+    if(!pool||!size||!["IN","OUT"].includes(type))return;
+    const key=`${pool}|${size}`;
+    const row=values.get(key)||{drayIn:0,drayOut:0};
+    if(type==="IN")row.drayIn+=Number(line.count)||0;
+    if(type==="OUT")row.drayOut+=Number(line.count)||0;
+    values.set(key,row);
+  });
+  return {record:latest||null,values};
+}
 function renderForecastExcelView(){
   const content=$("forecastExcelContent");
   if(!content)return;
   const units72=getForecastExcelWindowUnits(3).sort(compareForecastUnitsByArrival);
   const units24=getForecastExcelWindowUnits(1).sort(compareForecastUnitsByArrival);
   const trainRows=buildForecastExcelTrainRows(units72);
+  if(forecastExcelHideEmptyInbounds){
+    for(let index=trainRows.length-1;index>=0;index--){
+      if(trainRows[index].placeholder)trainRows.splice(index,1);
+    }
+  }
   const calc72Rows=buildForecastExcelCalculatorRows(units72);
   const calc24Rows=buildForecastExcelCalculatorRows(units24);
   const totals=["53","45","40","20"].map(size=>{
@@ -9762,15 +9910,18 @@ function renderForecastExcelView(){
   const trainTable=renderForecastExcelTable(
     ["Train ID","Size","TRAC","FGCP","SNCZ","DCLI","TOTAL"],
     trainRows,
-    r=>`<tr class="${r.totalRow?"excel-total-row":r.placeholder?"excel-placeholder-row":""}">${r.rowspan?`<th rowspan="${r.rowspan}" class="excel-train-name">${escapeHtml(r.train)}${r.arrivalLabel?`<small class="${getForecastExcelArrivalClass(r.arrivalLabel)}">${escapeHtml(r.arrivalLabel)}</small>`:""}</th>`:""}<th>${r.size}</th>${["TRAC","FGCP","SNCZ","DCLI"].map(k=>{const value=r.counts[k]||0;return `<td class="${!r.totalRow&&value>50?"excel-over-50":""}">${renderForecastExcelValue(value)}</td>`}).join("")}<th>${renderForecastExcelValue(r.total)}</th></tr>`,
+    r=>{const rowClass=r.totalRow?"excel-total-row":r.placeholder?"excel-placeholder-row":r.groupClass||"";const editable=r.rowspan&&!r.placeholder&&!r.totalRow&&!["STACKED","MISMATCH"].includes(String(r.train||"").toUpperCase());return `<tr class="${rowClass}">${r.rowspan?`<th rowspan="${r.rowspan}" class="excel-train-name${editable?" excel-train-name-editable":""}"${editable?` data-excel-train="${escapeHtml(r.sourceTrain)}" data-excel-day="${escapeHtml(r.sourceDay)}" title="Click to rename train"`:""}>${escapeHtml(r.train)}${forecastExcelShowTrainTotals&&editable?`<span class="forecast-excel-train-total">${Number(r.trainTotal)||0} Units</span>`:""}${r.arrivalLabel?`<small class="${getForecastExcelArrivalClass(r.arrivalLabel)}">${escapeHtml(r.arrivalLabel)}</small>`:""}</th>`:""}<th>${r.size}</th>${["TRAC","FGCP","SNCZ","DCLI"].map(k=>{const value=r.counts[k]||0;return `<td class="${!r.totalRow&&value>50?"excel-over-50":""}">${renderForecastExcelValue(value)}</td>`}).join("")}<th>${renderForecastExcelValue(r.total)}</th></tr>`},
     "forecast-excel-main-table"
   );
-  const calcTable=(title,rows,cls)=>`<section class="forecast-excel-block ${cls}"><h3>${title}</h3>${renderForecastExcelTable(
-    ["Pool","Size","Inbound","On Hand","Bad Order","Total"],
+  const calculatorIcon=`<svg class="forecast-excel-title-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="2.5" width="14" height="19" rx="1.5"/><rect x="8" y="5.5" width="8" height="4"/><path d="M8 13h1M12 13h1M16 13h1M8 16h1M12 16h1M16 16h1M8 19h1M12 19h1M16 19h1"/></svg>`;
+  const requestIcon=`<svg class="forecast-excel-title-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6"/><path d="M9 2h6v4H9z"/><path d="M7 4H5v18h14V4h-2"/><path d="M8 10h8M8 14h8M8 18h5"/></svg>`;
+  const calcTable=(title,rows,cls)=>`<section class="forecast-excel-block ${cls}"><h3>${calculatorIcon}<span>${title}</span></h3>${renderForecastExcelTable(
+    ["Pool","Size","Inbound","On Hand","Bad Order","Net"],
     rows,
-    r=>`<tr class="calculator-pool-${r.poolCode.toLowerCase()}">${r.rowspan?`<th rowspan="${r.rowspan}">${r.pool}</th>`:""}<th>${r.size}'</th><td>${renderForecastExcelValue(r.inbound)}</td><td>${renderForecastExcelValue(r.onHand)}</td><td>${renderForecastExcelValue(r.badOrder)}</td><th class="${r.total<0?"forecast-excel-negative":""}">${renderForecastExcelValue(r.total)}</th></tr>`
+    r=>`<tr class="calculator-pool-${r.poolCode.toLowerCase()}">${r.rowspan?`<th rowspan="${r.rowspan}">${r.pool}</th>`:""}<th>${r.size}'</th><td>${renderForecastExcelValue(r.inbound)}</td><td>${renderForecastExcelValue(r.onHand)}</td><td>${renderForecastExcelValue(r.badOrder)}</td><th><span class="calculator-net-flag ${getForecastRequestNetClass(r.poolCode,r.size,r.total)}"><span class="calculator-net-value">${r.total}</span></span></th></tr>`
   )}</section>`;
   const requestOrder=["TGRP","FGCP","SNCZ","DCLI"];
+  const previousSubmission=getForecastPreviousSubmissionValues();
   const requestGroups=[...FORECAST_CHASSIS_REQUEST_LAYOUT].sort((a,b)=>requestOrder.indexOf(a.pool)-requestOrder.indexOf(b.pool));
   const requestRows=requestGroups.flatMap(group=>group.sizes.map((size,index)=>({
     pool:index===0?group.pool:"",rowspan:index===0?group.sizes.length:0,size,
@@ -9780,14 +9931,99 @@ function renderForecastExcelView(){
     drayOut:Number(getForecastChassisRequestValue(group.pool,size,"drayOut"))||0,
     get net(){return this.baseTotal+this.drayIn-this.drayOut}
   })));
-  const requestTable=`<section class="forecast-excel-block request"><h3>Chassis Request</h3>${renderForecastExcelTable(
+  const requestTable=`<section class="forecast-excel-block request"><h3>${requestIcon}<span>Chassis Request to Cover 72H</span></h3>${renderForecastExcelTable(
     ["Pool","Size","Dray In","Dray Out","Net"],requestRows,
-    r=>`<tr class="request-pool-${r.poolCode.toLowerCase()}">${r.rowspan?`<th rowspan="${r.rowspan}">${r.pool}</th>`:""}<th>${String(r.size).replace(/'+$/,"")}'</th><td>${renderForecastExcelValue(r.drayIn)}</td><td>${renderForecastExcelValue(r.drayOut)}</td><th>${renderForecastExcelValue(r.net)}</th></tr>`
+    r=>{const size=String(r.size).replace(/'+$/,"");const previous=previousSubmission.values.get(`${r.poolCode}|${size}`)||{drayIn:0,drayOut:0};const drayIn=forecastExcelShowPreviousSubmission?previous.drayIn:r.drayIn;const drayOut=forecastExcelShowPreviousSubmission?previous.drayOut:r.drayOut;const net=forecastExcelShowPreviousSubmission?r.baseTotal+drayIn-drayOut:r.net;const locked=forecastExcelShowPreviousSubmission?" readonly aria-readonly=\"true\"":"";return `<tr class="request-pool-${r.poolCode.toLowerCase()}${forecastExcelShowPreviousSubmission?" previous-submission-row":""}" data-request-pool="${r.poolCode}" data-request-size="${size}'" data-request-base="${r.baseTotal}">${r.rowspan?`<th rowspan="${r.rowspan}">${r.pool}</th>`:""}<th>${size}'</th><td><input class="forecast-excel-request-input" type="number" min="0" step="1" inputmode="numeric" data-request-field="drayIn" value="${drayIn||""}" placeholder="0"${locked} aria-label="${r.poolCode} ${size} foot Dray In"></td><td><input class="forecast-excel-request-input" type="number" min="0" step="1" inputmode="numeric" data-request-field="drayOut" value="${drayOut||""}" placeholder="0"${locked} aria-label="${r.poolCode} ${size} foot Dray Out"></td><th><span class="request-net-flag ${getForecastRequestNetClass(r.poolCode,r.size,net)}"><span class="request-net-value">${net}</span></span></th></tr>`}
   )}</section>`;
   const todayNotes=buildForecastExcelShortageNotes(calc24Rows);
   const futureNotes=buildForecastExcelShortageNotes(calc72Rows);
-  const notes=`<section class="forecast-excel-notes"><h3>Notes</h3><div><strong>Today</strong><span>${todayNotes.length?todayNotes.map(escapeHtml).join("<br>"):"No Shortages"}</span><strong>Next Few Days</strong><span>${futureNotes.length?futureNotes.map(escapeHtml).join("<br>"):"No Shortages"}</span></div></section>`;
-  content.innerHTML=`<div class="forecast-excel-columns"><div class="forecast-excel-left"><h1>Chassis Forecast (24H and 72H Window)</h1>${trainTable}</div><div class="forecast-excel-right">${calcTable("Chassis Calculator (72H)",calc72Rows,"hours48")}${calcTable("Chassis Calculator (24H)",calc24Rows,"hours24")}${requestTable}</div></div>${notes}`;
+  const buildNotesTrainList=sourceUnits=>{
+    const groups=new Map();
+    sourceUnits.forEach(unit=>{
+      const train=getForecastTrainGroupName(unit);
+      const day=getForecastUnitDay(unit);
+      const key=`${train}|${day}`;
+      groups.set(key,{train,total:(groups.get(key)?.total||0)+1});
+    });
+    return [...groups.values()]
+      .map(group=>`${escapeHtml(group.train)} - ${group.total} Units`)
+      .join("<br>")||"No Inbounds";
+  };
+  const todayTrainList=buildNotesTrainList(units24);
+  const futureTrainList=buildNotesTrainList(units72.filter(unit=>getForecastExcelArrivalLabel(getForecastUnitDay(unit))!=="Today"));
+  const notesIcon=`<svg class="forecast-excel-notes-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6"/><path d="M9 2h6v4H9z"/><path d="M7 4H5v18h14V4h-2"/><path d="M8 10h8M8 14h8M8 18h5"/></svg>`;
+  const notes=`<section class="forecast-excel-notes"><h3>${notesIcon}<span>Notes</span></h3><div class="forecast-excel-notes-grid"><div class="forecast-excel-notes-row forecast-excel-notes-today"><strong><span class="forecast-excel-notes-label-text">Today</span></strong><span class="forecast-excel-notes-trains"><span class="forecast-excel-notes-train-text">${todayTrainList}</span></span><span class="forecast-excel-notes-shortages"><span class="forecast-excel-notes-message-text">${todayNotes.length?todayNotes.map(escapeHtml).join("<br>"):"No Shortages"}</span></span></div><div class="forecast-excel-notes-row forecast-excel-notes-future"><strong><span class="forecast-excel-notes-label-text">Next Few Days</span></strong><span class="forecast-excel-notes-trains"><span class="forecast-excel-notes-train-text">${futureTrainList}</span></span><span class="forecast-excel-notes-shortages"><span class="forecast-excel-notes-message-text">${futureNotes.length?futureNotes.map(escapeHtml).join("<br>"):"No Shortages"}</span></span></div></div></section>`;
+  const forecastTitleIcon=`<svg class="forecast-excel-main-title-icon" viewBox="0 0 48 24" aria-hidden="true"><path d="M3 4h28v15H3z"/><path d="M7 6v11M11 6v11M15 6v11M19 6v11M23 6v11M27 6v11"/><path d="M31 11h8l5 5v3H31z"/><path d="M36 12v4h6"/><circle cx="9" cy="21" r="2"/><circle cx="27" cy="21" r="2"/><circle cx="39" cy="21" r="2"/></svg>`;
+  const inlineNotes=forecastExcelHideEmptyInbounds?notes:"";
+  content.innerHTML=`<div class="forecast-excel-columns${forecastExcelHideEmptyInbounds?" hide-empty-inbounds":""}"><div class="forecast-excel-left"><h1>${forecastTitleIcon}<span>Chassis Forecast (72H)</span></h1>${trainTable}${inlineNotes}</div><div class="forecast-excel-right">${calcTable("Chassis Calculator (72H)",calc72Rows,"hours48")}${calcTable("Chassis Calculator (24H)",calc24Rows,"hours24")}${requestTable}</div></div>${forecastExcelHideEmptyInbounds?"":notes}`;
+  content.querySelectorAll(".forecast-excel-table th, .forecast-excel-table td").forEach(cell=>{
+    if(cell.querySelector(".request-net-flag, .calculator-net-flag"))return;
+    const wrapper=document.createElement("span");
+    wrapper.className="forecast-excel-cell-content";
+    while(cell.firstChild)wrapper.appendChild(cell.firstChild);
+    cell.appendChild(wrapper);
+  });
+  content.querySelectorAll(".excel-train-name-editable").forEach(cell=>{
+    cell.onclick=()=>{
+      if(cell.querySelector("input"))return;
+      const oldTrain=cell.dataset.excelTrain||"";
+      const day=cell.dataset.excelDay||"";
+      const wrapper=cell.querySelector(".forecast-excel-cell-content");
+      if(!wrapper)return;
+      const input=document.createElement("input");
+      input.type="text";
+      input.className="forecast-excel-train-name-input";
+      input.value=oldTrain;
+      input.setAttribute("aria-label","Edit train name");
+      wrapper.replaceChildren(input);
+      input.focus();
+      input.select();
+      let finished=false;
+      const finish=save=>{
+        if(finished)return;
+        finished=true;
+        const newTrain=String(input.value||"").trim();
+        if(save&&newTrain&&newTrain!==oldTrain){
+          forecastImportedUnits.forEach(unit=>{
+            if(getForecastTrainGroupName(unit)===oldTrain&&getForecastUnitDay(unit)===day)unit.trainId=newTrain;
+          });
+          saveForecastState();
+          renderForecastImportedUnits();
+          renderForecastExcelView();
+        }else{
+          renderForecastExcelView();
+        }
+      };
+      input.onkeydown=event=>{
+        if(event.key==="Enter"){event.preventDefault();finish(true);}
+        if(event.key==="Escape"){event.preventDefault();finish(false);}
+      };
+      input.onblur=()=>finish(true);
+    };
+  });
+  content.querySelectorAll(".forecast-excel-request-input").forEach(input=>{
+    input.oninput=()=>{
+      const row=input.closest("tr");
+      if(!row)return;
+      const pool=row.dataset.requestPool||"";
+      const size=row.dataset.requestSize||"";
+      const field=input.dataset.requestField;
+      const clean=String(input.value||"").replace(/[^0-9]/g,"");
+      if(input.value!==clean)input.value=clean;
+      setForecastChassisRequestValue(pool,size,field,clean);
+      const drayIn=Number(row.querySelector('[data-request-field="drayIn"]')?.value)||0;
+      const drayOut=Number(row.querySelector('[data-request-field="drayOut"]')?.value)||0;
+      const net=(Number(row.dataset.requestBase)||0)+drayIn-drayOut;
+      const flag=row.querySelector(".request-net-flag");
+      if(flag){
+        flag.className=`request-net-flag ${getForecastRequestNetClass(pool,size,net)}`;
+        const value=flag.querySelector(".request-net-value");
+        if(value)value.textContent=String(net);
+      }
+    };
+  });
+  updateForecastExcelEmptyInboundToggle();
+  updateForecastExcelTestCopyToggle();
 }
 function openForecastExcelView(){
   renderForecastExcelView();
@@ -9798,6 +10034,244 @@ function openForecastExcelView(){
 function closeForecastExcelView(){
   document.body.classList.remove("forecast-excel-view-open");
   $("forecastExcelView")?.setAttribute("aria-hidden","true");
+}
+function applyForecastExcelViewSettings(){
+  const page=document.querySelector("#forecastExcelView .forecast-excel-page");
+  const content=$("forecastExcelContent");
+  const mainHeaderSlider=$("forecastExcelMainHeaderSizeSlider");
+  const secondaryHeaderSlider=$("forecastExcelSecondaryHeaderSizeSlider");
+  const tableTextSlider=$("forecastExcelTableTextSizeSlider");
+  const arrivalFlagSlider=$("forecastExcelArrivalFlagSizeSlider");
+  const netTextSlider=$("forecastExcelNetTextSizeSlider");
+  const netPaddingSlider=$("forecastExcelNetPaddingSlider");
+  const notesLabelSlider=$("forecastExcelNotesLabelSizeSlider");
+  const notesTextSlider=$("forecastExcelNotesTextSizeSlider");
+  const notesTrainSlider=$("forecastExcelNotesTrainSizeSlider");
+  const notesHeightSlider=$("forecastExcelNotesHeightSlider");
+  const widthSlider=$("forecastExcelWidthSlider");
+  const heightSlider=$("forecastExcelHeightSlider");
+  if(!page||!content||!mainHeaderSlider||!secondaryHeaderSlider||!tableTextSlider||!arrivalFlagSlider||!netTextSlider||!netPaddingSlider||!notesLabelSlider||!notesTextSlider||!notesTrainSlider||!notesHeightSlider||!widthSlider||!heightSlider)return;
+  const mainHeader=Math.max(60,Math.min(180,Number(mainHeaderSlider.value)||100));
+  const secondaryHeader=Math.max(60,Math.min(180,Number(secondaryHeaderSlider.value)||100));
+  const tableText=Math.max(60,Math.min(180,Number(tableTextSlider.value)||100));
+  const arrivalFlag=Math.max(5,Math.min(14,Number(arrivalFlagSlider.value)||8));
+  const netText=Math.max(5,Math.min(16,Number(netTextSlider.value)||8.3));
+  const netPadding=Math.max(0,Math.min(20,Number(netPaddingSlider.value)||10));
+  const notesLabel=Math.max(6,Math.min(18,Number(notesLabelSlider.value)||10));
+  const notesText=Math.max(7,Math.min(22,Number(notesTextSlider.value)||14));
+  const notesTrain=Math.max(8,Math.min(24,Number(notesTrainSlider.value)||16));
+  const notesHeight=Math.max(54,Math.min(240,Number(notesHeightSlider.value)||90));
+  const width=Math.max(30,Math.min(140,Number(widthSlider.value)||100));
+  const height=Math.max(20,Math.min(180,Number(heightSlider.value)||100));
+  page.style.setProperty("--forecast-excel-main-header-scale",String(mainHeader/100));
+  page.style.setProperty("--forecast-excel-secondary-header-scale",String(secondaryHeader/100));
+  page.style.setProperty("--forecast-excel-table-text-scale",String(tableText/100));
+  page.style.setProperty("--forecast-excel-arrival-flag-scale",String(arrivalFlag/8));
+  page.style.setProperty("--forecast-excel-net-text-scale",String(netText/8.3));
+  page.style.setProperty("--forecast-excel-net-padding",`${netPadding}px`);
+  page.style.setProperty("--forecast-excel-notes-label-scale",String(notesLabel/10));
+  page.style.setProperty("--forecast-excel-notes-text-scale",String(notesText/14));
+  page.style.setProperty("--forecast-excel-notes-train-scale",String(notesTrain/16));
+  page.style.setProperty("--forecast-excel-notes-height",`${notesHeight}px`);
+  const visualWidth=width*.7;
+  page.style.setProperty("--forecast-excel-width-scale",`${visualWidth}%`);
+  page.style.setProperty("--forecast-excel-height-scale",String(height/100));
+  page.style.width=`${visualWidth}%`;
+  content.style.width="100%";
+  if($("forecastExcelMainHeaderSizeValue"))$("forecastExcelMainHeaderSizeValue").textContent=`${mainHeader}%`;
+  if($("forecastExcelSecondaryHeaderSizeValue"))$("forecastExcelSecondaryHeaderSizeValue").textContent=`${secondaryHeader}%`;
+  if($("forecastExcelTableTextSizeValue"))$("forecastExcelTableTextSizeValue").textContent=`${tableText}%`;
+  if($("forecastExcelArrivalFlagSizeValue"))$("forecastExcelArrivalFlagSizeValue").textContent=`${arrivalFlag.toFixed(1).replace(".0","")}px`;
+  if($("forecastExcelNetTextSizeValue"))$("forecastExcelNetTextSizeValue").textContent=`${netText.toFixed(1)}px`;
+  if($("forecastExcelNetPaddingValue"))$("forecastExcelNetPaddingValue").textContent=`${netPadding}px`;
+  if($("forecastExcelNotesLabelSizeValue"))$("forecastExcelNotesLabelSizeValue").textContent=`${notesLabel.toFixed(1).replace(".0","")}px`;
+  if($("forecastExcelNotesTextSizeValue"))$("forecastExcelNotesTextSizeValue").textContent=`${notesText.toFixed(1).replace(".0","")}px`;
+  if($("forecastExcelNotesTrainSizeValue"))$("forecastExcelNotesTrainSizeValue").textContent=`${notesTrain.toFixed(1).replace(".0","")}px`;
+  if($("forecastExcelNotesHeightValue"))$("forecastExcelNotesHeightValue").textContent=`${notesHeight}px`;
+  if($("forecastExcelWidthValue"))$("forecastExcelWidthValue").textContent=`${width}%`;
+  if($("forecastExcelHeightValue"))$("forecastExcelHeightValue").textContent=`${height}%`;
+  localStorage.setItem("forecastExcelMainHeaderSize",String(mainHeader));
+  localStorage.setItem("forecastExcelSecondaryHeaderSize",String(secondaryHeader));
+  localStorage.setItem("forecastExcelTableTextSize",String(tableText));
+  localStorage.setItem("forecastExcelArrivalFlagSize",String(arrivalFlag));
+  localStorage.setItem("forecastExcelNetTextSize",String(netText));
+  localStorage.setItem("forecastExcelNetPadding",String(netPadding));
+  localStorage.setItem("forecastExcelNotesLabelSize",String(notesLabel));
+  localStorage.setItem("forecastExcelNotesTextSize",String(notesText));
+  localStorage.setItem("forecastExcelNotesTrainSize",String(notesTrain));
+  localStorage.setItem("forecastExcelNotesHeight",String(notesHeight));
+  localStorage.setItem("forecastExcelWidth",String(width));
+  localStorage.setItem("forecastExcelHeight",String(height));
+}
+function setupForecastExcelViewSettings(){
+  const mainHeaderSlider=$("forecastExcelMainHeaderSizeSlider");
+  const secondaryHeaderSlider=$("forecastExcelSecondaryHeaderSizeSlider");
+  const tableTextSlider=$("forecastExcelTableTextSizeSlider");
+  const arrivalFlagSlider=$("forecastExcelArrivalFlagSizeSlider");
+  const netTextSlider=$("forecastExcelNetTextSizeSlider");
+  const netPaddingSlider=$("forecastExcelNetPaddingSlider");
+  const notesLabelSlider=$("forecastExcelNotesLabelSizeSlider");
+  const notesTextSlider=$("forecastExcelNotesTextSizeSlider");
+  const notesTrainSlider=$("forecastExcelNotesTrainSizeSlider");
+  const notesHeightSlider=$("forecastExcelNotesHeightSlider");
+  const widthSlider=$("forecastExcelWidthSlider");
+  const heightSlider=$("forecastExcelHeightSlider");
+  if(!mainHeaderSlider||!secondaryHeaderSlider||!tableTextSlider||!arrivalFlagSlider||!netTextSlider||!netPaddingSlider||!notesLabelSlider||!notesTextSlider||!notesTrainSlider||!notesHeightSlider||!widthSlider||!heightSlider)return;
+  const legacyText=localStorage.getItem("forecastExcelTextSize")||"100";
+  mainHeaderSlider.value=localStorage.getItem("forecastExcelMainHeaderSize")||legacyText;
+  secondaryHeaderSlider.value=localStorage.getItem("forecastExcelSecondaryHeaderSize")||legacyText;
+  tableTextSlider.value=localStorage.getItem("forecastExcelTableTextSize")||legacyText;
+  arrivalFlagSlider.value=localStorage.getItem("forecastExcelArrivalFlagSize")||"8";
+  netTextSlider.value=localStorage.getItem("forecastExcelNetTextSize")||"8.3";
+  netPaddingSlider.value=localStorage.getItem("forecastExcelNetPadding")||"10";
+  notesLabelSlider.value=localStorage.getItem("forecastExcelNotesLabelSize")||"10";
+  notesTextSlider.value=localStorage.getItem("forecastExcelNotesTextSize")||"14";
+  notesTrainSlider.value=localStorage.getItem("forecastExcelNotesTrainSize")||"16";
+  notesHeightSlider.value=localStorage.getItem("forecastExcelNotesHeight")||"90";
+  const savedWidth=Number(localStorage.getItem("forecastExcelWidth"));
+  widthSlider.value=Number.isFinite(savedWidth)&&savedWidth>=30?String(savedWidth):"100";
+  heightSlider.value=localStorage.getItem("forecastExcelHeight")||"100";
+  mainHeaderSlider.oninput=applyForecastExcelViewSettings;
+  secondaryHeaderSlider.oninput=applyForecastExcelViewSettings;
+  tableTextSlider.oninput=applyForecastExcelViewSettings;
+  arrivalFlagSlider.oninput=applyForecastExcelViewSettings;
+  netTextSlider.oninput=applyForecastExcelViewSettings;
+  netPaddingSlider.oninput=applyForecastExcelViewSettings;
+  notesLabelSlider.oninput=applyForecastExcelViewSettings;
+  notesTextSlider.oninput=applyForecastExcelViewSettings;
+  notesTrainSlider.oninput=applyForecastExcelViewSettings;
+  notesHeightSlider.oninput=applyForecastExcelViewSettings;
+  widthSlider.oninput=applyForecastExcelViewSettings;
+  heightSlider.oninput=applyForecastExcelViewSettings;
+  const emptyToggle=$("forecastExcelEmptyInboundToggle");
+  if(emptyToggle)emptyToggle.onclick=()=>{
+    forecastExcelHideEmptyInbounds=!forecastExcelHideEmptyInbounds;
+    localStorage.setItem("forecastExcelHideEmptyInbounds",String(forecastExcelHideEmptyInbounds));
+    renderForecastExcelView();
+  };
+  updateForecastExcelEmptyInboundToggle();
+  applyForecastExcelViewSettings();
+}
+function updateForecastExcelEmptyInboundToggle(){
+  const button=$("forecastExcelEmptyInboundToggle");
+  if(!button)return;
+  button.setAttribute("aria-pressed",String(forecastExcelHideEmptyInbounds));
+  button.textContent=forecastExcelHideEmptyInbounds?"Show No Inbound Sections":"Hide No Inbound Sections";
+  button.classList.toggle("is-active",forecastExcelHideEmptyInbounds);
+}
+function updateForecastExcelTestCopyToggle(){
+  const button=$("forecastExcelTestCopyToggle");
+  const page=document.querySelector("#forecastExcelView .forecast-excel-page");
+  if(page){
+    page.classList.remove("modern-table-view");
+    page.classList.remove("modern-table-blank");
+    page.classList.toggle("forecast-excel-test-copy",forecastExcelTestCopy);
+  }
+  if(!button)return;
+  button.setAttribute("aria-pressed",String(forecastExcelTestCopy));
+  button.textContent=forecastExcelTestCopy?"Back to Excel Page":"Open Test Copy";
+  button.classList.toggle("is-active",forecastExcelTestCopy);
+}
+const FORECAST_EXCEL_FONT_OPTIONS=[
+  ["Aptos Narrow",`"Aptos Narrow","Arial Narrow",Arial,sans-serif`],
+  ["Aptos",`Aptos,Calibri,Arial,sans-serif`],
+  ["Arial Narrow",`"Arial Narrow",Arial,sans-serif`],
+  ["Arial",`Arial,sans-serif`],
+  ["Calibri",`Calibri,Arial,sans-serif`],
+  ["Bahnschrift",`Bahnschrift,Arial,sans-serif`],
+  ["Segoe UI",`"Segoe UI",Arial,sans-serif`],
+  ["Tahoma",`Tahoma,Arial,sans-serif`],
+  ["Verdana",`Verdana,Arial,sans-serif`],
+  ["Trebuchet MS",`"Trebuchet MS",Arial,sans-serif`],
+  ["Century Gothic",`"Century Gothic",Arial,sans-serif`],
+  ["Franklin Gothic",`"Franklin Gothic Medium",Arial,sans-serif`],
+  ["Gill Sans",`"Gill Sans","Trebuchet MS",Arial,sans-serif`],
+  ["Georgia",`Georgia,serif`],
+  ["Times New Roman",`"Times New Roman",serif`],
+  ["Cambria",`Cambria,Georgia,serif`],
+  ["Garamond",`Garamond,Georgia,serif`],
+  ["Courier New",`"Courier New",monospace`],
+  ["Consolas",`Consolas,"Courier New",monospace`],
+  ["Lucida Console",`"Lucida Console",Consolas,monospace`]
+];
+function setupForecastExcelFontControls(){
+  const controls=$("forecastExcelFontControls");
+  const toggle=$("forecastExcelFontToggle");
+  const selectors=[
+    [$("forecastExcelTableFont"),"forecastExcelTableFont","--forecast-excel-table-font"],
+    [$("forecastExcelHeaderFont"),"forecastExcelHeaderFont","--forecast-excel-header-font"],
+    [$("forecastExcelTitleFont"),"forecastExcelTitleFont","--forecast-excel-title-font"]
+  ];
+  if(!controls||!toggle||selectors.some(([select])=>!select))return;
+  localStorage.removeItem("forecastExcelModernView");
+  selectors.forEach(([select,key,property])=>{
+    select.innerHTML=FORECAST_EXCEL_FONT_OPTIONS.map(([label,value])=>`<option value="${escapeHtml(value)}">${escapeHtml(label)}</option>`).join("");
+    select.value=localStorage.getItem(key)||FORECAST_EXCEL_FONT_OPTIONS[0][1];
+    select.onchange=()=>{
+      localStorage.setItem(key,select.value);
+      document.querySelector("#forecastExcelView .forecast-excel-page")?.style.setProperty(property,select.value);
+    };
+  });
+  toggle.onclick=()=>{
+    controls.hidden=!controls.hidden;
+    toggle.setAttribute("aria-expanded",String(!controls.hidden));
+    toggle.textContent=controls.hidden?"Change Fonts":"Hide Font Options";
+  };
+  applyForecastExcelFonts();
+  const testCopyToggle=$("forecastExcelTestCopyToggle");
+  if(testCopyToggle)testCopyToggle.onclick=()=>{
+    forecastExcelTestCopy=!forecastExcelTestCopy;
+    localStorage.setItem("forecastExcelTestCopy",String(forecastExcelTestCopy));
+    updateForecastExcelTestCopyToggle();
+  };
+  const trainTotalsToggle=$("forecastExcelTrainTotalsToggle");
+  const updateTrainTotalsToggle=()=>{
+    if(!trainTotalsToggle)return;
+    trainTotalsToggle.setAttribute("aria-pressed",String(forecastExcelShowTrainTotals));
+    trainTotalsToggle.textContent=forecastExcelShowTrainTotals?"Hide Train Totals":"Show Train Totals";
+    trainTotalsToggle.classList.toggle("is-active",forecastExcelShowTrainTotals);
+  };
+  if(trainTotalsToggle)trainTotalsToggle.onclick=()=>{
+    forecastExcelShowTrainTotals=!forecastExcelShowTrainTotals;
+    localStorage.setItem("forecastExcelShowTrainTotals",String(forecastExcelShowTrainTotals));
+    updateTrainTotalsToggle();
+    renderForecastExcelView();
+  };
+  updateTrainTotalsToggle();
+  const previousSubmissionToggle=$("forecastExcelPreviousSubmissionToggle");
+  const updatePreviousSubmissionToggle=()=>{
+    if(!previousSubmissionToggle)return;
+    previousSubmissionToggle.setAttribute("aria-pressed",String(forecastExcelShowPreviousSubmission));
+    previousSubmissionToggle.textContent=forecastExcelShowPreviousSubmission?"Show Current Submission":"Show Previous Submission";
+    previousSubmissionToggle.classList.toggle("is-active",forecastExcelShowPreviousSubmission);
+  };
+  if(previousSubmissionToggle)previousSubmissionToggle.onclick=()=>{
+    const previous=getForecastRequestHistory()[0];
+    if(!previous){
+      if(typeof showArchiveToast==="function")showArchiveToast("No previous request submission is available.");
+      return;
+    }
+    forecastExcelShowPreviousSubmission=!forecastExcelShowPreviousSubmission;
+    updatePreviousSubmissionToggle();
+    renderForecastExcelView();
+  };
+  updatePreviousSubmissionToggle();
+  const resetRequestsBtn=$("forecastExcelResetRequestsBtn");
+  if(resetRequestsBtn)resetRequestsBtn.onclick=()=>{
+    forecastChassisRequests={};
+    saveForecastState();
+    renderForecastChassisRequestBoard();
+    renderForecastExcelView();
+    if(typeof showArchiveToast==="function")showArchiveToast("All chassis requests reset to 0.");
+  };
+  updateForecastExcelTestCopyToggle();
+}
+function applyForecastExcelFonts(){
+  const page=document.querySelector("#forecastExcelView .forecast-excel-page");
+  if(!page)return;
+  page.style.setProperty("--forecast-excel-table-font",localStorage.getItem("forecastExcelTableFont")||FORECAST_EXCEL_FONT_OPTIONS[0][1]);
+  page.style.setProperty("--forecast-excel-header-font",localStorage.getItem("forecastExcelHeaderFont")||FORECAST_EXCEL_FONT_OPTIONS[0][1]);
+  page.style.setProperty("--forecast-excel-title-font",localStorage.getItem("forecastExcelTitleFont")||FORECAST_EXCEL_FONT_OPTIONS[0][1]);
 }
 
 
@@ -9929,6 +10403,7 @@ let forecastStackedUnits=[];
 let forecastMismatchUnits=[];
 let forecastAuthorizedRows=[];
 let forecastPendingMismatchPreview=null;
+let forecastMismatchPreviewMode="current";
 let forecastPendingAuthorizedPreview=null;
 let forecastInventoryRows=[];
 let forecastSelectedDays=new Set();
@@ -10267,6 +10742,20 @@ async function importForecastMismatchFiles(files){
     });
   }
   forecastPendingMismatchPreview={stacked,mismatched,noMates,excluded,unsupported,matching};
+  forecastMismatchPreviewMode="pending";
+  renderForecastMismatchPreview();
+  openForecastMismatchPreview();
+}
+function openForecastMismatchManager(){
+  forecastMismatchPreviewMode="current";
+  forecastPendingMismatchPreview={
+    stacked:[...forecastStackedUnits],
+    mismatched:[...forecastMismatchUnits],
+    noMates:[],
+    excluded:[],
+    unsupported:0,
+    matching:0
+  };
   renderForecastMismatchPreview();
   openForecastMismatchPreview();
 }
@@ -10288,6 +10777,8 @@ function renderForecastMismatchPreview(){
   if(summary)summary.textContent=`${preview.excluded.length} excluded records are listed below. No Mates are preview-only.`;
   const sections=$("forecastMismatchPreviewSections");
   if(!sections)return;
+  const confirmBtn=$("forecastMismatchPreviewConfirmBtn");
+  if(confirmBtn)confirmBtn.textContent=forecastMismatchPreviewMode==="pending"?"Apply Imported Data":"Import / Change Data";
   const equipmentCell=(row,allowPaid=true)=>{
     const paid=allowPaid&&isForecastEquipmentPaid(row.unitId);
     return paid
@@ -10296,8 +10787,8 @@ function renderForecastMismatchPreview(){
   };
   const table=(title,rows,type)=>{
     const meta={
-      mismatch:{icon:`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5"/><path d="M12 17.5h.01"/></svg>`,subtitle:"Conflicting or unmatchable details.",action:"View details"},
-      "no-mate":{icon:`<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 10v6"/><path d="M12 7h.01"/></svg>`,subtitle:"No matching equipment found in the target pool. These records are not imported.",action:"Export list"},
+      mismatch:{icon:`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.8 20h18.4L12 3Z"/><path d="M12 9v5"/><path d="M12 17.5h.01"/></svg>`,subtitle:"Conflicting or unmatchable details.",action:"View Details"},
+      "no-mate":{icon:`<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 10v6"/><path d="M12 7h.01"/></svg>`,subtitle:"No matching equipment found in the target pool. These records are not imported.",action:"View Details"},
       stacked:{icon:`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 9 5-9 5-9-5 9-5Z"/><path d="m3 12 9 5 9-5"/><path d="m3 16 9 5 9-5"/></svg>`,subtitle:"Already stacked in target pool.",action:""}
     }[type.toLowerCase().replace(/\s+/g,"-")]||{icon:"",subtitle:"",action:""};
     const body=rows.length?rows.map(row=>`<tr>
@@ -10333,7 +10824,7 @@ function renderForecastMismatchPreview(){
       <div class="forecast-preview-section-head">
         <span class="forecast-preview-section-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m9 9 6 6"/><path d="m15 9-6 6"/></svg></span>
         <div><h4>Not Included / Other (${rows.length})</h4><p>Unsupported equipment pools or other exclusions.</p></div>
-        <button type="button" data-mismatch-preview-action="excluded">View reasons</button>
+        <button type="button" data-mismatch-preview-action="excluded">View Details</button>
       </div>
       <table><colgroup><col class="preview-col-container"><col class="preview-col-chassis"><col class="preview-col-required"><col class="preview-col-chassis-pool"><col class="preview-col-size"><col class="preview-col-location"><col class="preview-col-reason"></colgroup><thead><tr><th data-sort-column="0">Container</th><th data-sort-column="1">Chassis</th><th data-sort-column="2">Required Pool</th><th data-sort-column="3">Chassis Pool</th><th data-sort-column="4" data-sort-type="number">Size</th><th data-sort-column="5">Location</th><th data-sort-column="6">Reason</th></tr></thead><tbody>${body}</tbody></table>
     </section>`;
@@ -10344,7 +10835,13 @@ function renderForecastMismatchPreview(){
     preview.stacked.length?table("Stacked",preview.stacked,"stacked"):"",
     excludedTable()
   ].join("");
-  sections.querySelectorAll("th[data-sort-column]").forEach(header=>{
+  setupForecastPreviewSorting(sections);
+  sections.querySelectorAll("[data-mismatch-preview-action]").forEach(btn=>{
+    btn.onclick=()=>openForecastMismatchDetails(btn.closest(".forecast-mismatch-preview-section"));
+  });
+}
+function setupForecastPreviewSorting(root){
+  root?.querySelectorAll("th[data-sort-column]").forEach(header=>{
     header.tabIndex=0;
     header.setAttribute("role","button");
     header.setAttribute("aria-sort","none");
@@ -10381,17 +10878,30 @@ function renderForecastMismatchPreview(){
       }
     });
   });
-  sections.querySelectorAll("[data-mismatch-preview-action]").forEach(btn=>{
-    btn.onclick=()=>{
-      const action=btn.dataset.mismatchPreviewAction;
-      if(action==="no-mate"){
-        exportForecastMismatchPreviewRows(preview.noMates,"no-mates");
-        return;
-      }
-      const section=btn.closest(".forecast-mismatch-preview-section");
-      section?.querySelector("tbody")?.scrollIntoView({behavior:"smooth",block:"nearest"});
-    };
-  });
+}
+function openForecastMismatchDetails(section){
+  const modal=$("forecastMismatchDetailsModal");
+  const content=$("forecastMismatchDetailsContent");
+  const title=$("forecastMismatchDetailsTitle");
+  const table=section?.querySelector("table");
+  if(!modal||!content||!table)return;
+  const sectionTitle=section.querySelector("h4")?.textContent||"View Details";
+  title.textContent=sectionTitle;
+  content.className="forecast-mismatch-details-content";
+  if(section.classList.contains("preview-mismatch"))content.classList.add("preview-mismatch");
+  else if(section.classList.contains("preview-no-mate"))content.classList.add("preview-no-mate");
+  else if(section.classList.contains("preview-stacked"))content.classList.add("preview-stacked");
+  else content.classList.add("preview-excluded");
+  content.replaceChildren(table.cloneNode(true));
+  setupForecastPreviewSorting(content);
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden","false");
+}
+function closeForecastMismatchDetails(){
+  const modal=$("forecastMismatchDetailsModal");
+  if(!modal)return;
+  modal.classList.remove("open");
+  modal.setAttribute("aria-hidden","true");
 }
 function exportForecastMismatchPreviewRows(rows,name){
   const headers=["Container","Chassis","Required Pool","Chassis Pool","Size","Location"];
@@ -10417,12 +10927,17 @@ function closeForecastMismatchPreview(){
   modal.classList.remove("open");
   modal.setAttribute("aria-hidden","true");
   forecastPendingMismatchPreview=null;
+  forecastMismatchPreviewMode="current";
 }
 function confirmForecastMismatchImport(){
+  if(forecastMismatchPreviewMode!=="pending"){
+    $("forecastMismatchFileInput")?.click();
+    return;
+  }
   const preview=forecastPendingMismatchPreview;
   if(!preview)return;
-  forecastStackedUnits=[...forecastStackedUnits,...preview.stacked];
-  forecastMismatchUnits=[...forecastMismatchUnits,...preview.mismatched];
+  forecastStackedUnits=[...preview.stacked];
+  forecastMismatchUnits=[...preview.mismatched];
   saveForecastState();
   renderForecastImportedUnits();
   if(document.body.classList.contains("forecast-excel-view-open"))renderForecastExcelView();
@@ -10602,22 +11117,30 @@ function forecastFormatHourToMilitary(hour){
 function getForecastEtaDisplay(day,hours){
   const raw=String(day||"").trim();
   if(!raw || raw==="No ETA Day")return "No ETA Day";
-  const label=getForecastEtaDayDetail(raw);
+  const label=forecastMonthDayLabel(raw);
   const hourText=forecastFormatHourToMilitary(hours);
   return `${label}${hourText && hourText!=="—" ? ` @ ${hourText}` : ""}`;
 }
 function updateForecastTrainDay(train,oldDay,dateValue){
   const d=new Date(`${dateValue}T00:00:00`);
   if(!dateValue || Number.isNaN(d.getTime()))return;
-  const newDay=String(d.getDate());
+  moveForecastTrainToDay(train,oldDay,String(d.getDate()));
+}
+function moveForecastTrainToDay(train,oldDay,newDay){
+  train=String(train||"");
+  oldDay=String(oldDay||"");
+  newDay=String(newDay||"");
+  if(!train||!newDay||newDay===oldDay)return;
+  let changed=0;
   forecastImportedUnits=forecastImportedUnits.map(unit=>{
     if(getForecastTrainGroupName(unit)===train && getForecastUnitDay(unit)===oldDay){
+      changed+=1;
       return {...unit,etaDay:newDay};
     }
     return unit;
   });
-  if(forecastSelectedDays && forecastSelectedDays instanceof Set && forecastSelectedDays.has(oldDay)){
-    forecastSelectedDays.delete(oldDay);
+  if(!changed)return;
+  if(forecastSelectedDays && forecastSelectedDays instanceof Set && forecastSelectedDays.size){
     forecastSelectedDays.add(newDay);
   }
   if(forecastHiddenTrainDays && forecastHiddenTrainDays instanceof Set){
@@ -10712,8 +11235,11 @@ function getVisibleForecastUnits(){
 function hideForecastTrainDay(train,day){
   if(!forecastHiddenTrainDays || !(forecastHiddenTrainDays instanceof Set))forecastHiddenTrainDays=new Set();
   forecastHiddenTrainDays.add(getForecastTrainDayKey(train,day));
-  saveForecastState();
-  renderForecastImportedUnits();
+  renderForecastHiddenTrainDays();
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{
+    renderForecastImportedUnits();
+    setTimeout(saveForecastState,0);
+  }));
 }
 function restoreForecastTrainDay(key){
   if(forecastHiddenTrainDays && forecastHiddenTrainDays instanceof Set)forecastHiddenTrainDays.delete(key);
@@ -11084,6 +11610,11 @@ function renderForecastStatusCards(){
 
   const groups=buildForecastTrainSummary();
   const selectedText=getForecastSelectedDayText();
+  const inboundNameCounts=groups.reduce((counts,group)=>{
+    const key=String(group.train||"").trim().toUpperCase();
+    if(key)counts.set(key,(counts.get(key)||0)+1);
+    return counts;
+  },new Map());
   if(pill) pill.textContent=groups.length ? `${groups.length} train status cards · ${selectedText}` : "No train cards yet.";
 
   if(!groups.length){
@@ -11170,13 +11701,17 @@ function renderForecastStatusCards(){
 
   box.innerHTML=dayKeys.map(day=>{
     const dayGroups=byDay[day];
-    return `<section class="forecast-day-section">
+    const dayUnitTotal=dayGroups.reduce((total,group)=>total+unitsForForecastGroup(group.train,group.day).length,0);
+    return `<section class="forecast-day-section" data-forecast-drop-day="${escapeHtml(day)}">
       <div class="forecast-day-divider">
         <div>
           <span>Expected Arrival</span>
           <strong>${escapeHtml(getForecastEtaDayDetail(day))}</strong>
         </div>
-        <em>Earliest arrivals shown first</em>
+        <div class="forecast-day-unit-total">
+          <span>Total Units</span>
+          <strong>${dayUnitTotal}</strong>
+        </div>
       </div>
       <div class="forecast-status-cards-grid">
         ${dayGroups.map(g=>{
@@ -11201,6 +11736,7 @@ function renderForecastStatusCards(){
           const hours=[...g.hours].sort((a,b)=>Number(a)-Number(b)).join(", ") || "—";
           const isNoTrain=g.train===getForecastNoTrainName();
           const isHighVolume=Number(g.total)>60;
+          const isDuplicateInbound=(inboundNameCounts.get(String(g.train||"").trim().toUpperCase())||0)>1;
 
           const itemDetails=mixKeys.map(key=>{
             const mixCount=Number(mix[key]||0);
@@ -11283,11 +11819,14 @@ function renderForecastStatusCards(){
             </div>
           </div>` : "";
 
-          return `<div class="forecast-train-card fancy-train-card compact-option-three forecast-quadrant-card ${isNoTrain?"no-train-card":""} ${isHighVolume?"high-volume-train":""}">
+          return `<div class="forecast-train-card fancy-train-card compact-option-three forecast-quadrant-card ${isNoTrain?"no-train-card":""} ${isHighVolume?"high-volume-train":""} ${isDuplicateInbound?"duplicate-inbound-card":""}" draggable="true" data-forecast-drag-train="${escapeHtml(g.train)}" data-forecast-drag-day="${escapeHtml(g.day)}" title="Drag this inbound to another arrival day">
             <div class="forecast-train-card-glow"></div>
             <div class="forecast-compact-train-head">
               <div class="forecast-compact-train-main">
-                <button type="button" class="forecast-train-name forecast-train-hide-toggle" data-forecast-train-hide-toggle="${escapeHtml(g.train)}" data-forecast-hide-day="${escapeHtml(g.day)}" data-train-label="${escapeHtml(g.train)}">${escapeHtml(g.train)}</button>
+                <span class="forecast-train-name-line">
+                  <button type="button" class="forecast-train-name forecast-train-hide-toggle" data-forecast-train-hide-toggle="${escapeHtml(g.train)}" data-forecast-hide-day="${escapeHtml(g.day)}" data-train-label="${escapeHtml(g.train)}">${escapeHtml(g.train)}</button>
+                  ${isDuplicateInbound?`<span class="forecast-duplicate-inbound-flag" title="This inbound appears more than once">Duplicate</span>`:""}
+                </span>
                 <span class="forecast-compact-eta-wrap">
                   <button type="button" class="forecast-compact-eta forecast-inline-date-trigger" data-forecast-date-open="${escapeHtml(g.train)}" data-forecast-old-day="${escapeHtml(g.day)}">${escapeHtml(getForecastEtaDisplay(g.day,hours))}</button>
                   <span class="forecast-inline-date-editor" hidden>
@@ -11351,9 +11890,15 @@ function renderForecastStatusCards(){
     });
   });
   box.querySelectorAll("[data-forecast-train-hide-toggle]").forEach(btn=>{
-    btn.onclick=()=>{
+    btn.onclick=event=>{
+      event.preventDefault();
+      event.stopPropagation();
       if(btn.classList.contains("armed")){
-        hideForecastTrainDay(btn.dataset.forecastTrainHideToggle,btn.dataset.forecastHideDay);
+        const train=btn.dataset.forecastTrainHideToggle;
+        const day=btn.dataset.forecastHideDay;
+        btn.classList.remove("armed");
+        btn.closest(".forecast-train-card")?.remove();
+        hideForecastTrainDay(train,day);
         return;
       }
       box.querySelectorAll("[data-forecast-train-hide-toggle].armed").forEach(other=>{
@@ -11363,14 +11908,53 @@ function renderForecastStatusCards(){
       btn.classList.add("armed");
       btn.textContent="Hide this train";
     };
-    btn.onblur=()=>setTimeout(()=>{
-      if(!btn.isConnected)return;
-      btn.classList.remove("armed");
-      btn.textContent=btn.dataset.trainLabel||"Train";
-    },120);
+    btn.onkeydown=event=>{
+      if(event.key==="Escape"){
+        btn.classList.remove("armed");
+        btn.textContent=btn.dataset.trainLabel||"Train";
+        btn.blur();
+      }
+    };
   });
   box.querySelectorAll("[data-forecast-jump-unknown-train]").forEach(btn=>{
     btn.onclick=()=>jumpForecastUnknownToResolver(btn.dataset.forecastJumpUnknownTrain,btn.dataset.forecastJumpUnknownDay,btn.dataset.forecastJumpUnknownLabel);
+  });
+  box.querySelectorAll("[data-forecast-drag-train]").forEach(card=>{
+    card.addEventListener("dragstart",event=>{
+      const payload={
+        train:card.dataset.forecastDragTrain||"",
+        day:card.dataset.forecastDragDay||""
+      };
+      event.dataTransfer.effectAllowed="move";
+      event.dataTransfer.setData("application/json",JSON.stringify(payload));
+      event.dataTransfer.setData("text/plain",`${payload.train}|${payload.day}`);
+      card.classList.add("forecast-inbound-dragging");
+    });
+    card.addEventListener("dragend",()=>{
+      card.classList.remove("forecast-inbound-dragging");
+      box.querySelectorAll(".forecast-day-section.forecast-inbound-drop-target").forEach(section=>section.classList.remove("forecast-inbound-drop-target"));
+    });
+  });
+  box.querySelectorAll("[data-forecast-drop-day]").forEach(section=>{
+    section.addEventListener("dragover",event=>{
+      event.preventDefault();
+      event.dataTransfer.dropEffect="move";
+      section.classList.add("forecast-inbound-drop-target");
+    });
+    section.addEventListener("dragleave",event=>{
+      if(!section.contains(event.relatedTarget))section.classList.remove("forecast-inbound-drop-target");
+    });
+    section.addEventListener("drop",event=>{
+      event.preventDefault();
+      section.classList.remove("forecast-inbound-drop-target");
+      let payload=null;
+      try{payload=JSON.parse(event.dataTransfer.getData("application/json"));}catch{}
+      if(!payload){
+        const [train,day]=String(event.dataTransfer.getData("text/plain")||"").split("|");
+        payload={train,day};
+      }
+      moveForecastTrainToDay(payload?.train,payload?.day,section.dataset.forecastDropDay);
+    });
   });
 }
 
@@ -11378,6 +11962,8 @@ function renderForecastStatusCards(){
 function renderForecastTrainSummary(){
   const body=$("forecastTrainSummaryRows");
   const pill=$("forecastTrainSummaryPill");
+  const card=$("forecastTrainSummaryCard");
+  if(card)card.remove();
   if(!body)return;
 
   const groups=buildForecastTrainSummary();
@@ -12077,6 +12663,41 @@ function closeForecastInventoryPreview(){
   modal.setAttribute("aria-hidden","true");
 }
 
+function setupForecastInventorySection(){
+  const card=$("forecastOnHandChassisCard");
+  const resolver=document.querySelector(".forecast-pool-resolver-card");
+  if(!card||!resolver||card.dataset.collapsibleReady==="1")return;
+  card.dataset.collapsibleReady="1";
+  const hiddenIsland=$("forecastHiddenTrainIsland");
+  (hiddenIsland||resolver).insertAdjacentElement("afterend",card);
+  const body=document.createElement("div");
+  body.id="forecastInventorySectionBody";
+  body.className="forecast-inventory-section-body collapsed";
+  while(card.firstChild)body.appendChild(card.firstChild);
+  const toggle=document.createElement("button");
+  toggle.id="forecastInventorySectionToggle";
+  toggle.type="button";
+  toggle.className="forecast-inventory-section-toggle";
+  toggle.setAttribute("aria-expanded","false");
+  toggle.innerHTML=`<span><strong>On Hand Inventory Details</strong></span><em>Show</em>`;
+  toggle.onclick=()=>{
+    const collapsed=body.classList.toggle("collapsed");
+    toggle.setAttribute("aria-expanded",collapsed?"false":"true");
+    toggle.querySelector("em").textContent=collapsed?"Show":"Hide";
+  };
+  card.append(toggle,body);
+}
+function arrangeForecastLowerSections(){
+  const page=document.querySelector("#forecastModal .forecast-page");
+  const resolver=document.querySelector(".forecast-pool-resolver-card");
+  const hidden=$("forecastHiddenTrainIsland");
+  const inventory=$("forecastOnHandChassisCard");
+  const controls=document.querySelector("#forecastModal .forecast-bottom-controls");
+  if(!page||!resolver)return;
+  if(hidden)resolver.insertAdjacentElement("afterend",hidden);
+  if(inventory)(hidden||resolver).insertAdjacentElement("afterend",inventory);
+  if(controls)page.appendChild(controls);
+}
 function renderForecastOnHandChassis(){
   if(!$('forecastOnHandChassisCard'))return;
   const s=buildForecastOnHandChassisSummary();
@@ -12536,6 +13157,18 @@ function renderForecastRequestSummaryQuadrants(){
     </div>`;
   }).join("");
 }
+function setupForecastSummaryVisibility(){
+  const button=$("forecastSummaryVisibilityToggle");
+  const grid=$("forecastSummaryGrid");
+  if(!button||!grid)return;
+  const setVisible=visible=>{
+    grid.hidden=!visible;
+    button.setAttribute("aria-expanded",String(visible));
+    button.textContent=visible?"Hide Deficits & Request Summary":"Show Deficits & Request Summary";
+  };
+  setVisible(false);
+  button.onclick=()=>setVisible(grid.hidden);
+}
 function getForecastRequestBoardPair(pool,size){
   const p=String(pool||"").trim().toUpperCase();
   const s=normalizeInventorySize(size);
@@ -12747,14 +13380,11 @@ async function init(){
   const forecastToolsToggleBtn=$("forecastToolsToggleBtn"); if(forecastToolsToggleBtn)forecastToolsToggleBtn.onclick=toggleForecastTools;
   const openForecastExcelViewBtn=$("openForecastExcelViewBtn"); if(openForecastExcelViewBtn)openForecastExcelViewBtn.onclick=openForecastExcelView;
   const closeForecastExcelViewBtn=$("closeForecastExcelViewBtn"); if(closeForecastExcelViewBtn)closeForecastExcelViewBtn.onclick=closeForecastExcelView;
+  setupForecastExcelViewSettings();
+  setupForecastExcelFontControls();
+  setupForecastSummaryVisibility();
   const forecastTrainSummaryCard=$("forecastTrainSummaryCard");
-  const forecastTrainSummaryToggle=$("forecastTrainSummaryToggle");
-  const forecastPage=document.querySelector("#forecastModal .forecast-page");
-  if(forecastPage&&forecastTrainSummaryCard)forecastPage.appendChild(forecastTrainSummaryCard);
-  if(forecastTrainSummaryToggle&&forecastTrainSummaryCard)forecastTrainSummaryToggle.onclick=()=>{
-    const collapsed=forecastTrainSummaryCard.classList.toggle("collapsed");
-    forecastTrainSummaryToggle.textContent=collapsed?"Show":"Hide";
-  };
+  if(forecastTrainSummaryCard)forecastTrainSummaryCard.remove();
   const forecastDifferenceToggleBtn=$("forecastDifferenceToggleBtn"); if(forecastDifferenceToggleBtn)forecastDifferenceToggleBtn.onclick=()=>{
     document.body.classList.toggle("hide-forecast-differences");
     forecastDifferenceToggleBtn.textContent=document.body.classList.contains("hide-forecast-differences")?"Show +/-":"Hide +/-";
@@ -12791,13 +13421,15 @@ async function init(){
     input.click();
   };
   const forecastInventoryFileInput=$("forecastInventoryFileInput"); if(forecastInventoryFileInput)forecastInventoryFileInput.onchange=e=>{if(e.target.files?.length)importChassisInventoryFiles(e.target.files);e.target.value=""};
-  const forecastMismatchImportBtn=$("forecastMismatchImportBtn"); if(forecastMismatchImportBtn)forecastMismatchImportBtn.onclick=()=>$("forecastMismatchFileInput")?.click();
+  const forecastMismatchImportBtn=$("forecastMismatchImportBtn"); if(forecastMismatchImportBtn)forecastMismatchImportBtn.onclick=openForecastMismatchManager;
   const forecastMismatchFileInput=$("forecastMismatchFileInput"); if(forecastMismatchFileInput)forecastMismatchFileInput.onchange=e=>{if(e.target.files?.length)importForecastMismatchFiles(e.target.files);e.target.value=""};
   const forecastMismatchClearBtn=$("forecastMismatchClearBtn"); if(forecastMismatchClearBtn)forecastMismatchClearBtn.onclick=clearForecastMismatchUnits;
   const forecastMismatchPreviewCloseBtn=$("forecastMismatchPreviewCloseBtn"); if(forecastMismatchPreviewCloseBtn)forecastMismatchPreviewCloseBtn.onclick=closeForecastMismatchPreview;
   const forecastMismatchPreviewCancelBtn=$("forecastMismatchPreviewCancelBtn"); if(forecastMismatchPreviewCancelBtn)forecastMismatchPreviewCancelBtn.onclick=closeForecastMismatchPreview;
   const forecastMismatchPreviewConfirmBtn=$("forecastMismatchPreviewConfirmBtn"); if(forecastMismatchPreviewConfirmBtn)forecastMismatchPreviewConfirmBtn.onclick=confirmForecastMismatchImport;
   const forecastMismatchPreviewModal=$("forecastMismatchPreviewModal"); if(forecastMismatchPreviewModal)forecastMismatchPreviewModal.addEventListener("click",e=>{if(e.target===forecastMismatchPreviewModal)closeForecastMismatchPreview()});
+  const forecastMismatchDetailsCloseBtn=$("forecastMismatchDetailsCloseBtn"); if(forecastMismatchDetailsCloseBtn)forecastMismatchDetailsCloseBtn.onclick=closeForecastMismatchDetails;
+  const forecastMismatchDetailsModal=$("forecastMismatchDetailsModal"); if(forecastMismatchDetailsModal)forecastMismatchDetailsModal.addEventListener("click",e=>{if(e.target===forecastMismatchDetailsModal)closeForecastMismatchDetails()});
   const forecastAuthorizedImportBtn=$("forecastAuthorizedImportBtn"); if(forecastAuthorizedImportBtn)forecastAuthorizedImportBtn.onclick=()=>$("forecastAuthorizedFileInput")?.click();
   const forecastAuthorizedFileInput=$("forecastAuthorizedFileInput"); if(forecastAuthorizedFileInput)forecastAuthorizedFileInput.onchange=e=>{if(e.target.files?.length)importForecastAuthorizedFiles(e.target.files);e.target.value=""};
   const forecastAuthorizedClearBtn=$("forecastAuthorizedClearBtn"); if(forecastAuthorizedClearBtn)forecastAuthorizedClearBtn.onclick=clearForecastAuthorizedRows;
@@ -12806,6 +13438,8 @@ async function init(){
   const forecastAuthorizedPreviewConfirmBtn=$("forecastAuthorizedPreviewConfirmBtn"); if(forecastAuthorizedPreviewConfirmBtn)forecastAuthorizedPreviewConfirmBtn.onclick=confirmForecastAuthorizedImport;
   const forecastAuthorizedPreviewModal=$("forecastAuthorizedPreviewModal"); if(forecastAuthorizedPreviewModal)forecastAuthorizedPreviewModal.addEventListener("click",e=>{if(e.target===forecastAuthorizedPreviewModal)closeForecastAuthorizedPreview()});
   const forecastInventoryClearBtn=$("forecastInventoryClearBtn"); if(forecastInventoryClearBtn)forecastInventoryClearBtn.onclick=clearChassisInventoryRows;
+  setupForecastInventorySection();
+  arrangeForecastLowerSections();
   const forecastClearImportBtn=$("forecastClearImportBtn"); if(forecastClearImportBtn)forecastClearImportBtn.onclick=clearForecastImportedUnits;
   const forecastResolvePoolsBtn=$("forecastResolvePoolsBtn"); if(forecastResolvePoolsBtn)forecastResolvePoolsBtn.onclick=toggleForecastPoolResolver;
   const forecastPoolResolverModeBtn=$("forecastPoolResolverModeBtn"); if(forecastPoolResolverModeBtn)forecastPoolResolverModeBtn.onclick=()=>{forecastPoolResolverShowAll=!forecastPoolResolverShowAll;forecastPoolResolverOpen=true;renderForecastPoolResolver();};
@@ -14812,9 +15446,12 @@ window.addEventListener("DOMContentLoaded",async()=>{
 .forecast-head-actions{
   display:flex!important;
   align-items:center!important;
-  justify-content:flex-end!important;
+  justify-content:flex-start!important;
   gap:10px!important;
   flex-wrap:wrap!important;
+}
+#openForecastExcelViewBtn{
+  margin-left:0!important;
 }
 .forecast-head .forecast-tools-toggle-btn{
   margin:0!important;
@@ -15158,6 +15795,52 @@ window.addEventListener("DOMContentLoaded",async()=>{
   margin:0;
   border-collapse:collapse;
   table-layout:fixed;
+  display:block;
+  max-height:250px;
+  overflow-y:auto;
+  overflow-x:hidden;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(148,163,184,.72) rgba(15,23,42,.42);
+}
+.forecast-mismatch-preview-section table thead,
+.forecast-mismatch-preview-section table tbody{
+  display:table;
+  width:100%;
+  table-layout:fixed;
+}
+.forecast-mismatch-preview-section table::-webkit-scrollbar{
+  width:9px;
+}
+.forecast-mismatch-preview-section table::-webkit-scrollbar-track{
+  background:rgba(15,23,42,.42);
+}
+.forecast-mismatch-preview-section table::-webkit-scrollbar-thumb{
+  border:2px solid rgba(15,23,42,.42);
+  border-radius:999px;
+  background:rgba(148,163,184,.72);
+}
+.forecast-mismatch-preview-section.preview-mismatch table,
+.forecast-mismatch-excluded-section table{
+  display:block!important;
+  max-height:250px!important;
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  scrollbar-width:thin;
+  scrollbar-color:rgba(148,163,184,.72) rgba(15,23,42,.42);
+}
+.forecast-mismatch-preview-section.preview-mismatch table thead,
+.forecast-mismatch-preview-section.preview-mismatch table tbody,
+.forecast-mismatch-excluded-section table thead,
+.forecast-mismatch-excluded-section table tbody{
+  display:table;
+  width:100%;
+  table-layout:fixed;
+}
+.forecast-mismatch-preview-section.preview-mismatch th,
+.forecast-mismatch-excluded-section th{
+  position:sticky!important;
+  top:0;
+  z-index:3;
 }
 .forecast-mismatch-preview-section thead tr{
   position:relative;
@@ -15254,6 +15937,210 @@ window.addEventListener("DOMContentLoaded",async()=>{
   box-shadow:-18px 0 #92400e,18px 0 #92400e!important;
 }
 .forecast-mismatch-preview-empty{padding:18px;color:#94a3b8;text-align:center}
+.forecast-mismatch-details-modal{
+  position:fixed;
+  inset:0;
+  z-index:100010;
+  display:none;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  background:rgba(2,6,23,.86);
+  backdrop-filter:blur(10px);
+}
+.forecast-mismatch-details-modal.open{display:flex}
+.forecast-mismatch-details-card{
+  width:min(1450px,97vw);
+  max-height:92vh;
+  display:flex;
+  flex-direction:column;
+  overflow:hidden;
+  border:1px solid rgba(148,163,184,.34);
+  border-radius:18px;
+  background:linear-gradient(180deg,#111827,#020617);
+  box-shadow:0 32px 100px rgba(0,0,0,.7);
+}
+.forecast-mismatch-details-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  padding:16px 20px;
+  border-bottom:1px solid rgba(148,163,184,.22);
+}
+.forecast-mismatch-details-head h3{margin:0;color:#fff;font-size:24px}
+.forecast-mismatch-details-head button{
+  border:1px solid rgba(147,197,253,.45);
+  border-radius:999px;
+  padding:9px 16px;
+  background:rgba(30,41,59,.82);
+  color:#f8fafc;
+  font-weight:1000;
+}
+.forecast-mismatch-details-content{overflow:auto;padding:20px}
+.forecast-mismatch-details-content table{
+  width:100%;
+  min-width:900px;
+  border-collapse:collapse;
+  table-layout:fixed;
+}
+.forecast-mismatch-details-content th,
+.forecast-mismatch-details-content td{
+  padding:13px 16px;
+  text-align:center;
+  vertical-align:middle;
+  font-size:14px;
+  font-weight:850;
+}
+.forecast-mismatch-details-content th{
+  position:sticky;
+  top:0;
+  z-index:2;
+  color:#fff;
+  text-transform:uppercase;
+  cursor:pointer;
+  user-select:none;
+}
+.forecast-mismatch-details-content td{
+  border-bottom:1px solid rgba(148,163,184,.18);
+  color:#f8fafc;
+}
+.forecast-mismatch-details-content.preview-mismatch th{background:#7f1d1d}
+.forecast-mismatch-details-content.preview-no-mate th{background:#1e3a8a}
+.forecast-mismatch-details-content.preview-stacked th{background:#92400e}
+.forecast-mismatch-details-content.preview-excluded th{background:#581c87}
+.forecast-mismatch-details-content th[data-sort-column]::after{
+  content:" ↕";
+  margin-left:6px;
+  opacity:.55;
+}
+.forecast-mismatch-details-content th[data-sort-direction="asc"]::after{content:" ▲";opacity:1}
+.forecast-mismatch-details-content th[data-sort-direction="desc"]::after{content:" ▼";opacity:1}
+.forecast-inventory-section-toggle{
+  width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  padding:14px 18px;
+  border:0;
+  border-radius:16px;
+  background:linear-gradient(135deg,rgba(8,47,73,.94),rgba(15,23,42,.96));
+  color:#e0f2fe;
+  text-align:left;
+  cursor:pointer;
+}
+.forecast-inventory-section-toggle span{display:grid;gap:2px}
+.forecast-inventory-section-toggle small{
+  color:#67e8f9;
+  font-size:10px;
+  font-weight:1000;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+.forecast-inventory-section-toggle strong{font-size:17px}
+.forecast-inventory-section-toggle em{
+  min-width:68px;
+  padding:7px 12px;
+  border:1px solid rgba(103,232,249,.38);
+  border-radius:999px;
+  background:rgba(8,145,178,.18);
+  color:#cffafe;
+  font-size:11px;
+  font-style:normal;
+  font-weight:1000;
+  text-align:center;
+  text-transform:uppercase;
+}
+.forecast-inventory-section-body.collapsed{display:none!important}
+.forecast-inventory-section-body:not(.collapsed){padding-top:14px}
+#forecastOnHandChassisCard[data-collapsible-ready="1"]{
+  padding:10px!important;
+  margin-top:14px!important;
+}
+#forecastHiddenTrainIsland.forecast-hidden-island{
+  margin-top:14px!important;
+  margin-bottom:0!important;
+  border-color:rgba(248,113,113,.42)!important;
+  background:
+    radial-gradient(circle at top left,rgba(248,113,113,.15),transparent 24rem),
+    radial-gradient(circle at top right,rgba(251,113,133,.08),transparent 18rem),
+    linear-gradient(135deg,rgba(100,45,55,.68),rgba(57,32,42,.82))!important;
+  box-shadow:0 16px 42px rgba(100,35,45,.18),inset 0 1px 0 rgba(255,255,255,.08)!important;
+}
+#forecastHiddenTrainIsland .forecast-hidden-toggle-head{
+  color:#ffe4e6!important;
+}
+#forecastHiddenTrainIsland .forecast-hidden-kicker,
+#forecastHiddenTrainIsland .forecast-hidden-collapse-text{
+  color:#fecdd3!important;
+}
+#forecastHiddenTrainIsland .forecast-hidden-pill{
+  border-color:rgba(251,113,133,.32)!important;
+  background:rgba(78,38,48,.48)!important;
+  color:#fff1f2!important;
+}
+#forecastStatusCards .forecast-compact-eta{
+  font-size:11px!important;
+  padding:4px 8px!important;
+  line-height:1!important;
+}
+.forecast-train-name-line{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  min-width:0;
+}
+#forecastStatusCards .duplicate-inbound-card{
+  border-color:rgba(250,204,21,.9)!important;
+  box-shadow:0 0 0 2px rgba(250,204,21,.18),0 12px 30px rgba(234,179,8,.14)!important;
+}
+#forecastStatusCards .forecast-duplicate-inbound-flag{
+  flex:0 0 auto;
+  display:inline-flex;
+  align-items:center;
+  min-height:22px;
+  padding:3px 8px;
+  border:1px solid rgba(253,224,71,.85);
+  border-radius:999px;
+  background:#facc15;
+  color:#422006;
+  font-size:10px;
+  font-weight:1000;
+  line-height:1;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  box-shadow:0 0 14px rgba(250,204,21,.26);
+}
+
+/* Give the 5x2 forecast action bank enough room for full button labels. */
+@media(min-width:1181px){
+  #forecastModal .forecast-controls{
+    grid-template-columns:minmax(190px,220px) minmax(340px,1fr) minmax(600px,650px)!important;
+  }
+}
+#forecastModal .forecast-primary-actions,
+.forecast-primary-actions{
+  grid-template-columns:repeat(5,minmax(108px,1fr))!important;
+  grid-template-rows:repeat(2,38px)!important;
+  min-height:96px!important;
+  gap:8px!important;
+  padding:11px!important;
+}
+#forecastModal .forecast-primary-actions button,
+.forecast-primary-actions button{
+  height:38px!important;
+  min-height:38px!important;
+  padding:6px 9px!important;
+  font-size:11px!important;
+  line-height:1.1!important;
+}
+@media(max-width:1180px) and (min-width:681px){
+  #forecastModal .forecast-primary-actions,
+  .forecast-primary-actions{
+    grid-template-columns:repeat(5,minmax(108px,1fr))!important;
+  }
+}
 .forecast-mismatch-preview-actions{
   display:flex;
   justify-content:flex-end;
@@ -15916,6 +16803,26 @@ window.addEventListener("DOMContentLoaded",async()=>{
 .forecast-summary-grid{
   grid-template-columns:repeat(2,minmax(0,1fr))!important;
 }
+.forecast-summary-grid[hidden]{
+  display:none!important;
+}
+#forecastSummaryVisibilityToggle{
+  margin-left:auto!important;
+  min-height:34px;
+  padding:0 14px;
+  border:1px solid rgba(96,165,250,.38);
+  border-radius:999px;
+  background:rgba(15,23,42,.78);
+  color:#bfdbfe;
+  font:900 11px/1 "Arial Narrow",Arial,sans-serif;
+  letter-spacing:.03em;
+  text-transform:uppercase;
+  cursor:pointer;
+}
+#forecastSummaryVisibilityToggle:hover{
+  border-color:rgba(96,165,250,.7);
+  background:rgba(30,64,175,.28);
+}
 #forecastShortageSurplusCard{
   display:none!important;
 }
@@ -15976,10 +16883,51 @@ window.addEventListener("DOMContentLoaded",async()=>{
     0 0 16px rgba(251,191,36,.35),
     0 2px 0 rgba(0,0,0,.30)!important;
 }
+#forecastStatusCards .forecast-day-unit-total{
+  margin-left:auto;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  text-align:right;
+}
+#forecastStatusCards .forecast-day-unit-total span{
+  margin:0!important;
+  color:#fde68a!important;
+  font-size:10px!important;
+  letter-spacing:.10em!important;
+  white-space:nowrap;
+}
+#forecastStatusCards .forecast-day-unit-total strong{
+  margin:0!important;
+  min-width:58px;
+  padding:5px 12px;
+  border:1px solid rgba(253,230,138,.58);
+  border-radius:999px;
+  background:rgba(15,23,42,.56);
+  color:#fff7ed!important;
+  font-size:23px!important;
+  line-height:1!important;
+  text-align:center;
+}
 #forecastStatusCards .forecast-day-section{
   border-color:rgba(251,191,36,.38)!important;
   background:
     linear-gradient(180deg, rgba(15,23,42,.72), rgba(2,6,23,.64))!important;
+}
+#forecastStatusCards .forecast-train-card[draggable="true"]{
+  cursor:grab;
+}
+#forecastStatusCards .forecast-train-card[draggable="true"]:active{
+  cursor:grabbing;
+}
+#forecastStatusCards .forecast-inbound-dragging{
+  opacity:.45!important;
+  transform:scale(.985);
+}
+#forecastStatusCards .forecast-day-section.forecast-inbound-drop-target{
+  border-color:#60a5fa!important;
+  box-shadow:0 0 0 3px rgba(96,165,250,.24),0 0 28px rgba(37,99,235,.2)!important;
+  background:linear-gradient(180deg,rgba(30,64,175,.22),rgba(2,6,23,.72))!important;
 }
 
 
@@ -19187,7 +20135,7 @@ body.forecast-excel-view-open .forecast-excel-view{
   padding:6px;
   background:#fff;
   color:#000;
-  font-family:"Aptos Narrow","Arial Narrow",Arial,sans-serif;
+  font-family:var(--forecast-excel-table-font,"Aptos Narrow","Arial Narrow",Arial,sans-serif);
   font-weight:700;
 }
 .forecast-excel-page,
@@ -19199,6 +20147,9 @@ body.forecast-excel-view-open .forecast-excel-view{
   top:10px;
   right:10px;
   z-index:50;
+  display:grid;
+  gap:8px;
+  width:230px;
 }
 .forecast-excel-toolbar h2{display:none}
 .forecast-excel-toolbar button,.forecast-excel-open-btn{
@@ -19211,6 +20162,651 @@ body.forecast-excel-view-open .forecast-excel-view{
 }
 .forecast-excel-content{
   display:block;
+  width:100%;
+  margin-left:auto;
+  margin-right:auto;
+}
+#forecastExcelView .forecast-excel-content h1{
+  min-height:48px;
+  margin:0 0 6px;
+  padding:7px 14px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:13px;
+  border:0;
+  border-radius:0;
+  background:#fff;
+  color:#111!important;
+  box-shadow:none;
+  font-size:calc(20px * var(--forecast-excel-main-header-scale,1))!important;
+  font-weight:1000;
+  letter-spacing:.02em;
+  line-height:1;
+  text-align:left;
+  text-transform:uppercase;
+  text-shadow:none;
+}
+#forecastExcelView .forecast-excel-content h1 span{color:#111!important}
+.forecast-excel-main-title-icon{
+  flex:0 0 auto;
+  width:46px;
+  height:25px;
+  fill:none;
+  stroke:#111;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+#forecastExcelView .forecast-excel-block h3,
+#forecastExcelView .forecast-excel-notes h3{font-size:calc(12px * var(--forecast-excel-secondary-header-scale,1))!important}
+#forecastExcelView .forecast-excel-table th,
+#forecastExcelView .forecast-excel-table td{font-size:11px!important}
+#forecastExcelView .forecast-excel-main-table .excel-train-name,
+#forecastExcelView .forecast-excel-main-table .excel-total-row .excel-train-name{
+  font-size:16px!important;
+}
+#forecastExcelView .forecast-excel-main-table .excel-train-name small{
+  font-size:8px!important;
+  transform:scale(var(--forecast-excel-arrival-flag-scale,1));
+  transform-origin:center;
+}
+#forecastExcelView .forecast-excel-main-table .forecast-excel-train-total{
+  display:block;
+  width:max-content;
+  margin:3px auto 0;
+  color:#111;
+  font-size:9px!important;
+  font-weight:800;
+  line-height:1;
+}
+#forecastExcelView .forecast-excel-notes strong,
+#forecastExcelView .forecast-excel-notes span{
+  font-size:14px!important;
+}
+#forecastExcelView .forecast-excel-page{
+  width:var(--forecast-excel-width-scale,100%);
+  max-width:none!important;
+  margin-left:auto!important;
+  margin-right:auto!important;
+}
+#forecastExcelView .forecast-excel-table th,
+#forecastExcelView .forecast-excel-table td{
+  padding-top:calc(2px * var(--forecast-excel-height-scale,1))!important;
+  padding-bottom:calc(2px * var(--forecast-excel-height-scale,1))!important;
+  height:calc(17px * var(--forecast-excel-height-scale,1))!important;
+  max-height:calc(17px * var(--forecast-excel-height-scale,1))!important;
+  line-height:calc(13px * var(--forecast-excel-height-scale,1))!important;
+  box-sizing:border-box;
+  overflow:hidden;
+  text-overflow:clip;
+}
+#forecastExcelView .forecast-excel-table{
+  width:100%;
+  table-layout:fixed!important;
+}
+#forecastExcelView .forecast-excel-table th,
+#forecastExcelView .forecast-excel-table td,
+#forecastExcelView .forecast-excel-table th *,
+#forecastExcelView .forecast-excel-table td *{
+  white-space:nowrap!important;
+}
+#forecastExcelView .forecast-excel-cell-content{
+  display:inline-flex;
+  width:100%;
+  height:100%;
+  align-items:center;
+  justify-content:center;
+  transform:scale(var(--forecast-excel-table-text-scale,1));
+  transform-origin:center;
+}
+#forecastExcelView .forecast-excel-main-table .excel-train-name > .forecast-excel-cell-content{
+  flex-direction:column;
+  gap:3px;
+}
+.excel-train-name-editable{
+  cursor:text;
+}
+.excel-train-name-editable:hover{
+  box-shadow:inset 0 0 0 2px rgba(37,99,235,.38);
+}
+.forecast-excel-train-name-input{
+  width:92%;
+  min-width:0;
+  padding:3px 5px;
+  border:1px solid #2563eb;
+  border-radius:4px;
+  outline:0;
+  background:#fff;
+  color:#000;
+  font:inherit;
+  text-align:center;
+  box-shadow:0 0 0 2px rgba(37,99,235,.15);
+}
+#forecastExcelView .forecast-excel-left>h1{
+  height:48px;
+  min-height:48px!important;
+  max-height:48px;
+  box-sizing:border-box;
+  overflow:hidden;
+  white-space:nowrap;
+}
+#forecastExcelView .forecast-excel-block h3{
+  height:44px;
+  min-height:44px!important;
+  max-height:44px;
+  box-sizing:border-box;
+  overflow:hidden;
+  white-space:nowrap;
+}
+#forecastExcelView .forecast-excel-notes>div{
+  min-height:calc(68px * var(--forecast-excel-height-scale,1))!important;
+}
+.forecast-excel-view-controls{
+  display:grid;
+  gap:5px;
+  padding:10px;
+  border:1px solid #cbd5e1;
+  border-radius:8px;
+  background:rgba(255,255,255,.96);
+  box-shadow:0 6px 20px rgba(15,23,42,.12);
+}
+.forecast-excel-view-controls label{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  color:#0f172a;
+  font-size:11px;
+  font-weight:850;
+}
+.forecast-excel-view-controls strong{color:#0f172a!important;font-size:11px!important}
+.forecast-excel-view-controls input[type="range"]{
+  width:100%;
+  accent-color:#2563eb;
+}
+.forecast-excel-empty-toggle{
+  width:100%;
+  margin-top:4px;
+  padding:7px 9px;
+  border:1px solid #64748b;
+  border-radius:6px;
+  background:#fff;
+  color:#0f172a;
+  font-size:10px;
+  font-weight:900;
+  cursor:pointer;
+}
+.forecast-excel-empty-toggle.is-active{
+  border-color:#2563eb;
+  background:#dbeafe;
+  color:#1e3a8a;
+}
+.forecast-excel-reset-requests{
+  border-color:#dc2626!important;
+  background:#fee2e2!important;
+  color:#991b1b!important;
+}
+.forecast-excel-font-controls{
+  display:grid;
+  gap:4px;
+  padding-top:3px;
+}
+.forecast-excel-font-controls[hidden]{display:none}
+.forecast-excel-font-controls label{
+  padding:0;
+  border:0;
+  box-shadow:none;
+  background:transparent;
+}
+.forecast-excel-font-controls select{
+  width:100%;
+  min-width:0;
+  padding:5px 6px;
+  border:1px solid #94a3b8;
+  border-radius:5px;
+  background:#fff;
+  color:#0f172a;
+  font-size:10px;
+  font-weight:700;
+}
+.forecast-excel-page.modern-table-view{
+  padding:12px;
+  background:#f1f5f9;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-columns{
+  gap:12px;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-left,
+.forecast-excel-page.modern-table-view .forecast-excel-block,
+.forecast-excel-page.modern-table-view .forecast-excel-notes{
+  overflow:hidden;
+  border:1px solid #cbd5e1;
+  border-radius:12px;
+  background:#fff;
+  box-shadow:0 5px 16px rgba(15,23,42,.10);
+}
+.forecast-excel-page.modern-table-view .forecast-excel-block.hours48{
+  background:#ffdf55;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-left{
+  padding:10px;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-left>h1{
+  min-height:48px;
+  margin:0 0 8px;
+  border-radius:8px;
+  background:#0f2742;
+  color:#fff!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-left>h1 span,
+.forecast-excel-page.modern-table-view .forecast-excel-left>h1 svg{
+  color:#fff!important;
+  stroke:#fff!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-block h3,
+.forecast-excel-page.modern-table-view .forecast-excel-notes h3{
+  margin:0;
+  border:0;
+  border-radius:0;
+  box-shadow:none;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-table{
+  overflow:hidden;
+  border:0!important;
+  border-collapse:separate;
+  border-spacing:0;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-table thead th{
+  padding:7px 5px!important;
+  border:0!important;
+  background:#e2e8f0!important;
+  color:#334155!important;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-table tbody tr > *{
+  border-top:1px solid #e2e8f0!important;
+  border-bottom:0!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-table tbody tr:nth-child(even) > *{
+  background-color:rgba(241,245,249,.72);
+}
+.forecast-excel-page.modern-table-view .forecast-excel-main-table .excel-train-name,
+.forecast-excel-page.modern-table-view .forecast-excel-table tbody th[rowspan]{
+  border-right:1px solid #cbd5e1!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-table tbody tr > :last-child{
+  border-left:1px solid #cbd5e1!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-request-input:focus{
+  background:#eff6ff;
+  box-shadow:inset 0 0 0 2px #3b82f6;
+}
+.forecast-excel-page.modern-table-view{
+  background:
+    radial-gradient(circle at 14% 8%,rgba(0,102,255,.12),transparent 25rem),
+    radial-gradient(circle at 82% 18%,rgba(168,36,255,.10),transparent 24rem),
+    #020711;
+  color:#e5eefc!important;
+}
+.forecast-excel-page.modern-table-view,
+.forecast-excel-page.modern-table-view *{
+  color:#e5eefc!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-left,
+.forecast-excel-page.modern-table-view .forecast-excel-block,
+.forecast-excel-page.modern-table-view .forecast-excel-notes{
+  padding:6px;
+  border-radius:9px;
+  background:rgba(3,10,24,.94);
+}
+.forecast-excel-page.modern-table-view .forecast-excel-left{
+  border-color:#0088ff;
+  box-shadow:0 0 12px rgba(0,119,255,.42),inset 0 0 18px rgba(0,72,170,.10);
+}
+.forecast-excel-page.modern-table-view .forecast-excel-block.hours48{
+  border-color:#c62cff;
+  background:rgba(12,3,25,.95);
+  box-shadow:0 0 12px rgba(190,39,255,.38),inset 0 0 18px rgba(128,0,188,.10);
+}
+.forecast-excel-page.modern-table-view .forecast-excel-block.hours24{
+  border-color:#00d875;
+  background:rgba(2,22,16,.95);
+  box-shadow:0 0 12px rgba(0,216,117,.34),inset 0 0 18px rgba(0,120,62,.12);
+}
+.forecast-excel-page.modern-table-view .forecast-excel-block.request{
+  border-color:#ff7a00;
+  background:rgba(25,10,1,.96);
+  box-shadow:0 0 12px rgba(255,110,0,.38),inset 0 0 18px rgba(150,55,0,.12);
+}
+.forecast-excel-page.modern-table-view .forecast-excel-left>h1{
+  min-height:42px;
+  background:linear-gradient(90deg,rgba(0,51,108,.92),rgba(2,10,24,.90));
+  border:1px solid #0088ff;
+  box-shadow:inset 0 0 18px rgba(0,119,255,.16);
+}
+.forecast-excel-page.modern-table-view .forecast-excel-block h3,
+.forecast-excel-page.modern-table-view .forecast-excel-notes h3{
+  min-height:38px;
+  padding-top:6px;
+  padding-bottom:6px;
+  color:#fff!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-block.hours48 h3{
+  background:linear-gradient(90deg,rgba(72,15,111,.92),rgba(16,3,28,.92))!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-block.hours24 h3{
+  background:linear-gradient(90deg,rgba(0,83,47,.92),rgba(2,25,18,.92))!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-block.request h3{
+  background:linear-gradient(90deg,rgba(124,47,0,.94),rgba(29,10,1,.94))!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-table thead th{
+  background:rgba(5,10,20,.96)!important;
+  color:#dbeafe!important;
+  border-bottom:1px solid rgba(148,163,184,.28)!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-table tbody tr > *{
+  background-color:rgba(3,10,23,.88)!important;
+  border-top:1px solid rgba(148,163,184,.18)!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-table tbody tr:nth-child(even) > *{
+  background-color:rgba(8,18,36,.92)!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-main-table tbody tr:nth-child(-n+8) > *{
+  background-color:rgba(0,62,38,.45)!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-main-table tbody tr:nth-child(n+9):nth-child(-n+16) > *{
+  background-color:rgba(93,53,0,.47)!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-main-table tbody tr:nth-child(n+17):nth-child(-n+24) > *{
+  background-color:rgba(0,45,99,.48)!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-block.hours48 tbody tr.calculator-pool-tgrp > *,
+.forecast-excel-page.modern-table-view .forecast-excel-block.hours24 tbody tr.calculator-pool-tgrp > *{
+  background-color:#261650!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-block.hours48 tbody tr.calculator-pool-fgcp > *,
+.forecast-excel-page.modern-table-view .forecast-excel-block.hours24 tbody tr.calculator-pool-fgcp > *{
+  background-color:#6b2d04!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-block.hours48 tbody tr.calculator-pool-sncz > *,
+.forecast-excel-page.modern-table-view .forecast-excel-block.hours24 tbody tr.calculator-pool-sncz > *{
+  background-color:#034523!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-block.hours48 tbody tr.calculator-pool-dcli > *,
+.forecast-excel-page.modern-table-view .forecast-excel-block.hours24 tbody tr.calculator-pool-dcli > *{
+  background-color:#092957!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-block.request tbody tr.request-pool-tgrp > *{
+  background-color:#261650!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-block.request tbody tr.request-pool-fgcp > *{
+  background-color:#6b2d04!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-block.request tbody tr.request-pool-sncz > *{
+  background-color:#034523!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-block.request tbody tr.request-pool-dcli > *{
+  background-color:#092957!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-block tbody tr.calculator-pool-tgrp > th[rowspan],
+.forecast-excel-page.modern-table-view .forecast-excel-block.request tbody tr.request-pool-tgrp > th[rowspan]{
+  background:#321b6b!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-block tbody tr.calculator-pool-fgcp > th[rowspan],
+.forecast-excel-page.modern-table-view .forecast-excel-block.request tbody tr.request-pool-fgcp > th[rowspan]{
+  background:#8a3900!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-block tbody tr.calculator-pool-sncz > th[rowspan],
+.forecast-excel-page.modern-table-view .forecast-excel-block.request tbody tr.request-pool-sncz > th[rowspan]{
+  background:#00652e!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-block tbody tr.calculator-pool-dcli > th[rowspan],
+.forecast-excel-page.modern-table-view .forecast-excel-block.request tbody tr.request-pool-dcli > th[rowspan]{
+  background:#103b78!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-block .forecast-excel-table tbody tr > *{
+  border-top-color:rgba(191,219,254,.14)!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-block .forecast-excel-table tbody tr[class*="pool-"]:has(th[rowspan]) > *{
+  border-top-color:rgba(226,232,240,.42)!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-table .excel-over-50{
+  background:#9b0000!important;
+  box-shadow:inset 0 0 10px rgba(255,34,34,.75);
+}
+.forecast-excel-page.modern-table-view .forecast-excel-zero{
+  color:#94a3b8!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-request-input{
+  color:#fff!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-request-input:focus{
+  background:rgba(0,119,255,.16);
+}
+.forecast-excel-page.modern-table-view .forecast-excel-notes{
+  border-color:#0e7490;
+  background:#030b17;
+  box-shadow:0 0 10px rgba(14,116,144,.25);
+}
+.forecast-excel-page.modern-table-view .forecast-excel-notes h3{
+  background:linear-gradient(90deg,#052c3a,#061525)!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-notes>div{
+  border-color:#164e63;
+  background:#030b17;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-notes strong{
+  background:#061524!important;
+  color:#67e8f9!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-notes span:nth-child(2){
+  background:#032a22!important;
+  color:#d1fae5!important;
+  border-color:#164e63;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-notes span:nth-child(4){
+  background:#071b36!important;
+  color:#dbeafe!important;
+}
+.forecast-excel-page.modern-table-view{
+  padding:14px;
+  border:1px solid #111827;
+  border-radius:0;
+  box-shadow:inset 0 0 60px rgba(0,0,0,.76);
+}
+.forecast-excel-page.modern-table-view::before{
+  content:"🚛  CHASSIS FORECAST";
+  display:flex;
+  align-items:center;
+  min-height:58px;
+  margin-bottom:12px;
+  padding-left:18px;
+  background:linear-gradient(135deg,#06111f,#02050b 68%);
+  border:1px solid #13243a;
+  border-radius:8px;
+  color:#f8fafc!important;
+  font-family:var(--forecast-excel-title-font,"Aptos Narrow","Arial Narrow",Arial,sans-serif);
+  font-size:calc(25px * var(--forecast-excel-main-header-scale,1));
+  font-weight:800;
+  letter-spacing:.04em;
+  text-shadow:0 0 10px rgba(255,255,255,.22);
+}
+.forecast-excel-page.modern-table-view .forecast-excel-columns{
+  grid-template-columns:minmax(0,51.5%) minmax(0,48.5%);
+  gap:10px;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-left,
+.forecast-excel-page.modern-table-view .forecast-excel-block{
+  padding:5px;
+  border-width:1px;
+  border-radius:7px;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-left>h1{
+  justify-content:flex-start!important;
+  min-height:40px;
+  padding:7px 12px!important;
+  gap:9px!important;
+  border:0;
+  border-bottom:1px solid rgba(0,136,255,.52);
+  border-radius:4px 4px 0 0;
+  background:linear-gradient(90deg,#06182d,#020812)!important;
+  font-size:calc(16px * var(--forecast-excel-main-header-scale,1))!important;
+}
+.forecast-excel-page.modern-table-view #forecastExcelContent .forecast-excel-left>h1 span{
+  color:#f8fafc!important;
+  font-weight:700!important;
+  text-shadow:0 0 7px rgba(255,255,255,.16);
+}
+.forecast-excel-page.modern-table-view .forecast-excel-main-title-icon{
+  width:31px;
+  height:20px;
+  stroke:#4aa8ff!important;
+  filter:drop-shadow(0 0 5px #0077ff);
+}
+.forecast-excel-page.modern-table-view .forecast-excel-block h3{
+  min-height:40px;
+  padding:7px 10px 7px 42px;
+  border-radius:4px 4px 0 0;
+  font-size:calc(14px * var(--forecast-excel-secondary-header-scale,1))!important;
+  font-weight:750!important;
+  letter-spacing:.06em;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-title-icon{
+  left:11px;
+  width:23px;
+  height:23px;
+  stroke:#fff;
+  filter:drop-shadow(0 0 4px currentColor);
+}
+.forecast-excel-page.modern-table-view .forecast-excel-table thead th{
+  padding:5px 4px!important;
+  background:#050a12!important;
+  color:#cbd5e1!important;
+  font-size:9px!important;
+  font-weight:800;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-table tbody tr > *{
+  padding-top:calc(2px * var(--forecast-excel-height-scale,1))!important;
+  padding-bottom:calc(2px * var(--forecast-excel-height-scale,1))!important;
+  border-color:rgba(96,165,250,.16)!important;
+  font-weight:600!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-main-table .excel-train-name{
+  color:#f8fafc!important;
+  font-size:12px!important;
+  font-weight:750!important;
+  letter-spacing:.02em;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-main-table .excel-train-name small{
+  width:max-content;
+  margin:4px auto 0;
+  padding:2px 8px;
+  border-radius:999px;
+  background:#0d9488;
+  color:#ecfeff!important;
+  font-size:7px!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-main-table .arrival-tomorrow{
+  background:#c2410c!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-main-table .arrival-two-days{
+  background:#1d4ed8!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-main-table .excel-total-row > *{
+  background:linear-gradient(90deg,rgba(2,28,66,.96),rgba(4,18,43,.96))!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-block.hours48 h3{
+  border-bottom:1px solid #b92cff;
+  box-shadow:inset 0 -1px 12px rgba(183,44,255,.14);
+}
+.forecast-excel-page.modern-table-view .forecast-excel-block.hours24 h3{
+  border-bottom:1px solid #00d875;
+  box-shadow:inset 0 -1px 12px rgba(0,216,117,.14);
+}
+.forecast-excel-page.modern-table-view .forecast-excel-block.request h3{
+  border-bottom:1px solid #ff7a00;
+  box-shadow:inset 0 -1px 12px rgba(255,122,0,.16);
+}
+.forecast-excel-page.modern-table-view .forecast-excel-notes{
+  margin-top:10px;
+  padding:0;
+  border:0;
+  background:transparent;
+  box-shadow:none;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-notes h3{
+  display:none;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-notes>div{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  min-height:70px!important;
+  border:0;
+  background:transparent;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-notes strong,
+.forecast-excel-page.modern-table-view .forecast-excel-notes span{
+  border:1px solid #15314e!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-notes strong{
+  display:none;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-notes span{
+  position:relative;
+  padding:23px 14px 8px!important;
+  border-radius:7px;
+  justify-content:flex-start;
+  text-align:left;
+  background:#061322!important;
+  box-shadow:inset 0 0 18px rgba(0,0,0,.34);
+}
+.forecast-excel-page.modern-table-view .forecast-excel-notes span:nth-child(2)::before{
+  content:"TODAY";
+  position:absolute;
+  top:7px;
+  left:14px;
+  color:#34d399!important;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.08em;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-notes span:nth-child(4)::before{
+  content:"NEXT FEW DAYS";
+  position:absolute;
+  top:7px;
+  left:14px;
+  color:#60a5fa!important;
+  font-size:9px;
+  font-weight:900;
+  letter-spacing:.08em;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-notes span:nth-child(2){
+  border-color:#064e3b!important;
+  background:linear-gradient(135deg,#061b18,#04101a)!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-notes span:nth-child(4){
+  border-color:#1e3a8a!important;
+  background:linear-gradient(135deg,#07162d,#04101a)!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-columns.hide-empty-inbounds .forecast-excel-left .forecast-excel-notes{
+  flex:none;
+  margin-top:8px;
+  padding:0;
+  border:0;
+  border-radius:0;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-columns.hide-empty-inbounds .forecast-excel-left .forecast-excel-notes>div{
+  grid-template-columns:1fr 1fr;
+  grid-template-rows:auto;
+  gap:8px;
+  min-height:64px!important;
+}
+.forecast-excel-page.modern-table-view .forecast-excel-columns.hide-empty-inbounds .forecast-excel-left .forecast-excel-notes>div > *{
+  border-bottom:1px solid!important;
 }
 .forecast-excel-columns{
   display:grid;
@@ -19235,24 +20831,98 @@ body.forecast-excel-view-open .forecast-excel-view{
   flex:1;
   height:100%;
 }
+.forecast-excel-main-table th,
+.forecast-excel-main-table td{
+  text-align:center!important;
+  vertical-align:middle!important;
+}
+.forecast-excel-columns.hide-empty-inbounds .forecast-excel-left .forecast-excel-main-table{
+  flex:0 0 auto;
+  height:auto;
+}
+.forecast-excel-columns.hide-empty-inbounds .forecast-excel-left .forecast-excel-notes{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  margin-top:6px;
+  padding:0;
+  border-color:#111;
+  border-radius:0;
+  box-shadow:none;
+}
+.forecast-excel-columns.hide-empty-inbounds .forecast-excel-left .forecast-excel-notes>div{
+  flex:1;
+  min-height:0!important;
+  grid-template-columns:84px 1fr;
+  grid-template-rows:1fr 1fr;
+}
+.forecast-excel-columns.hide-empty-inbounds .forecast-excel-left .forecast-excel-notes>div > :nth-child(1),
+.forecast-excel-columns.hide-empty-inbounds .forecast-excel-left .forecast-excel-notes>div > :nth-child(2){
+  border-bottom:1px solid #111;
+}
+#forecastExcelView .forecast-excel-columns.hide-empty-inbounds .forecast-excel-left .forecast-excel-notes>div > strong{
+  font-size:10px!important;
+  line-height:1.1;
+}
+.forecast-excel-columns.hide-empty-inbounds .forecast-excel-left .forecast-excel-notes span:nth-child(2){
+  border-right:0;
+}
 .forecast-excel-left>h1{
   margin:0 0 8px;
   text-align:center;
   font-size:18px;
+  font-family:var(--forecast-excel-title-font,"Aptos Narrow","Arial Narrow",Arial,sans-serif);
 }
 .forecast-excel-right{
   display:grid;
   gap:6px;
 }
 .forecast-excel-block h3{
+  position:relative;
+  min-height:44px;
   margin:0 0 6px;
-  padding:4px 6px;
-  text-align:center;
-  background:#fff600;
+  padding:8px 14px 8px 48px;
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  border:1px solid rgba(161,98,7,.20);
+  border-radius:9px 9px 3px 3px;
+  background:linear-gradient(100deg,#ffd21f,#ffe66a 62%,#ffd83d);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 2px 5px rgba(146,64,14,.14);
+  color:#111;
+  text-align:left;
   font-size:17px;
+  font-weight:1000;
+  letter-spacing:.02em;
+  text-transform:uppercase;
+  font-family:var(--forecast-excel-header-font,"Aptos Narrow","Arial Narrow",Arial,sans-serif);
 }
-.forecast-excel-block.hours24 h3{background:#d9f2cf}
-.forecast-excel-block.hours48 h3{background:#fff600}
+.forecast-excel-notes h3{
+  font-family:var(--forecast-excel-header-font,"Aptos Narrow","Arial Narrow",Arial,sans-serif);
+}
+.forecast-excel-table{
+  font-family:var(--forecast-excel-table-font,"Aptos Narrow","Arial Narrow",Arial,sans-serif);
+}
+.forecast-excel-block h3 span{display:block}
+.forecast-excel-title-icon{
+  position:absolute;
+  left:13px;
+  top:50%;
+  width:25px;
+  height:25px;
+  transform:translateY(-50%);
+  fill:none;
+  stroke:#111;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+.forecast-excel-block.hours24 h3{
+  border-color:rgba(63,98,18,.22);
+  background:linear-gradient(100deg,#a9db91,#d8efca 65%,#acd995);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 2px 5px rgba(63,98,18,.13);
+}
+.forecast-excel-block.hours48 h3{background:linear-gradient(100deg,#ffd21f,#ffe66a 62%,#ffd83d)}
 .forecast-excel-table{
   width:100%;
   border-collapse:collapse;
@@ -19424,6 +21094,27 @@ body.forecast-excel-view-open .forecast-excel-view{
   border:2px solid #111;
   border-top:0;
 }
+.forecast-excel-block.hours24 .forecast-excel-table tbody tr > *,
+.forecast-excel-block.hours48 .forecast-excel-table tbody tr > *{
+  border-top:1px solid #d8dde5!important;
+}
+.forecast-excel-block.hours24 .forecast-excel-table tbody tr:first-child > *,
+.forecast-excel-block.hours48 .forecast-excel-table tbody tr:first-child > *{
+  border-top:0!important;
+}
+.forecast-excel-block.hours48 .forecast-excel-table tbody tr:nth-child(3) > *,
+.forecast-excel-block.hours48 .forecast-excel-table tbody tr:nth-child(6) > *,
+.forecast-excel-block.hours48 .forecast-excel-table tbody tr:nth-child(8) > *,
+.forecast-excel-block.hours48 .forecast-excel-table tbody tr:nth-child(12) > *{
+  border-bottom:2px solid #475569!important;
+}
+.forecast-excel-block.hours48 .forecast-excel-table tbody th[rowspan]{
+  border-bottom:2px solid #475569!important;
+}
+.forecast-excel-block.hours24 .forecast-excel-table tbody tr > *,
+.forecast-excel-block.hours48 .forecast-excel-table tbody tr > *{
+  border-top-color:#d8dde5!important;
+}
 .forecast-excel-block:not(.request) .forecast-excel-table thead th{
   border:0;
   border-bottom:2px solid #111;
@@ -19455,7 +21146,7 @@ body.forecast-excel-view-open .forecast-excel-view{
   background:#ffff00!important;
   color:#000!important;
 }
-.forecast-excel-block.request h3{background:#fff600}
+.forecast-excel-block.request h3{background:linear-gradient(100deg,#ffd21f,#ffe66a 62%,#ffd83d)}
 .forecast-excel-block.request tbody tr.request-pool-tgrp{background:#f4d1f0}
 .forecast-excel-block.request tbody tr.request-pool-fgcp{background:#ffe5d4}
 .forecast-excel-block.request tbody tr.request-pool-sncz{background:#d9f2cf}
@@ -19471,10 +21162,12 @@ body.forecast-excel-view-open .forecast-excel-view{
 }
 .forecast-excel-block.request .forecast-excel-table tbody th,
 .forecast-excel-block.request .forecast-excel-table tbody td{
-  border-top:0;
+  border-top:1px solid #d8dde5;
   border-bottom:0;
   border-left:0;
   border-right:0;
+  text-align:center!important;
+  vertical-align:middle!important;
 }
 .forecast-excel-block.request .forecast-excel-table tbody th[rowspan]{
   border:1px solid rgba(15,23,42,.12);
@@ -19492,6 +21185,80 @@ body.forecast-excel-view-open .forecast-excel-view{
 }
 .forecast-excel-block.request .forecast-excel-table tbody tr > :last-child{
   border-right:0;
+}
+.forecast-excel-request-input{
+  width:100%;
+  min-width:0;
+  height:100%;
+  padding:0 2px;
+  border:0;
+  border-radius:3px;
+  outline:0;
+  background:transparent;
+  color:#000;
+  font:inherit;
+  font-size:12px!important;
+  font-weight:inherit;
+  text-align:center;
+  vertical-align:middle;
+  appearance:textfield;
+}
+.forecast-excel-request-input::placeholder{
+  color:#000;
+  opacity:.07;
+}
+.forecast-excel-request-input:focus{
+  background:rgba(255,255,255,.68);
+  box-shadow:inset 0 0 0 1px #2563eb;
+}
+.forecast-excel-request-input::-webkit-inner-spin-button,
+.forecast-excel-request-input::-webkit-outer-spin-button{
+  margin:0;
+  appearance:none;
+}
+#forecastExcelView .forecast-excel-table :is(.request-net-flag,.calculator-net-flag){
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:24px;
+  width:max-content;
+  height:16px;
+  min-height:16px;
+  max-height:16px;
+  padding:3px var(--forecast-excel-net-padding,10px);
+  border:1px solid currentColor;
+  border-radius:999px;
+  box-sizing:border-box;
+  overflow:visible;
+  font-size:8.3px!important;
+  font-weight:825;
+  line-height:1;
+}
+#forecastExcelView .forecast-excel-table :is(.request-net-value,.calculator-net-value){
+  display:inline-block;
+  font:inherit;
+  line-height:1;
+  transform:scale(var(--forecast-excel-net-text-scale,1));
+  transform-origin:center;
+}
+.forecast-excel-block.request .forecast-excel-table .request-net-flag.request-net-red,
+#forecastExcelView .forecast-excel-table .calculator-net-flag.request-net-red{
+  background:#fca5a5!important;
+  color:#000!important;
+}
+.forecast-excel-block.request .forecast-excel-table .request-net-flag.request-net-yellow,
+#forecastExcelView .forecast-excel-table .calculator-net-flag.request-net-yellow{
+  background:#fde68a!important;
+  color:#000!important;
+}
+.forecast-excel-block.request .forecast-excel-table .request-net-flag.request-net-green,
+#forecastExcelView .forecast-excel-table .calculator-net-flag.request-net-green{
+  background:#bbf7d0!important;
+  color:#000!important;
+}
+.forecast-excel-block.request .forecast-excel-table .request-net-flag .forecast-excel-zero{
+  color:inherit!important;
+  opacity:1!important;
 }
 .forecast-excel-block.request .forecast-excel-table tbody tr[class^="request-pool-"]:has(th[rowspan]) > *{
   border-top:2px solid #111;
@@ -19525,11 +21292,42 @@ body.forecast-excel-view-open .forecast-excel-view{
 }
 .forecast-excel-notes h3{
   margin:0;
-  padding:3px;
-  background:#000!important;
+  min-height:18px;
+  padding:2px 6px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:4px;
+  background:linear-gradient(90deg,#071a31,#08243e)!important;
   color:#fff!important;
   text-align:center;
-  font-size:12px;
+  font-size:8px;
+  font-weight:1000;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+.forecast-excel-notes h3 span{
+  display:inline!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  color:#fff!important;
+  font-size:inherit!important;
+  line-height:1!important;
+}
+.forecast-excel-notes-icon{
+  flex:0 0 auto;
+  width:16px;
+  height:16px;
+  fill:none;
+  stroke:#fff;
+  stroke-width:1.8;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+}
+#forecastExcelView .forecast-excel-notes h3,
+#forecastExcelView .forecast-excel-notes h3 span{
+  font-size:calc(13px * var(--forecast-excel-secondary-header-scale,1))!important;
 }
 .forecast-excel-notes>div{
   display:grid;
@@ -19550,6 +21348,26 @@ body.forecast-excel-view-open .forecast-excel-view{
   overflow-wrap:normal;
   word-break:normal;
 }
+.forecast-excel-notes strong{
+  font-size:10px!important;
+}
+.forecast-excel-notes>div>span{
+  font-size:14px!important;
+}
+.forecast-excel-notes-label-text{
+  display:inline-block!important;
+  font:inherit!important;
+  line-height:1.1!important;
+  transform:scale(var(--forecast-excel-notes-label-scale,1));
+  transform-origin:center;
+}
+.forecast-excel-notes-message-text{
+  display:inline-block!important;
+  font:inherit!important;
+  line-height:inherit!important;
+  transform:scale(var(--forecast-excel-notes-text-scale,1));
+  transform-origin:center;
+}
 .forecast-excel-notes span:nth-child(2){
   background:#d9f2cf;
   border-right:2px solid #111;
@@ -19561,6 +21379,407 @@ body.forecast-excel-view-open .forecast-excel-view{
 }
 @media(max-width:1000px){
   .forecast-excel-page{transform-origin:top left}
+}
+
+/* Final modern dashboard overrides: keep these after the Excel theme rules. */
+#forecastExcelView .forecast-excel-page.modern-table-view #forecastExcelContent .forecast-excel-left > h1,
+#forecastExcelView .forecast-excel-page.modern-table-view #forecastExcelContent .forecast-excel-left > h1 span{
+  color:#f8fafc!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-main-title-icon{
+  stroke:#55b7ff!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block h3,
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block h3 span{
+  color:#f8fafc!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-table th,
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-table td{
+  color:#eef4ff!important;
+  font-weight:550!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-table thead th{
+  background:#050912!important;
+  color:#d7e0ee!important;
+  font-weight:700!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block.hours48 tr.calculator-pool-tgrp > *,
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block.hours24 tr.calculator-pool-tgrp > *,
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block.request tr.request-pool-tgrp > *{
+  background:#24154d!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block.hours48 tr.calculator-pool-fgcp > *,
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block.hours24 tr.calculator-pool-fgcp > *,
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block.request tr.request-pool-fgcp > *{
+  background:#682a03!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block.hours48 tr.calculator-pool-sncz > *,
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block.hours24 tr.calculator-pool-sncz > *,
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block.request tr.request-pool-sncz > *{
+  background:#033d20!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block.hours48 tr.calculator-pool-dcli > *,
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block.hours24 tr.calculator-pool-dcli > *,
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block.request tr.request-pool-dcli > *{
+  background:#092652!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block tr.calculator-pool-tgrp > th[rowspan],
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block.request tr.request-pool-tgrp > th[rowspan]{
+  background:#321d68!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block tr.calculator-pool-fgcp > th[rowspan],
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block.request tr.request-pool-fgcp > th[rowspan]{
+  background:#873800!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block tr.calculator-pool-sncz > th[rowspan],
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block.request tr.request-pool-sncz > th[rowspan]{
+  background:#00602d!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block tr.calculator-pool-dcli > th[rowspan],
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block.request tr.request-pool-dcli > th[rowspan]{
+  background:#103b78!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block .forecast-excel-table tbody tr > *{
+  border-top:1px solid rgba(203,213,225,.16)!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block .forecast-excel-table tbody tr:has(th[rowspan]) > *{
+  border-top-color:rgba(226,232,240,.36)!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-request-input{
+  color:#f8fafc!important;
+  font-weight:550!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .request-net-flag{
+  color:#050505!important;
+}
+/* Modern view mirrors the Excel view geometry; only its visual theme changes. */
+#forecastExcelView .forecast-excel-page.modern-table-view{
+  padding:6px;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view::before{
+  display:none;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-columns{
+  grid-template-columns:minmax(0,56%) minmax(0,44%);
+  gap:6px;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-left,
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block{
+  padding:6px;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-left > h1{
+  height:48px;
+  min-height:48px!important;
+  max-height:48px;
+  margin:0 0 8px;
+  padding:7px 14px!important;
+  justify-content:center!important;
+  gap:13px!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block h3{
+  height:44px;
+  min-height:44px!important;
+  max-height:44px;
+  margin:0 0 6px;
+  padding:8px 14px 8px 48px;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-notes{
+  display:block;
+  width:100%;
+  margin-top:8px;
+  padding:6px;
+  border:1px solid #0e7490;
+  border-radius:6px;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-notes h3{
+  display:flex;
+  height:auto;
+  min-height:18px;
+  margin:0;
+  padding:2px 6px;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-notes > div{
+  display:grid;
+  grid-template-columns:84px 1fr 96px 1fr;
+  grid-template-rows:auto;
+  gap:0;
+  min-height:calc(68px * var(--forecast-excel-height-scale,1))!important;
+  border:2px solid #164e63;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-notes strong{
+  display:flex;
+  position:static;
+  padding:5px!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-notes span{
+  position:static;
+  padding:5px!important;
+  border-radius:0;
+  justify-content:center;
+  text-align:center;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-notes span::before{
+  content:none!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-notes span:nth-child(2){
+  border-right:2px solid #164e63!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-columns.hide-empty-inbounds .forecast-excel-left .forecast-excel-notes{
+  flex:1;
+  display:flex;
+  flex-direction:column;
+  margin-top:6px;
+  padding:0;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-columns.hide-empty-inbounds .forecast-excel-left .forecast-excel-notes > div{
+  flex:1;
+  grid-template-columns:84px 1fr;
+  grid-template-rows:1fr 1fr;
+  gap:0;
+  min-height:0!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-columns.hide-empty-inbounds .forecast-excel-left .forecast-excel-notes strong{
+  display:flex;
+}
+/* Blank-slate modern view: start as an exact visual copy of Excel view. */
+#forecastExcelView .forecast-excel-page.modern-table-view{
+  background:#fff!important;
+  color:#000!important;
+  border:0!important;
+  border-radius:0!important;
+  box-shadow:none!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view,
+#forecastExcelView .forecast-excel-page.modern-table-view *{
+  color:#000!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-left,
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block{
+  overflow:visible;
+  border:1px solid #e5e7eb!important;
+  border-radius:6px!important;
+  background:#fff!important;
+  box-shadow:0 1px 5px rgba(0,0,0,.12)!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-left > h1{
+  border:0!important;
+  border-radius:0!important;
+  background:#fff!important;
+  box-shadow:none!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-left > h1 span{
+  color:#111!important;
+  text-shadow:none!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-main-title-icon{
+  stroke:#111!important;
+  filter:none!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block h3{
+  border:1px solid rgba(161,98,7,.20)!important;
+  border-radius:9px 9px 3px 3px!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.72),0 2px 5px rgba(146,64,14,.14)!important;
+  color:#111!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block h3 span{
+  color:#111!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block.hours48 h3,
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block.request h3{
+  background:linear-gradient(100deg,#ffd21f,#ffe66a 62%,#ffd83d)!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block.hours24 h3{
+  background:#d9f2cf!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-title-icon{
+  stroke:#111!important;
+  filter:none!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-table{
+  border-collapse:collapse!important;
+  border-spacing:0!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-table thead th{
+  background:#fff!important;
+  color:#000!important;
+  border-bottom:2px solid #111!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-table th,
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-table td{
+  color:#000!important;
+  font-weight:700!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-main-table tbody tr > *{
+  background:inherit!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block.hours48 tr.calculator-pool-tgrp > *,
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block.request tr.request-pool-tgrp > *{
+  background:#f4d1f0!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block.hours48 tr.calculator-pool-fgcp > *,
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block.request tr.request-pool-fgcp > *{
+  background:#ffe5d4!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block.hours48 tr.calculator-pool-sncz > *,
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block.request tr.request-pool-sncz > *{
+  background:#d9f2cf!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block.hours48 tr.calculator-pool-dcli > *,
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block.request tr.request-pool-dcli > *{
+  background:#f2f2f2!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block.hours24 tr.calculator-pool-tgrp > *,
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block.hours24 tr.calculator-pool-sncz > *{
+  background:#e9e9e9!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block.hours24 tr.calculator-pool-fgcp > *,
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-block.hours24 tr.calculator-pool-dcli > *{
+  background:#fff!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-zero{
+  color:#000!important;
+  opacity:.07!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-notes{
+  border:1px solid #e5e7eb!important;
+  background:#fff!important;
+  box-shadow:0 1px 5px rgba(0,0,0,.12)!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-notes h3{
+  background:linear-gradient(90deg,#071a31,#08243e)!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-notes h3,
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-notes h3 *{
+  color:#fff!important;
+  stroke:#fff!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-notes > div{
+  border-color:#111!important;
+  background:#fff!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-notes strong{
+  background:#fff!important;
+  color:#000!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-notes > div > span:nth-child(2){
+  background:#d9f2cf!important;
+  color:#000!important;
+  border-right-color:#111!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-notes > div > span:nth-child(4){
+  background:#dbe9f8!important;
+  color:#000!important;
+}
+#forecastExcelView .forecast-excel-page.modern-table-view .forecast-excel-request-input{
+  color:#000!important;
+}
+/* Test Copy row colors. */
+#forecastExcelView .forecast-excel-page.forecast-excel-test-copy .forecast-excel-main-table .excel-total-row > *{
+  background:#e5e7eb!important;
+}
+#forecastExcelView .forecast-excel-page.forecast-excel-test-copy .forecast-excel-main-table .excel-arrival-today > *{
+  background:#dcfce7!important;
+}
+#forecastExcelView .forecast-excel-page.forecast-excel-test-copy .forecast-excel-main-table .excel-arrival-tomorrow > *{
+  background:#fef3c7!important;
+}
+#forecastExcelView .forecast-excel-page.forecast-excel-test-copy .forecast-excel-main-table .excel-arrival-two-days > *{
+  background:#dbeafe!important;
+}
+#forecastExcelView .forecast-excel-page.forecast-excel-test-copy .forecast-excel-main-table .excel-stacked-row > *,
+#forecastExcelView .forecast-excel-page.forecast-excel-test-copy .forecast-excel-main-table .excel-mismatch-row > *{
+  background:#fff!important;
+}
+#forecastExcelView .forecast-excel-page.forecast-excel-test-copy .forecast-excel-main-table .excel-over-50{
+  background:#f59e0b!important;
+  color:#000!important;
+}
+#forecastExcelView .forecast-excel-page .forecast-excel-main-table tbody tr:not(.excel-total-row) > .excel-over-50,
+#forecastExcelView .forecast-excel-page.forecast-excel-test-copy .forecast-excel-main-table tbody tr:not(.excel-total-row) > .excel-over-50{
+  background:#f59e0b!important;
+  background-color:#f59e0b!important;
+  color:#000!important;
+}
+#forecastExcelView .previous-submission-row .forecast-excel-request-input[readonly]{
+  cursor:default;
+  color:#1e3a8a!important;
+  background:rgba(191,219,254,.28)!important;
+  font-style:italic;
+}
+#forecastExcelView .forecast-excel-columns.hide-empty-inbounds .forecast-excel-left .forecast-excel-main-table{
+  flex:1 1 auto!important;
+  height:auto!important;
+}
+#forecastExcelView .forecast-excel-columns.hide-empty-inbounds .forecast-excel-left .forecast-excel-notes{
+  flex:0 0 auto!important;
+  margin-top:4px!important;
+}
+#forecastExcelView .forecast-excel-columns.hide-empty-inbounds .forecast-excel-left .forecast-excel-notes > div{
+  flex:none!important;
+  height:var(--forecast-excel-notes-height,90px)!important;
+  min-height:var(--forecast-excel-notes-height,90px)!important;
+  grid-template-rows:repeat(2,minmax(0,1fr))!important;
+}
+#forecastExcelView .forecast-excel-columns.hide-empty-inbounds .forecast-excel-left .forecast-excel-notes strong,
+#forecastExcelView .forecast-excel-columns.hide-empty-inbounds .forecast-excel-left .forecast-excel-notes > div > span{
+  padding:2px 4px!important;
+}
+#forecastExcelView .forecast-excel-notes .forecast-excel-notes-grid{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  grid-template-rows:repeat(2,minmax(0,1fr))!important;
+  gap:0!important;
+  min-height:68px;
+  border:2px solid #111;
+}
+#forecastExcelView .forecast-excel-notes .forecast-excel-notes-row{
+  display:grid;
+  grid-template-columns:90px minmax(150px,1fr) minmax(180px,1.35fr);
+  min-width:0;
+}
+#forecastExcelView .forecast-excel-notes .forecast-excel-notes-row+ .forecast-excel-notes-row{
+  border-top:1px solid #111;
+}
+#forecastExcelView .forecast-excel-notes .forecast-excel-notes-row>strong,
+#forecastExcelView .forecast-excel-notes .forecast-excel-notes-row>.forecast-excel-notes-trains,
+#forecastExcelView .forecast-excel-notes .forecast-excel-notes-row>.forecast-excel-notes-shortages{
+  display:flex!important;
+  align-items:center;
+  justify-content:center;
+  min-width:0;
+  padding:5px!important;
+  border:0!important;
+  text-align:center;
+  line-height:1.25;
+}
+#forecastExcelView .forecast-excel-notes .forecast-excel-notes-row>.forecast-excel-notes-trains{
+  border-left:2px solid #111!important;
+  border-right:2px solid #111!important;
+  font-size:16px!important;
+  font-weight:700;
+}
+#forecastExcelView .forecast-excel-notes .forecast-excel-notes-train-text{
+  display:inline-block!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  color:inherit!important;
+  font:inherit!important;
+  line-height:1.25!important;
+  transform:scale(var(--forecast-excel-notes-train-scale,1));
+  transform-origin:center;
+}
+#forecastExcelView .forecast-excel-notes .forecast-excel-notes-today>.forecast-excel-notes-trains,
+#forecastExcelView .forecast-excel-notes .forecast-excel-notes-today>.forecast-excel-notes-shortages{
+  background:#d9f2cf!important;
+}
+#forecastExcelView .forecast-excel-notes .forecast-excel-notes-future>.forecast-excel-notes-trains,
+#forecastExcelView .forecast-excel-notes .forecast-excel-notes-future>.forecast-excel-notes-shortages{
+  background:#dbe9f8!important;
+}
+#forecastExcelView .forecast-excel-columns.hide-empty-inbounds .forecast-excel-left .forecast-excel-notes .forecast-excel-notes-grid{
+  height:var(--forecast-excel-notes-height,90px)!important;
+  min-height:var(--forecast-excel-notes-height,90px)!important;
 }
 
 </style>
