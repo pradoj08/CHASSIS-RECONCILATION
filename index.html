@@ -9834,7 +9834,7 @@ function buildForecastExcelShortageNotes(rows){
     ["TGRP","45",3,"TRAC"],["TGRP","40",15,"TRAC"],
     ["FGCP","45",3,"FLEXI"],["FGCP","40",15,"FLEXI"],
     ["SNCZ","53",15,"SNCZ"],["SNBZ","40",5,"SNCZ"],
-    ["DCLI","53",15,"DCLI/DCLP"],["DCLI","40",15,"DCLI/DCLP"],["DCLI","20",15,"DCLI/DCLP"]
+    ["DCLI","53",15,"DCLI"],["DCLI","40",15,"DCLI/DCLP"],["DCLI","20",15,"DCLI/DCLP"]
   ];
   return checks.flatMap(([pool,size,limit,label])=>{
     const row=byKey.get(`${pool}|${size}`);
@@ -9943,7 +9943,9 @@ function renderForecastExcelView(){
       const train=getForecastTrainGroupName(unit);
       const day=getForecastUnitDay(unit);
       const key=`${train}|${day}`;
-      groups.set(key,{train,total:(groups.get(key)?.total||0)+1});
+      const group=groups.get(key);
+      if(group)group.total+=1;
+      else groups.set(key,{train,total:1});
     });
     return [...groups.values()]
       .map(group=>`${escapeHtml(group.train)} - ${group.total} Units`)
@@ -9952,7 +9954,30 @@ function renderForecastExcelView(){
   const todayTrainList=buildNotesTrainList(units24);
   const futureTrainList=buildNotesTrainList(units72.filter(unit=>getForecastExcelArrivalLabel(getForecastUnitDay(unit))!=="Today"));
   const notesIcon=`<svg class="forecast-excel-notes-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4h6"/><path d="M9 2h6v4H9z"/><path d="M7 4H5v18h14V4h-2"/><path d="M8 10h8M8 14h8M8 18h5"/></svg>`;
-  const notes=`<section class="forecast-excel-notes"><h3>${notesIcon}<span>Notes</span></h3><div class="forecast-excel-notes-grid"><div class="forecast-excel-notes-row forecast-excel-notes-today"><strong><span class="forecast-excel-notes-label-text">Today</span></strong><span class="forecast-excel-notes-trains"><span class="forecast-excel-notes-train-text">${todayTrainList}</span></span><span class="forecast-excel-notes-shortages"><span class="forecast-excel-notes-message-text">${todayNotes.length?todayNotes.map(escapeHtml).join("<br>"):"No Shortages"}</span></span></div><div class="forecast-excel-notes-row forecast-excel-notes-future"><strong><span class="forecast-excel-notes-label-text">Next Few Days</span></strong><span class="forecast-excel-notes-trains"><span class="forecast-excel-notes-train-text">${futureTrainList}</span></span><span class="forecast-excel-notes-shortages"><span class="forecast-excel-notes-message-text">${futureNotes.length?futureNotes.map(escapeHtml).join("<br>"):"No Shortages"}</span></span></div></div></section>`;
+  const notes=`
+    <section class="forecast-excel-notes">
+      <h3>${notesIcon}<span>Notes</span></h3>
+      <div class="forecast-excel-notes-grid">
+        <div class="forecast-excel-notes-row forecast-excel-notes-today">
+          <strong><span class="forecast-excel-notes-label-text">Today</span></strong>
+          <span class="forecast-excel-notes-trains">
+            <span class="forecast-excel-notes-train-text">${todayTrainList}</span>
+          </span>
+          <span class="forecast-excel-notes-shortages">
+            <span class="forecast-excel-notes-message-text">${todayNotes.length?todayNotes.map(escapeHtml).join("<br>"):"No Shortages"}</span>
+          </span>
+        </div>
+        <div class="forecast-excel-notes-row forecast-excel-notes-future">
+          <strong><span class="forecast-excel-notes-label-text">Next Few Days</span></strong>
+          <span class="forecast-excel-notes-trains">
+            <span class="forecast-excel-notes-train-text">${futureTrainList}</span>
+          </span>
+          <span class="forecast-excel-notes-shortages">
+            <span class="forecast-excel-notes-message-text">${futureNotes.length?futureNotes.map(escapeHtml).join("<br>"):"No Shortages"}</span>
+          </span>
+        </div>
+      </div>
+    </section>`;
   const forecastTitleIcon=`<svg class="forecast-excel-main-title-icon" viewBox="0 0 48 24" aria-hidden="true"><path d="M3 4h28v15H3z"/><path d="M7 6v11M11 6v11M15 6v11M19 6v11M23 6v11M27 6v11"/><path d="M31 11h8l5 5v3H31z"/><path d="M36 12v4h6"/><circle cx="9" cy="21" r="2"/><circle cx="27" cy="21" r="2"/><circle cx="39" cy="21" r="2"/></svg>`;
   const inlineNotes=forecastExcelHideEmptyInbounds?notes:"";
   content.innerHTML=`<div class="forecast-excel-columns${forecastExcelHideEmptyInbounds?" hide-empty-inbounds":""}"><div class="forecast-excel-left"><h1>${forecastTitleIcon}<span>Chassis Forecast (72H)</span></h1>${trainTable}${inlineNotes}</div><div class="forecast-excel-right">${calcTable("Chassis Calculator (72H)",calc72Rows,"hours48")}${calcTable("Chassis Calculator (24H)",calc24Rows,"hours24")}${requestTable}</div></div>${forecastExcelHideEmptyInbounds?"":notes}`;
@@ -21253,7 +21278,15 @@ body.forecast-excel-view-open .forecast-excel-view{
 }
 .forecast-excel-block.request .forecast-excel-table .request-net-flag.request-net-green,
 #forecastExcelView .forecast-excel-table .calculator-net-flag.request-net-green{
-  background:#bbf7d0!important;
+  min-width:0;
+  width:auto;
+  height:auto;
+  min-height:0;
+  max-height:none;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent!important;
   color:#000!important;
 }
 .forecast-excel-block.request .forecast-excel-table .request-net-flag .forecast-excel-zero{
@@ -21780,6 +21813,18 @@ body.forecast-excel-view-open .forecast-excel-view{
 #forecastExcelView .forecast-excel-columns.hide-empty-inbounds .forecast-excel-left .forecast-excel-notes .forecast-excel-notes-grid{
   height:var(--forecast-excel-notes-height,90px)!important;
   min-height:var(--forecast-excel-notes-height,90px)!important;
+}
+#forecastExcelView .forecast-excel-table :is(.request-net-flag,.calculator-net-flag):not(.request-net-red):not(.request-net-yellow){
+  min-width:0!important;
+  width:auto!important;
+  height:auto!important;
+  min-height:0!important;
+  max-height:none!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
 }
 
 </style>
