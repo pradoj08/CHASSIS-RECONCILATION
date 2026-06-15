@@ -9851,6 +9851,8 @@ function renderForecastExcelValue(value){
   return Number(value)===0?`<span class="forecast-excel-zero">0</span>`:String(value);
 }
 function getForecastRequestNetClass(pool,size,value){
+  const poolCode=String(pool).toUpperCase();
+  const sizeCode=String(size).replace(/'+$/,"");
   const thresholds={
     TGRP:{"45":2,"40":15,"20":15},
     FGCP:{"45":2,"40":15,"20":15},
@@ -9858,7 +9860,8 @@ function getForecastRequestNetClass(pool,size,value){
     DCLI:{"53":15,"45":2,"40":15,"20":15}
   };
   const net=Number(value)||0;
-  const limit=thresholds[String(pool).toUpperCase()]?.[String(size).replace(/'+$/,"")];
+  const limit=thresholds[poolCode]?.[sizeCode];
+  if(poolCode==="DCLI"&&sizeCode==="45"&&net<=0)return "request-net-green";
   if(net<=0)return "request-net-red";
   if(limit!=null&&net<=limit)return "request-net-yellow";
   return "request-net-green";
