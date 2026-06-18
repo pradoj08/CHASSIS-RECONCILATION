@@ -6032,10 +6032,6 @@ body.forecast-view .forecast-bottom-controls {
             <span>Arrival Day</span>
             <input id="forecastTracklistDay" type="number" min="1" max="31" placeholder="Day">
           </label>
-          <label>
-            <span>Arrival Hour</span>
-            <input id="forecastTracklistHour" type="number" min="0" max="23" placeholder="0-23">
-          </label>
         </div>
         <label class="forecast-tracklist-paste-label">
           <span>Paste Tracklist</span>
@@ -6043,7 +6039,6 @@ body.forecast-view .forecast-bottom-controls {
         </label>
         <div id="forecastTracklistPreview" class="forecast-tracklist-preview">No tracklist pasted.</div>
         <div class="forecast-tracklist-actions">
-          <button id="forecastTracklistPreviewBtn" type="button">Preview Units</button>
           <button id="forecastTracklistImportConfirmBtn" type="button">Import Tracklist</button>
         </div>
       </div>
@@ -10736,9 +10731,7 @@ function openForecastTracklistImportModal(){
   const modal=$("forecastTracklistImportModal");
   if(!modal)return;
   const day=$("forecastTracklistDay");
-  const hour=$("forecastTracklistHour");
   if(day && !day.value)day.value=String(new Date().getDate());
-  if(hour && !hour.value)hour.value="";
   renderForecastTracklistPastePreview();
   modal.classList.add("open");
   modal.setAttribute("aria-hidden","false");
@@ -10975,7 +10968,7 @@ function parseForecastTracklistText(raw,inboundName,etaDay,etaHour){
 function getForecastTracklistFormUnits(){
   const inboundName=String($("forecastTracklistName")?.value||"").trim() || "Tracklist Inbound";
   const etaDay=String($("forecastTracklistDay")?.value||"").trim() || String(new Date().getDate());
-  const etaHour=String($("forecastTracklistHour")?.value||"").trim();
+  const etaHour="";
   const raw=$("forecastTracklistText")?.value||"";
   return parseForecastTracklistText(raw,inboundName,etaDay,etaHour);
 }
@@ -12508,6 +12501,7 @@ function renderForecastStatusCards(){
                     <input type="text" value="${escapeHtml(g.train)}" data-forecast-train-edit-input="${escapeHtml(g.train)}" data-forecast-edit-day="${escapeHtml(g.day)}" aria-label="Edit inbound name">
                     <button type="button" data-forecast-train-edit-save="${escapeHtml(g.train)}" data-forecast-edit-day="${escapeHtml(g.day)}">Save</button>
                     <button type="button" data-forecast-train-edit-cancel>Cancel</button>
+                    <button type="button" class="forecast-train-hide-emoji" data-forecast-train-edit-hide="${escapeHtml(g.train)}" data-forecast-edit-day="${escapeHtml(g.day)}" title="Hide this inbound" aria-label="Hide this inbound">🙈</button>
                   </span>
                   ${isDuplicateInbound?`<span class="forecast-duplicate-inbound-flag" title="This inbound appears more than once">Duplicate</span>`:""}
                 </span>
@@ -12603,6 +12597,13 @@ function renderForecastStatusCards(){
       const trigger=line?.querySelector("[data-forecast-train-edit]");
       if(editor)editor.hidden=true;
       if(trigger)trigger.hidden=false;
+    };
+  });
+  box.querySelectorAll("[data-forecast-train-edit-hide]").forEach(btn=>{
+    btn.onclick=event=>{
+      event.preventDefault();
+      event.stopPropagation();
+      hideForecastTrainDay(btn.dataset.forecastTrainEditHide,btn.dataset.forecastEditDay);
     };
   });
   box.querySelectorAll("[data-forecast-train-edit-input]").forEach(input=>{
@@ -14446,9 +14447,8 @@ async function init(){
   const forecastTracklistImportBtn=$("forecastTracklistImportBtn"); if(forecastTracklistImportBtn)forecastTracklistImportBtn.onclick=openForecastTracklistImportModal;
   const forecastTracklistCloseBtn=$("forecastTracklistCloseBtn"); if(forecastTracklistCloseBtn)forecastTracklistCloseBtn.onclick=closeForecastTracklistImportModal;
   const forecastTracklistModal=$("forecastTracklistImportModal"); if(forecastTracklistModal)forecastTracklistModal.addEventListener("click",e=>{if(e.target===forecastTracklistModal)closeForecastTracklistImportModal()});
-  const forecastTracklistPreviewBtn=$("forecastTracklistPreviewBtn"); if(forecastTracklistPreviewBtn)forecastTracklistPreviewBtn.onclick=renderForecastTracklistPastePreview;
   const forecastTracklistImportConfirmBtn=$("forecastTracklistImportConfirmBtn"); if(forecastTracklistImportConfirmBtn)forecastTracklistImportConfirmBtn.onclick=importForecastTracklistFromModal;
-  ["forecastTracklistName","forecastTracklistDay","forecastTracklistHour","forecastTracklistText"].forEach(id=>{
+  ["forecastTracklistName","forecastTracklistDay","forecastTracklistText"].forEach(id=>{
     const el=$(id); if(el)el.addEventListener("input",()=>{clearTimeout(el._tracklistTimer);el._tracklistTimer=setTimeout(renderForecastTracklistPastePreview,120);});
   });
 
@@ -17165,6 +17165,7 @@ window.addEventListener("DOMContentLoaded",async()=>{
   align-items:center;
   gap:8px;
   min-width:0;
+  flex-wrap:wrap;
 }
 #forecastStatusCards .duplicate-inbound-card{
   border-color:rgba(250,204,21,.9)!important;
@@ -20064,7 +20065,7 @@ window.addEventListener("DOMContentLoaded",async()=>{
 .forecast-tracklist-head h2{margin:6px 0!important;color:#fff!important;font-size:32px!important;line-height:1!important;font-weight:1000!important;}
 .forecast-tracklist-head p{margin:0!important;color:#99f6e4!important;font-size:13px!important;font-weight:850!important;}
 #forecastTracklistCloseBtn{border:1px solid rgba(45,212,191,.42)!important;background:rgba(13,148,136,.20)!important;color:#ccfbf1!important;border-radius:999px!important;padding:10px 16px!important;font-size:13px!important;font-weight:1000!important;}
-.forecast-tracklist-grid{display:grid!important;grid-template-columns:2fr 1fr 1fr!important;gap:12px!important;padding:18px 22px 0!important;}
+.forecast-tracklist-grid{display:grid!important;grid-template-columns:2fr 1fr!important;gap:12px!important;padding:18px 22px 0!important;}
 .forecast-tracklist-grid label,.forecast-tracklist-paste-label{display:grid!important;gap:7px!important;}
 .forecast-tracklist-grid span,.forecast-tracklist-paste-label span{color:#bfdbfe!important;font-size:11px!important;font-weight:1000!important;text-transform:uppercase!important;letter-spacing:.08em!important;}
 .forecast-tracklist-grid input,#forecastTracklistText{width:100%!important;border:1px solid rgba(148,163,184,.22)!important;background:rgba(2,6,23,.70)!important;color:#f8fafc!important;border-radius:14px!important;padding:11px 12px!important;font-size:14px!important;font-weight:900!important;}
@@ -20078,7 +20079,6 @@ window.addEventListener("DOMContentLoaded",async()=>{
 .forecast-tracklist-preview-pills span{display:inline-flex!important;align-items:center!important;gap:7px!important;border:1px solid rgba(45,212,191,.24)!important;background:rgba(13,148,136,.16)!important;color:#ccfbf1!important;border-radius:999px!important;padding:6px 10px!important;font-size:12px!important;font-weight:1000!important;}
 .forecast-tracklist-preview-pills b{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-width:24px!important;height:22px!important;border-radius:999px!important;background:rgba(15,23,42,.72)!important;color:#fff!important;}
 .forecast-tracklist-actions{display:flex!important;justify-content:flex-end!important;gap:10px!important;padding:18px 22px 22px!important;}
-#forecastTracklistPreviewBtn{background:rgba(37,99,235,.20)!important;border-color:rgba(96,165,250,.38)!important;color:#dbeafe!important;}
 #forecastTracklistImportConfirmBtn{background:rgba(13,148,136,.26)!important;border-color:rgba(45,212,191,.46)!important;color:#ccfbf1!important;}
 @media(max-width:780px){.forecast-tracklist-grid{grid-template-columns:1fr!important;}}
 
@@ -24015,15 +24015,31 @@ body.forecast-view #forecastModal .forecast-page > .hero.clean-hero #forecastHer
     width:100%!important;
     grid-template-columns:minmax(130px,1fr) minmax(220px,2fr)!important;
   }
-  body.forecast-view #forecastModal .forecast-page > .hero.clean-hero #forceSaveBtn,
+body.forecast-view #forecastModal .forecast-page > .hero.clean-hero #forceSaveBtn,
   body.forecast-view #forecastModal .forecast-page > .hero.clean-hero #forecastHeroBtn{
     width:auto!important;
     min-width:0!important;
   }
 }
+body.forecast-view.forecast-print-clean-view #forecastModal .forecast-page > .hero.clean-hero{
+  display:flex!important;
+  justify-content:flex-end!important;
+  align-items:stretch!important;
+}
+body.forecast-view.forecast-print-clean-view #forecastModal .forecast-page > .hero.clean-hero .hero-actions{
+  width:100%!important;
+  display:flex!important;
+  justify-content:flex-end!important;
+  justify-items:end!important;
+  margin-left:auto!important;
+}
+body.forecast-view.forecast-print-clean-view #forecastModal .forecast-page > .hero.clean-hero #forceSaveBtn{
+  margin-left:auto!important;
+  margin-right:0!important;
+}
 /* Editable inbound card train names. */
 #forecastStatusCards .forecast-train-edit-trigger{
-  cursor:text!important;
+  cursor:pointer!important;
 }
 #forecastStatusCards .forecast-train-edit-trigger:hover{
   filter:brightness(1.12)!important;
@@ -24033,13 +24049,17 @@ body.forecast-view #forecastModal .forecast-page > .hero.clean-hero #forecastHer
 #forecastStatusCards .forecast-inline-train-editor{
   display:inline-flex!important;
   align-items:center!important;
-  gap:5px!important;
+  gap:6px!important;
+  flex:1 1 100%!important;
+  min-width:220px!important;
   max-width:100%!important;
+  padding-top:4px!important;
 }
 #forecastStatusCards .forecast-inline-train-editor[hidden]{display:none!important;}
 #forecastStatusCards .forecast-inline-train-editor input{
-  width:120px!important;
-  max-width:42vw!important;
+  flex:1 1 180px!important;
+  width:auto!important;
+  max-width:260px!important;
   min-height:28px!important;
   border:1px solid rgba(147,197,253,.62)!important;
   border-radius:9px!important;
@@ -24052,10 +24072,89 @@ body.forecast-view #forecastModal .forecast-page > .hero.clean-hero #forecastHer
   outline:none!important;
 }
 #forecastStatusCards .forecast-inline-train-editor button{
+  flex:0 0 auto!important;
   min-height:28px!important;
   padding:4px 8px!important;
   border-radius:8px!important;
   font-size:10px!important;
+}
+#forecastStatusCards .forecast-inline-train-editor .forecast-train-hide-emoji{
+  width:30px!important;
+  min-width:30px!important;
+  padding:0!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  border-color:rgba(251,113,133,.46)!important;
+  background:rgba(127,29,29,.26)!important;
+  color:#fecdd3!important;
+  font-size:14px!important;
+}
+/* Final inbound-name editor layout: keep edit controls out of the ETA/total lane. */
+#forecastStatusCards .forecast-compact-train-head{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  align-items:start!important;
+  gap:10px!important;
+}
+#forecastStatusCards .forecast-compact-train-main{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  align-items:start!important;
+  gap:8px!important;
+  min-width:0!important;
+}
+#forecastStatusCards .forecast-train-name-line{
+  grid-column:1 / -1!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,max-content) auto!important;
+  align-items:center!important;
+  justify-content:start!important;
+  gap:7px!important;
+  min-width:0!important;
+}
+#forecastStatusCards .forecast-train-name-line:has(.forecast-inline-train-editor:not([hidden])){
+  grid-template-columns:minmax(0,1fr)!important;
+}
+#forecastStatusCards .forecast-train-name-line .forecast-inline-train-editor:not([hidden]){
+  display:grid!important;
+  grid-template-columns:minmax(145px,1fr) auto auto auto!important;
+  width:100%!important;
+  min-width:0!important;
+  max-width:100%!important;
+  padding-top:2px!important;
+  gap:6px!important;
+}
+#forecastStatusCards .forecast-train-name-line .forecast-inline-train-editor input{
+  min-width:0!important;
+  max-width:none!important;
+  width:100%!important;
+}
+#forecastStatusCards .forecast-train-name-line .forecast-inline-train-editor button{
+  min-width:0!important;
+  white-space:nowrap!important;
+}
+#forecastStatusCards .forecast-train-name-line .forecast-inline-train-editor .forecast-train-hide-emoji{
+  width:28px!important;
+  min-width:28px!important;
+}
+#forecastStatusCards .forecast-compact-eta-wrap{
+  grid-column:1!important;
+  justify-self:start!important;
+  min-width:0!important;
+}
+#forecastStatusCards .forecast-compact-total{
+  grid-column:2!important;
+  grid-row:1 / span 2!important;
+  justify-self:end!important;
+  align-self:start!important;
+}
+#forecastStatusCards button,
+#forecastStatusCards [role="button"],
+#forecastStatusCards .forecast-train-edit-trigger,
+#forecastStatusCards .forecast-pool-edit-trigger,
+#forecastExcelView .excel-train-name-editable{
+  cursor:pointer!important;
 }
 /* Editable inbound pool labels. */
 #forecastStatusCards .forecast-pool-edit-trigger{
@@ -24064,7 +24163,7 @@ body.forecast-view #forecastModal .forecast-page > .hero.clean-hero #forecastHer
   background:transparent!important;
   margin:0!important;
   padding:0!important;
-  cursor:text!important;
+  cursor:pointer!important;
   text-align:left!important;
 }
 #forecastStatusCards .forecast-pool-edit-trigger:hover{
