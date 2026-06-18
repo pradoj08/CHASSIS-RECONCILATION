@@ -10578,14 +10578,14 @@ const FORECAST_CONSIGNEE_POOL_BANK = {
   "MATSONLOGIST":"dclp",
   "RADIANROARAI":"dcli",
   "YANGMINMARLI":"tgrp",
-  "LOUPLOGCOLLC":"",
+  "LOUPLOGCOLLC":"dcli",
   "UNIONPACRRRA":"dcli",
   "ECHOGLOLOGIS":"",
   "INTERMSALES":"dcli",
   "ACOSCOSHILIN":"",
   "CHEMLOGIX":"dclp",
   "TARGETTRANSP":"dcli",
-  "RETRANSPORTA":"",
+  "RETRANSPORTA":"dcli",
   "ODYSSEMANSER":"",
   "GAMASTRASOLU":"",
   "KNICHELOGIST":"",
@@ -10624,6 +10624,9 @@ function loadForecastConsigneePoolBank(){
       FORECAST_CONSIGNEE_POOL_BANK[cleanKey]=normalizeForecastPoolLabel(value);
     });
   }catch{}
+  [["HUBGROUPCANADA","dcli"],["LOUPLOGCOLLC","dcli"],["RETRANSPORTA","dcli"]].forEach(([key,pool])=>{
+    if(!String(FORECAST_CONSIGNEE_POOL_BANK[key]||"").trim())FORECAST_CONSIGNEE_POOL_BANK[key]=pool;
+  });
 }
 function saveForecastConsigneePoolBank(){
   try{localStorage.setItem(FORECAST_POOL_BANK_STORAGE_KEY,JSON.stringify(FORECAST_CONSIGNEE_POOL_BANK));}catch{}
@@ -10659,7 +10662,16 @@ function getForecastCell(row,possibleNames){
 }
 function forecastPoolForConsignee(consignee){
   const key=String(consignee||"").trim().toUpperCase() || "BLANK";
-  return FORECAST_CONSIGNEE_POOL_BANK[key] ?? "";
+  if(Object.prototype.hasOwnProperty.call(FORECAST_CONSIGNEE_POOL_BANK,key))return FORECAST_CONSIGNEE_POOL_BANK[key] ?? "";
+  const compact=key.replace(/[^A-Z0-9]/g,"");
+  const match=Object.keys(FORECAST_CONSIGNEE_POOL_BANK)
+    .filter(bankKey=>bankKey && bankKey!=="BLANK")
+    .sort((a,b)=>b.length-a.length)
+    .find(bankKey=>{
+      const bank=String(bankKey).replace(/[^A-Z0-9]/g,"");
+      return bank && (compact.startsWith(bank) || bank.startsWith(compact));
+    });
+  return match ? FORECAST_CONSIGNEE_POOL_BANK[match] : "";
 }
 
 function forecastPoolByCarKindRule(carType,unitId){
@@ -10787,6 +10799,77 @@ function inferForecastSizeFromTracklistText(){
   if(explicit)return `${explicit[1]}'`;
   return "";
 }
+function inferForecastPoolFromKnownTracklistShipper(){
+  const text=[...arguments].map(x=>String(x||"").toUpperCase().replace(/[^A-Z0-9]/g,"")).join(" ");
+  const candidates=[
+    ["HUBGROUP","dcli"],
+    ["TARGETTRANSP","dcli"],
+    ["LOUPLOGCOLLC","dcli"],
+    ["LOUPINTERMOD","dcli"],
+    ["RETRANSPORTA","dcli"],
+    ["FEDEXGROPACS","dcli"],
+    ["SCHNEINATION","sncz"],
+    ["OCEANNETEXPP","fgcp"],
+    ["CMACGMAMELLC","tgrp"],
+    ["YANGMINMARLI","tgrp"]
+  ];
+  const hit=candidates.find(([needle])=>text.includes(needle));
+  return hit ? hit[1] : "";
+}
+function parseForecastTracklistVisibleRow(line){
+  const text=String(line||"").replace(/\u2002|\u2003|\u2009|\u00a0/g," ").trim();
+  const tokens=text.split(/\s+/).filter(Boolean);
+  let unitIndex=-1;
+  let unitId="";
+  for(let i=0;i<tokens.length;i+=1){
+    const combined=String(tokens[i]||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
+    if(/^[A-Z]{3,5}\d{3,8}$/.test(combined)){
+      unitIndex=i;
+      unitId=combined.replace(/^([A-Z]{3,5})(\d{3,8})$/,"$1 $2");
+      break;
+    }
+    const next=String(tokens[i+1]||"").replace(/[^0-9]/g,"");
+    if(/^[A-Z]{3,5}$/i.test(tokens[i]||"") && /^\d{3,8}$/.test(next)){
+      unitIndex=i;
+      unitId=`${String(tokens[i]).toUpperCase()} ${next}`;
+      break;
+    }
+  }
+  if(unitIndex<0)return null;
+  const offset=unitId.includes(" ") ? 2 : 1;
+  const aarKind=tokens[unitIndex+offset]||"";
+  const carType=tokens[unitIndex+offset+1]||"";
+  const loadEmpty=tokens[unitIndex+offset+2]||"";
+  const service=tokens[unitIndex+offset+3]||"";
+  const priority=tokens[unitIndex+offset+4]||"";
+  const type=tokens[unitIndex+offset+5]||"";
+  if(!/^[A-Z]\d{2,3}$/i.test(aarKind) || !/^[A-Z0-9]{2,6}$/i.test(carType) || !/^[LE]$/i.test(loadEmpty) || !/^(TOFC|COFC)$/i.test(service)){
+    const match=text.match(/^(\S+)\s+([A-Z]{3,5}\s*\d{3,8})\s+([A-Z]\d{2,3})\s+([A-Z0-9]+)\s+([LE])\s+(TOFC|COFC)\s+(\d+)\s+(\S+)(?:\s+(.+))?$/i);
+    if(!match)return null;
+    return {
+      pos:match[1]||"",
+      unitId:match[2]||"",
+      aarKind:match[3]||"",
+      carType:match[4]||"",
+      loadEmpty:match[5]||"",
+      service:match[6]||"",
+      priority:match[7]||"",
+      type:match[8]||"",
+      statusText:match[9]||""
+    };
+  }
+  return {
+    pos:tokens[Math.max(0,unitIndex-1)]||"",
+    unitId,
+    aarKind,
+    carType,
+    loadEmpty,
+    service,
+    priority,
+    type,
+    statusText:tokens.slice(unitIndex+offset+6).join(" ")
+  };
+}
 function parseForecastTracklistText(raw,inboundName,etaDay,etaHour){
   loadForecastConsigneePoolBank();
   const text=String(raw||"").replace(/\u2002|\u2003|\u2009|\u00a0/g," ");
@@ -10817,6 +10900,7 @@ function parseForecastTracklistText(raw,inboundName,etaDay,etaHour){
     if(/^Pos\s+Unit ID\s+/i.test(trimmed))return;
     if(cols.length<4)return;
 
+    const visibleRow=parseForecastTracklistVisibleRow(trimmed);
     const headerRow=headers.length ? buildForecastTracklistRowFromHeader(headers,cols) : {};
     let unitId=getForecastTracklistValue(headerRow,["Unit ID","Unit","Van/Container ID","Container ID","Container","Equipment ID"]);
     let aarKind=getForecastTracklistValue(headerRow,["AAR Kind","AAR"]);
@@ -10829,6 +10913,17 @@ function parseForecastTracklistText(raw,inboundName,etaDay,etaHour){
     let statusText=getForecastTracklistValue(headerRow,["Status","Ramp Status"]);
     const chassisText=getForecastTracklistValue(headerRow,["Chassis","Chassis ID","Chassis Pool","Pool","Equipment Pool","Eq Pool","Eqmt Pool","Chassis Type"]);
     const sizeText=getForecastTracklistValue(headerRow,["Size","Length","Container Size","Equipment Size","Chassis Size"]);
+
+    if(visibleRow){
+      unitId=visibleRow.unitId||unitId;
+      aarKind=visibleRow.aarKind||aarKind;
+      carType=visibleRow.carType||carType;
+      loadEmpty=visibleRow.loadEmpty||loadEmpty;
+      type=visibleRow.type||type;
+      priority=visibleRow.priority||priority;
+      statusText=visibleRow.statusText||statusText;
+      destination=visibleRow.type||destination;
+    }
 
     if(!unitId && !headers.length)unitId=cols[1]||"";
     if(!aarKind && !headers.length)aarKind=cols[2]||"";
@@ -10843,12 +10938,14 @@ function parseForecastTracklistText(raw,inboundName,etaDay,etaHour){
     if(!/^[A-Z]{3,5}\s*\d{3,8}$/i.test(unitId))return;
     const cleanUnit=normalizeForecastTracklistUnitId(unitId);
     const carKindRule=forecastPoolByCarKindRule(carType,cleanUnit);
-    const consignee=destination ? String(destination).replace(/\s+/g," ").trim().toUpperCase() : "BLANK";
+    const consignee=(destination||type) ? String(destination||type).replace(/\s+/g," ").trim().toUpperCase() : "BLANK";
     const directPool=inferForecastPoolFromTracklistText(chassisText,sizeText,carType,aarKind,trimmed);
-    const pool=normalizeForecastPoolLabel(carKindRule.pool || directPool || forecastPoolForConsignee(consignee));
+    const knownShipperPool=inferForecastPoolFromKnownTracklistShipper(consignee,type,destination,trimmed);
+    const bankPool=forecastPoolForConsignee(consignee) || forecastPoolForConsignee(type) || forecastPoolForConsignee(destination);
+    const pool=normalizeForecastPoolLabel(carKindRule.pool || directPool || bankPool || knownShipperPool);
     const directSize=inferForecastSizeFromTracklistText(sizeText,chassisText,carType,aarKind,trimmed);
     const size=directSize || inferForecastSizeFromCarType(carType);
-    const mappedStatus=carKindRule.pool ? `Mapped by ${carKindRule.reason}` : (directPool ? "Mapped by Tracklist Pool" : forecastPoolStatus(consignee,pool));
+    const mappedStatus=carKindRule.pool ? `Mapped by ${carKindRule.reason}` : (directPool ? "Mapped by Tracklist Pool" : (bankPool ? "Mapped by Consignee Bank" : (knownShipperPool ? "Mapped by Tracklist Shipper" : forecastPoolStatus(consignee,pool))));
     units.push({
       sourceFile,
       trainId:String(inboundName||trainFromSeq||railcar||"Tracklist Inbound").trim(),
@@ -10895,9 +10992,11 @@ function renderForecastTracklistPastePreview(){
     const label=getForecastUnitPoolSizeLabel(u);
     counts[label]=(counts[label]||0)+1;
   });
+  const unresolvedNames=[...new Set(units.filter(isForecastPoolUnresolved).map(u=>String(u.consignee||u.type||"BLANK").trim()).filter(Boolean))].slice(0,6);
   const shown=Object.entries(counts).sort((a,b)=>String(a[0]).localeCompare(String(b[0]))).map(([label,count])=>`<span>${escapeHtml(label)} <b>${count}</b></span>`).join("");
   box.innerHTML=`<div class="forecast-tracklist-preview-top"><strong>${units.length}</strong> units detected</div>
-    <div class="forecast-tracklist-preview-pills">${shown}</div>`;
+    <div class="forecast-tracklist-preview-pills">${shown}</div>
+    ${unresolvedNames.length?`<div class="forecast-tracklist-unresolved-note">Still unresolved: ${escapeHtml(unresolvedNames.join(", "))}</div>`:""}`;
 }
 function importForecastTracklistFromModal(){
   const units=getForecastTracklistFormUnits();
@@ -11433,6 +11532,260 @@ function getForecastEtaDisplay(day,hours){
   const label=forecastMonthDayLabel(raw);
   const hourText=forecastFormatHourToMilitary(hours);
   return `${label}${hourText && hourText!=="—" ? ` @ ${hourText}` : ""}`;
+}
+function parseForecastPoolSizeEdit(value){
+  const raw=String(value||"").trim().toUpperCase();
+  if(!raw)return null;
+  if(raw==="TRAILER")return {pool:"TRAILER",size:""};
+  const sizeMatch=raw.match(/\b(20|40|45|53)\b/);
+  const poolText=raw
+    .replace(/\b(20|40|45|53)\b/g," ")
+    .replace(/\bFT\b/g," ")
+    .replace(/['"]/g," ")
+    .replace(/\s+/g," ")
+    .trim();
+  const pool=normalizeForecastPoolLabel(poolText).toUpperCase();
+  if(!pool || pool==="UNKNOWN" || !sizeMatch)return null;
+  const pair=normalizeInventoryPoolSizePair(pool,sizeMatch[1]);
+  if(!pair || !pair.pool || !pair.size)return null;
+  return pair;
+}
+function updateForecastTrainPoolSize(train,day,oldLabel,newValue){
+  train=String(train||"");
+  day=String(day||"");
+  oldLabel=String(oldLabel||"").trim();
+  const pair=parseForecastPoolSizeEdit(newValue);
+  if(!train||!day||!oldLabel||!pair){
+    showForecastToast("Enter a pool and size like TGRP 40 or DCLI 53.");
+    return false;
+  }
+  let changed=0;
+  forecastImportedUnits=forecastImportedUnits.map(unit=>{
+    if(getForecastTrainGroupName(unit)!==train || getForecastUnitDay(unit)!==day)return unit;
+    if(getForecastUnitPoolSizeLabel(unit)!==oldLabel)return unit;
+    changed+=1;
+    if(pair.pool==="TRAILER"){
+      return {
+        ...unit,
+        pool:"trailer",
+        size:"",
+        manualPoolOverride:true,
+        poolRule:"Manual Pool/Size Override",
+        status:"Manual Pool Override"
+      };
+    }
+    return {
+      ...unit,
+      pool:normalizeForecastPoolLabel(pair.pool),
+      size:`${pair.size}'`,
+      manualPoolOverride:true,
+      poolRule:"Manual Pool/Size Override",
+      status:"Manual Pool Override"
+    };
+  });
+  if(!changed){
+    showForecastToast("No matching units found for that pool.");
+    return false;
+  }
+  saveForecastState();
+  renderForecastImportedUnits();
+  renderForecastExcelView();
+  showForecastToast(`Updated ${changed} unit${changed===1?"":"s"} to ${pair.pool==="TRAILER"?"TRAILER":`${pair.pool} ${pair.size}`}.`);
+  return true;
+}
+function defaultForecastPoolSizeForQuadrant(quadrant){
+  const q=String(quadrant||"").toLowerCase();
+  if(q==="tgrp")return "TGRP 40";
+  if(q==="fgcp")return "FGCP 40";
+  if(q==="sncz")return "SNCZ 53";
+  if(q==="dcli")return "DCLI 53";
+  if(q==="trailer")return "TRAILER";
+  return "";
+}
+const FORECAST_POOL_SIZE_EDIT_OPTIONS=[
+  "TGRP 20","TGRP 40","TGRP 45",
+  "FGCP 20","FGCP 40","FGCP 45",
+  "SNCZ 53","SNBZ 40",
+  "DCLI 53","DCLI 45",
+  "DCLP 20","DCLP 40","DCLP 45",
+  "TRAILER"
+];
+function forecastPoolSizeSelectOptions(selected){
+  const current=String(selected||"").trim().toUpperCase();
+  const options=[...FORECAST_POOL_SIZE_EDIT_OPTIONS];
+  if(current && !options.includes(current))options.unshift(current);
+  return options.map(option=>`<option value="${escapeHtml(option)}" ${option===current?"selected":""}>${escapeHtml(option)}</option>`).join("");
+}
+function makeManualForecastUnit(train,day,pair,index){
+  const pool=pair.pool==="TRAILER"?"trailer":normalizeForecastPoolLabel(pair.pool);
+  const size=pair.pool==="TRAILER"?"":`${pair.size}'`;
+  const stamp=Date.now().toString(36);
+  return {
+    sourceFile:"Manual Forecast Edit",
+    trainId:train,
+    carType:pair.pool==="TRAILER"?"V":"MANUAL",
+    unitId:`MANUAL-${stamp}-${index}`,
+    consignee:"MANUAL",
+    pool,
+    poolRule:"Manual Pool/Size Count",
+    etaDay:day,
+    etaHour:"",
+    size,
+    status:"Manual Pool Count",
+    manualPoolOverride:true,
+    manualForecastPoolCount:true
+  };
+}
+function setForecastTrainPoolSizeCount(train,day,oldLabel,poolSizeValue,countValue){
+  train=String(train||"");
+  day=String(day||"");
+  oldLabel=String(oldLabel||"").trim();
+  const pair=parseForecastPoolSizeEdit(poolSizeValue);
+  const desired=Math.max(0,Math.trunc(Number(String(countValue||"").replace(/[^0-9.-]/g,""))));
+  if(!train||!day||!pair||!Number.isFinite(desired)){
+    showForecastToast("Enter a pool/size and a whole number count.");
+    return false;
+  }
+  const nextUnits=[];
+  forecastImportedUnits.forEach(unit=>{
+    const sameTrain=getForecastTrainGroupName(unit)===train && getForecastUnitDay(unit)===day;
+    const sameLabel=oldLabel && getForecastUnitPoolSizeLabel(unit)===oldLabel;
+    if(sameTrain && sameLabel)return;
+    nextUnits.push(unit);
+  });
+  for(let i=0;i<desired;i+=1){
+    nextUnits.push(makeManualForecastUnit(train,day,pair,i+1));
+  }
+  forecastImportedUnits=nextUnits;
+  saveForecastState();
+  renderForecastImportedUnits();
+  renderForecastExcelView();
+  const label=pair.pool==="TRAILER"?"TRAILER":`${pair.pool} ${pair.size}`;
+  showForecastToast(`${label} set to ${desired} on ${train}.`);
+  return true;
+}
+function promptForecastPoolSizeCount(train,day,oldLabel,defaultPoolSize,defaultCount){
+  const poolSize=prompt("Pool and size",oldLabel||defaultPoolSize||"");
+  if(poolSize===null)return;
+  const count=prompt("How many units?",String(defaultCount ?? 1));
+  if(count===null)return;
+  setForecastTrainPoolSizeCount(train,day,oldLabel||"",poolSize,count);
+}
+function forecastPoolLabelBelongsToQuadrant(label,quadrant){
+  const id=String(quadrant||"").toLowerCase();
+  const fingerprint=String(label||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
+  if(id==="tgrp")return /^(?:TGRP|TRGP)(?:20|40|45)/.test(fingerprint);
+  if(id==="fgcp")return fingerprint.includes("FGCP");
+  if(id==="sncz")return fingerprint.includes("SNCZ")||fingerprint.includes("SNBZ");
+  if(id==="dcli")return fingerprint.includes("DCLI")||fingerprint.includes("DCLP");
+  if(id==="trailer")return fingerprint.includes("TRAILER");
+  return false;
+}
+function getForecastQuadrantPoolCounts(train,day,quadrant){
+  const counts=new Map();
+  forecastImportedUnits.forEach(unit=>{
+    if(getForecastTrainGroupName(unit)!==train || getForecastUnitDay(unit)!==day)return;
+    const label=getForecastUnitPoolSizeLabel(unit);
+    if(!forecastPoolLabelBelongsToQuadrant(label,quadrant))return;
+    counts.set(label,(counts.get(label)||0)+1);
+  });
+  return [...counts.entries()].map(([label,count])=>({label,count})).sort((a,b)=>String(a.label).localeCompare(String(b.label),undefined,{numeric:true,sensitivity:"base"}));
+}
+function closeForecastQuadrantPoolEditor(){
+  document.getElementById("forecastQuadrantPoolEditor")?.remove();
+}
+function openForecastQuadrantPoolEditor(train,day,quadrant){
+  train=String(train||"");
+  day=String(day||"");
+  quadrant=String(quadrant||"").toLowerCase();
+  const title=quadrant.toUpperCase();
+  const defaultPoolSize=defaultForecastPoolSizeForQuadrant(quadrant);
+  const rows=getForecastQuadrantPoolCounts(train,day,quadrant);
+  closeForecastQuadrantPoolEditor();
+  const overlay=document.createElement("div");
+  overlay.id="forecastQuadrantPoolEditor";
+  overlay.className="forecast-quadrant-editor-overlay";
+  overlay.innerHTML=`
+    <div class="forecast-quadrant-editor-modal" role="dialog" aria-modal="true" aria-label="Edit ${escapeHtml(title)} chassis">
+      <div class="forecast-quadrant-editor-head">
+        <div>
+          <strong>${escapeHtml(title)} Chassis</strong>
+          <span>${escapeHtml(train)} • ${escapeHtml(getForecastEtaDisplay(day,""))}</span>
+        </div>
+        <button type="button" class="forecast-quadrant-editor-close" data-forecast-quadrant-editor-close>&times;</button>
+      </div>
+      <div class="forecast-quadrant-editor-rows">
+        ${rows.length?rows.map(row=>`
+          <div class="forecast-quadrant-editor-row" data-forecast-editor-old-label="${escapeHtml(row.label)}">
+            <select data-forecast-editor-pool aria-label="Pool and size">
+              ${forecastPoolSizeSelectOptions(row.label)}
+            </select>
+            <input type="number" min="0" step="1" value="${row.count}" data-forecast-editor-count aria-label="Count">
+            <button type="button" data-forecast-editor-save>Save</button>
+          </div>`).join(""):`<div class="forecast-quadrant-editor-empty">No ${escapeHtml(title)} chassis entered yet.</div>`}
+      </div>
+      <div class="forecast-quadrant-editor-add">
+        <select data-forecast-editor-add-pool aria-label="Add pool and size">
+          ${forecastPoolSizeSelectOptions(defaultPoolSize)}
+        </select>
+        <input type="number" min="0" step="1" value="1" data-forecast-editor-add-count aria-label="Add count">
+        <button type="button" data-forecast-editor-add-save>Add / More</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+  overlay.addEventListener("click",event=>{
+    if(event.target===overlay || event.target.closest("[data-forecast-quadrant-editor-close]")){
+      closeForecastQuadrantPoolEditor();
+      return;
+    }
+    const save=event.target.closest("[data-forecast-editor-save]");
+    if(save){
+      const row=save.closest(".forecast-quadrant-editor-row");
+      const ok=setForecastTrainPoolSizeCount(train,day,row?.dataset.forecastEditorOldLabel||"",row?.querySelector("[data-forecast-editor-pool]")?.value||"",row?.querySelector("[data-forecast-editor-count]")?.value||"0");
+      if(ok)closeForecastQuadrantPoolEditor();
+      return;
+    }
+    const add=event.target.closest("[data-forecast-editor-add-save]");
+    if(add){
+      const ok=setForecastTrainPoolSizeCount(train,day,"",overlay.querySelector("[data-forecast-editor-add-pool]")?.value||"",overlay.querySelector("[data-forecast-editor-add-count]")?.value||"1");
+      if(ok)closeForecastQuadrantPoolEditor();
+    }
+  });
+  overlay.addEventListener("keydown",event=>{
+    if(event.key==="Escape")closeForecastQuadrantPoolEditor();
+    if(event.key==="Enter"){
+      const row=event.target.closest(".forecast-quadrant-editor-row");
+      if(row){event.preventDefault();row.querySelector("[data-forecast-editor-save]")?.click();}
+    }
+  });
+  const first=overlay.querySelector("[data-forecast-editor-pool], [data-forecast-editor-add-pool]");
+  if(first)first.focus();
+}
+function renameForecastTrainDay(train,day,newTrain){
+  train=String(train||"");
+  day=String(day||"");
+  newTrain=String(newTrain||"").trim();
+  if(!train||!day||!newTrain||newTrain===train)return;
+  let changed=0;
+  forecastImportedUnits=forecastImportedUnits.map(unit=>{
+    if(getForecastTrainGroupName(unit)===train && getForecastUnitDay(unit)===day){
+      changed+=1;
+      return {...unit,trainId:newTrain};
+    }
+    return unit;
+  });
+  if(!changed)return;
+  if(forecastHiddenTrainDays && forecastHiddenTrainDays instanceof Set){
+    const oldKey=getForecastTrainDayKey(train,day);
+    if(forecastHiddenTrainDays.has(oldKey)){
+      forecastHiddenTrainDays.delete(oldKey);
+      forecastHiddenTrainDays.add(getForecastTrainDayKey(newTrain,day));
+    }
+  }
+  saveForecastState();
+  renderForecastImportedUnits();
+  if(typeof renderForecastExcelView==="function")renderForecastExcelView();
+  if(typeof showArchiveToast==="function")showArchiveToast(`${train} renamed to ${newTrain}.`);
 }
 function updateForecastTrainDay(train,oldDay,dateValue){
   const d=new Date(`${dateValue}T00:00:00`);
@@ -12102,7 +12455,7 @@ function renderForecastStatusCards(){
             // Do not show the trailer card if this train has no trailer units.
             if(def.id==="trailer" && quadrantTotal===0)return "";
 
-            return `<div class="forecast-quadrant forecast-quadrant-${def.id}">
+            return `<div class="forecast-quadrant forecast-quadrant-${def.id}" data-forecast-quadrant-add="${escapeHtml(def.id)}" data-forecast-quadrant-train="${escapeHtml(g.train)}" data-forecast-quadrant-day="${escapeHtml(g.day)}" title="Click empty space to add ${escapeHtml(def.title)} units">
               <div class="forecast-quadrant-head">
                 <strong>${escapeHtml(def.title)}</strong>
                 <span>${quadrantTotal}</span>
@@ -12110,10 +12463,24 @@ function renderForecastStatusCards(){
               <div class="forecast-quadrant-body">
                 ${items.length ? items.map(item=>`
                   <div class="forecast-quadrant-item ${item.covered?"coverage-ok":"coverage-short"}" title="${escapeHtml(item.coverageTitle)}">
-                    <span class="forecast-quadrant-label">${escapeHtml(item.key)}${item.isMixHighVolume?` <em class="forecast-pool-over60-label">OVER 60</em>`:""}</span>
+                    <button type="button" class="forecast-quadrant-label forecast-pool-edit-trigger" data-forecast-pool-edit-train="${escapeHtml(g.train)}" data-forecast-pool-edit-day="${escapeHtml(g.day)}" data-forecast-pool-edit-label="${escapeHtml(item.key)}" title="Click to edit pool and size">${escapeHtml(item.key)}${item.isMixHighVolume?` <em class="forecast-pool-over60-label">OVER 60</em>`:""}</button>
+                    <span class="forecast-inline-pool-editor" hidden>
+                      <input type="text" value="${escapeHtml(item.key)}" data-forecast-pool-edit-input="${escapeHtml(item.key)}" data-forecast-pool-edit-train="${escapeHtml(g.train)}" data-forecast-pool-edit-day="${escapeHtml(g.day)}" aria-label="Edit pool and size">
+                      <input type="number" min="0" step="1" value="${item.mixCount}" data-forecast-pool-count-input aria-label="Edit count">
+                      <button type="button" data-forecast-pool-edit-save="${escapeHtml(item.key)}" data-forecast-pool-edit-count="${item.mixCount}" data-forecast-pool-edit-train="${escapeHtml(g.train)}" data-forecast-pool-edit-day="${escapeHtml(g.day)}">Save</button>
+                      <button type="button" data-forecast-pool-edit-cancel>Cancel</button>
+                    </span>
                     <em class="forecast-quadrant-status ${item.covered?"ok":"short"}" aria-label="${item.covered?"Enough chassis":"Short chassis"}">${item.covered?"✓":"×"}</em>
-                    <strong class="forecast-count-bubble ${item.covered?"":"deficit-bubble"}">${item.covered?item.mixCount:`-${item.deficit}`}</strong>
-                  </div>`).join("") : `<div class="forecast-quadrant-empty">No ${escapeHtml(def.title)}</div>`}
+                    <strong class="forecast-count-bubble ${item.covered?"":"deficit-bubble"}" title="${item.covered?`Count: ${item.mixCount}`:`Count: ${item.mixCount} / shortage: ${item.deficit}`}">${item.mixCount}</strong>
+                  </div>`).join("") : `<div class="forecast-quadrant-empty forecast-quadrant-empty-add" data-forecast-empty-quadrant-add="${escapeHtml(def.id)}" data-forecast-empty-quadrant-train="${escapeHtml(g.train)}" data-forecast-empty-quadrant-day="${escapeHtml(g.day)}">
+                    <button type="button" class="forecast-empty-quadrant-trigger">No ${escapeHtml(def.title)}</button>
+                    <span class="forecast-inline-pool-editor" hidden>
+                      <input type="text" value="${escapeHtml(defaultForecastPoolSizeForQuadrant(def.id))}" data-forecast-empty-pool-input aria-label="Add pool and size">
+                      <input type="number" min="0" step="1" value="1" data-forecast-empty-count-input aria-label="Add count">
+                      <button type="button" data-forecast-empty-pool-save>Save</button>
+                      <button type="button" data-forecast-empty-pool-cancel>Cancel</button>
+                    </span>
+                  </div>`}
               </div>
             </div>`;
           }).join("");
@@ -12126,7 +12493,7 @@ function renderForecastStatusCards(){
             <div class="forecast-other-list">
               ${otherItems.map(item=>`<button type="button" class="forecast-other-pill forecast-unknown-jump ${item.covered?"coverage-ok":"coverage-short"}" title="${escapeHtml(item.coverageTitle)}" data-forecast-jump-unknown-train="${escapeHtml(g.train)}" data-forecast-jump-unknown-day="${escapeHtml(g.day)}" data-forecast-jump-unknown-label="${escapeHtml(item.key)}">
                 <span>${escapeHtml(item.key)}</span>
-                <strong>${item.covered?item.mixCount:`-${item.deficit}`}</strong>
+                <strong>${item.mixCount}</strong>
               </button>`).join("")}
             </div>
           </div>` : "";
@@ -12136,7 +12503,12 @@ function renderForecastStatusCards(){
             <div class="forecast-compact-train-head">
               <div class="forecast-compact-train-main">
                 <span class="forecast-train-name-line">
-                  <button type="button" class="forecast-train-name forecast-train-hide-toggle" data-forecast-train-hide-toggle="${escapeHtml(g.train)}" data-forecast-hide-day="${escapeHtml(g.day)}" data-train-label="${escapeHtml(g.train)}">${escapeHtml(g.train)}</button>
+                  <button type="button" class="forecast-train-name forecast-train-edit-trigger" data-forecast-train-edit="${escapeHtml(g.train)}" data-forecast-edit-day="${escapeHtml(g.day)}" title="Click to edit inbound name">${escapeHtml(g.train)}</button>
+                  <span class="forecast-inline-train-editor" hidden>
+                    <input type="text" value="${escapeHtml(g.train)}" data-forecast-train-edit-input="${escapeHtml(g.train)}" data-forecast-edit-day="${escapeHtml(g.day)}" aria-label="Edit inbound name">
+                    <button type="button" data-forecast-train-edit-save="${escapeHtml(g.train)}" data-forecast-edit-day="${escapeHtml(g.day)}">Save</button>
+                    <button type="button" data-forecast-train-edit-cancel>Cancel</button>
+                  </span>
                   ${isDuplicateInbound?`<span class="forecast-duplicate-inbound-flag" title="This inbound appears more than once">Duplicate</span>`:""}
                 </span>
                 <span class="forecast-compact-eta-wrap">
@@ -12201,35 +12573,247 @@ function renderForecastStatusCards(){
       }
     });
   });
-  box.querySelectorAll("[data-forecast-train-hide-toggle]").forEach(btn=>{
+  box.querySelectorAll("[data-forecast-train-edit]").forEach(btn=>{
     btn.onclick=event=>{
       event.preventDefault();
       event.stopPropagation();
-      if(btn.classList.contains("armed")){
-        const train=btn.dataset.forecastTrainHideToggle;
-        const day=btn.dataset.forecastHideDay;
-        btn.classList.remove("armed");
-        btn.closest(".forecast-train-card")?.remove();
-        hideForecastTrainDay(train,day);
+      const line=btn.closest(".forecast-train-name-line");
+      const editor=line?.querySelector(".forecast-inline-train-editor");
+      const input=line?.querySelector("[data-forecast-train-edit-input]");
+      if(editor)editor.hidden=false;
+      btn.hidden=true;
+      if(input){input.focus();input.select();}
+    };
+  });
+  box.querySelectorAll("[data-forecast-train-edit-save]").forEach(btn=>{
+    btn.onclick=event=>{
+      event.preventDefault();
+      event.stopPropagation();
+      const line=btn.closest(".forecast-train-name-line");
+      const input=line?.querySelector("[data-forecast-train-edit-input]");
+      renameForecastTrainDay(btn.dataset.forecastTrainEditSave,btn.dataset.forecastEditDay,input?.value||"");
+    };
+  });
+  box.querySelectorAll("[data-forecast-train-edit-cancel]").forEach(btn=>{
+    btn.onclick=event=>{
+      event.preventDefault();
+      event.stopPropagation();
+      const line=btn.closest(".forecast-train-name-line");
+      const editor=line?.querySelector(".forecast-inline-train-editor");
+      const trigger=line?.querySelector("[data-forecast-train-edit]");
+      if(editor)editor.hidden=true;
+      if(trigger)trigger.hidden=false;
+    };
+  });
+  box.querySelectorAll("[data-forecast-train-edit-input]").forEach(input=>{
+    input.addEventListener("keydown",event=>{
+      if(event.key==="Enter"){
+        event.preventDefault();
+        const line=input.closest(".forecast-train-name-line");
+        line?.querySelector("[data-forecast-train-edit-save]")?.click();
+      }
+      if(event.key==="Escape"){
+        event.preventDefault();
+        const line=input.closest(".forecast-train-name-line");
+        line?.querySelector("[data-forecast-train-edit-cancel]")?.click();
+      }
+    });
+  });
+  if(!box.dataset.forecastPoolEditorBound){
+    box.dataset.forecastPoolEditorBound="1";
+  box.addEventListener("click",event=>{
+    const quadrantTarget=event.target.closest("[data-forecast-quadrant-add]");
+    if(quadrantTarget && box.contains(quadrantTarget) && !event.target.closest(".forecast-inline-pool-editor,input")){
+      event.preventDefault();
+      event.stopPropagation();
+      openForecastQuadrantPoolEditor(quadrantTarget.dataset.forecastQuadrantTrain,quadrantTarget.dataset.forecastQuadrantDay,quadrantTarget.dataset.forecastQuadrantAdd);
+      return;
+    }
+    const emptySave=event.target.closest("[data-forecast-empty-pool-save]");
+    if(emptySave && box.contains(emptySave)){
+      event.preventDefault();
+      event.stopPropagation();
+      const empty=emptySave.closest("[data-forecast-empty-quadrant-add]");
+      const poolInput=empty?.querySelector("[data-forecast-empty-pool-input]");
+      const countInput=empty?.querySelector("[data-forecast-empty-count-input]");
+      setForecastTrainPoolSizeCount(empty?.dataset.forecastEmptyQuadrantTrain,empty?.dataset.forecastEmptyQuadrantDay,"",poolInput?.value||"",countInput?.value||"1");
+      return;
+    }
+    const emptyCancel=event.target.closest("[data-forecast-empty-pool-cancel]");
+    if(emptyCancel && box.contains(emptyCancel)){
+      event.preventDefault();
+      event.stopPropagation();
+      const empty=emptyCancel.closest("[data-forecast-empty-quadrant-add]");
+      const editor=empty?.querySelector(".forecast-inline-pool-editor");
+      const trigger=empty?.querySelector(".forecast-empty-quadrant-trigger");
+      if(editor)editor.hidden=true;
+      if(trigger)trigger.hidden=false;
+      return;
+    }
+    const emptyTarget=event.target.closest("[data-forecast-empty-quadrant-add]");
+    if(emptyTarget && box.contains(emptyTarget)){
+      event.preventDefault();
+      event.stopPropagation();
+      if(emptyTarget.classList.contains("forecast-quadrant-add-btn")){
+        promptForecastPoolSizeCount(emptyTarget.dataset.forecastEmptyQuadrantTrain,emptyTarget.dataset.forecastEmptyQuadrantDay,"",defaultForecastPoolSizeForQuadrant(emptyTarget.dataset.forecastEmptyQuadrantAdd),1);
         return;
       }
-      box.querySelectorAll("[data-forecast-train-hide-toggle].armed").forEach(other=>{
-        other.classList.remove("armed");
-        other.textContent=other.dataset.trainLabel||"Train";
-      });
-      btn.classList.add("armed");
-      btn.textContent="Hide this train";
+      const editor=emptyTarget.querySelector(".forecast-inline-pool-editor");
+      const trigger=emptyTarget.querySelector(".forecast-empty-quadrant-trigger");
+      const input=emptyTarget.querySelector("[data-forecast-empty-pool-input]");
+      if(editor)editor.hidden=false;
+      if(trigger)trigger.hidden=true;
+      if(input){input.focus();input.select();}
+      return;
+    }
+    const poolSave=event.target.closest("[data-forecast-pool-edit-save]");
+    if(poolSave && box.contains(poolSave)){
+      event.preventDefault();
+      event.stopPropagation();
+      const item=poolSave.closest(".forecast-quadrant-item");
+      const input=item?.querySelector("[data-forecast-pool-edit-input]");
+      const countInput=item?.querySelector("[data-forecast-pool-count-input]");
+      setForecastTrainPoolSizeCount(poolSave.dataset.forecastPoolEditTrain,poolSave.dataset.forecastPoolEditDay,poolSave.dataset.forecastPoolEditSave,input?.value||"",countInput?.value||poolSave.dataset.forecastPoolEditCount||"0");
+      return;
+    }
+    const poolCancel=event.target.closest("[data-forecast-pool-edit-cancel]");
+    if(poolCancel && box.contains(poolCancel)){
+      event.preventDefault();
+      event.stopPropagation();
+      const item=poolCancel.closest(".forecast-quadrant-item");
+      const editor=item?.querySelector(".forecast-inline-pool-editor");
+      const trigger=item?.querySelector("[data-forecast-pool-edit-label]");
+      if(editor)editor.hidden=true;
+      if(trigger)trigger.hidden=false;
+      return;
+    }
+    const item=event.target.closest(".forecast-quadrant-item");
+    if(item && box.contains(item) && !event.target.closest(".forecast-inline-pool-editor,input")){
+      event.preventDefault();
+      event.stopPropagation();
+      const trigger=item.querySelector("[data-forecast-pool-edit-label]");
+      const editor=item.querySelector(".forecast-inline-pool-editor");
+      const input=item.querySelector("[data-forecast-pool-edit-input]");
+      if(editor)editor.hidden=false;
+      if(trigger)trigger.hidden=true;
+      if(input){input.focus();input.select();}
+      return;
+    }
+  },true);
+  box.addEventListener("keydown",event=>{
+    const input=event.target.closest("[data-forecast-pool-edit-input],[data-forecast-pool-count-input],[data-forecast-empty-pool-input],[data-forecast-empty-count-input]");
+    if(!input || !box.contains(input))return;
+    if(event.key==="Enter"){
+      event.preventDefault();
+      const item=input.closest(".forecast-quadrant-item");
+      if(item){item.querySelector("[data-forecast-pool-edit-save]")?.click();return;}
+      input.closest("[data-forecast-empty-quadrant-add]")?.querySelector("[data-forecast-empty-pool-save]")?.click();
+    }
+    if(event.key==="Escape"){
+      event.preventDefault();
+      const item=input.closest(".forecast-quadrant-item");
+      if(item){item.querySelector("[data-forecast-pool-edit-cancel]")?.click();return;}
+      input.closest("[data-forecast-empty-quadrant-add]")?.querySelector("[data-forecast-empty-pool-cancel]")?.click();
+    }
+  },true);
+  }
+  box.querySelectorAll("[data-forecast-pool-edit-label]").forEach(btn=>{
+    btn.onclick=event=>{
+      event.preventDefault();
+      event.stopPropagation();
+      const item=btn.closest(".forecast-quadrant-item");
+      const editor=item?.querySelector(".forecast-inline-pool-editor");
+      const input=item?.querySelector("[data-forecast-pool-edit-input]");
+      if(editor)editor.hidden=false;
+      btn.hidden=true;
+      if(input){input.focus();input.select();}
     };
-    btn.onkeydown=event=>{
-      if(event.key==="Escape"){
-        btn.classList.remove("armed");
-        btn.textContent=btn.dataset.trainLabel||"Train";
-        btn.blur();
+  });
+  box.querySelectorAll(".forecast-quadrant-item").forEach(item=>{
+    item.onclick=event=>{
+      if(event.target.closest(".forecast-inline-pool-editor,input,button"))return;
+      event.preventDefault();
+      event.stopPropagation();
+      item.querySelector("[data-forecast-pool-edit-label]")?.click();
+    };
+  });
+  box.querySelectorAll("[data-forecast-pool-edit-save]").forEach(btn=>{
+    btn.onclick=event=>{
+      event.preventDefault();
+      event.stopPropagation();
+      const item=btn.closest(".forecast-quadrant-item");
+      const input=item?.querySelector("[data-forecast-pool-edit-input]");
+      const countInput=item?.querySelector("[data-forecast-pool-count-input]");
+      setForecastTrainPoolSizeCount(btn.dataset.forecastPoolEditTrain,btn.dataset.forecastPoolEditDay,btn.dataset.forecastPoolEditSave,input?.value||"",countInput?.value||btn.dataset.forecastPoolEditCount||"0");
+    };
+  });
+  box.querySelectorAll("[data-forecast-pool-edit-cancel]").forEach(btn=>{
+    btn.onclick=event=>{
+      event.preventDefault();
+      event.stopPropagation();
+      const item=btn.closest(".forecast-quadrant-item");
+      const editor=item?.querySelector(".forecast-inline-pool-editor");
+      const trigger=item?.querySelector("[data-forecast-pool-edit-label]");
+      if(editor)editor.hidden=true;
+      if(trigger)trigger.hidden=false;
+    };
+  });
+  box.querySelectorAll("[data-forecast-pool-edit-input]").forEach(input=>{
+    input.addEventListener("keydown",event=>{
+      if(event.key==="Enter"){
+        event.preventDefault();
+        input.closest(".forecast-quadrant-item")?.querySelector("[data-forecast-pool-edit-save]")?.click();
       }
+      if(event.key==="Escape"){
+        event.preventDefault();
+        input.closest(".forecast-quadrant-item")?.querySelector("[data-forecast-pool-edit-cancel]")?.click();
+      }
+    });
+  });
+  box.querySelectorAll("[data-forecast-pool-count-input]").forEach(input=>{
+    input.addEventListener("keydown",event=>{
+      if(event.key==="Enter"){
+        event.preventDefault();
+        input.closest(".forecast-quadrant-item")?.querySelector("[data-forecast-pool-edit-save]")?.click();
+      }
+      if(event.key==="Escape"){
+        event.preventDefault();
+        input.closest(".forecast-quadrant-item")?.querySelector("[data-forecast-pool-edit-cancel]")?.click();
+      }
+    });
+  });
+  box.querySelectorAll("[data-forecast-empty-quadrant-add]").forEach(btn=>{
+    btn.onclick=event=>{
+      if(btn.classList.contains("forecast-quadrant-empty-add"))return;
+      event.preventDefault();
+      event.stopPropagation();
+      const defaultPoolSize=defaultForecastPoolSizeForQuadrant(btn.dataset.forecastEmptyQuadrantAdd);
+      promptForecastPoolSizeCount(btn.dataset.forecastEmptyQuadrantTrain,btn.dataset.forecastEmptyQuadrantDay,"",defaultPoolSize,1);
+    };
+  });
+  box.querySelectorAll("[data-forecast-quadrant-add]").forEach(quadrant=>{
+    quadrant.onclick=event=>{
+      if(event.target.closest(".forecast-quadrant-item,.forecast-inline-pool-editor,button,input"))return;
+      event.preventDefault();
+      event.stopPropagation();
+      const defaultPoolSize=defaultForecastPoolSizeForQuadrant(quadrant.dataset.forecastQuadrantAdd);
+      promptForecastPoolSizeCount(quadrant.dataset.forecastQuadrantTrain,quadrant.dataset.forecastQuadrantDay,"",defaultPoolSize,1);
     };
   });
   box.querySelectorAll("[data-forecast-jump-unknown-train]").forEach(btn=>{
-    btn.onclick=()=>jumpForecastUnknownToResolver(btn.dataset.forecastJumpUnknownTrain,btn.dataset.forecastJumpUnknownDay,btn.dataset.forecastJumpUnknownLabel);
+    btn.onclick=event=>{
+      event.preventDefault();
+      event.stopPropagation();
+      if(event.altKey){
+        jumpForecastUnknownToResolver(btn.dataset.forecastJumpUnknownTrain,btn.dataset.forecastJumpUnknownDay,btn.dataset.forecastJumpUnknownLabel);
+        return;
+      }
+      const next=prompt("Pool and size",btn.dataset.forecastJumpUnknownLabel||"");
+      if(next!==null){
+        const count=prompt("How many units?","1");
+        if(count!==null)setForecastTrainPoolSizeCount(btn.dataset.forecastJumpUnknownTrain,btn.dataset.forecastJumpUnknownDay,btn.dataset.forecastJumpUnknownLabel,next,count);
+      }
+    };
   });
   box.querySelectorAll("[data-forecast-drag-train]").forEach(card=>{
     card.addEventListener("dragstart",event=>{
@@ -23436,6 +24020,259 @@ body.forecast-view #forecastModal .forecast-page > .hero.clean-hero #forecastHer
     width:auto!important;
     min-width:0!important;
   }
+}
+/* Editable inbound card train names. */
+#forecastStatusCards .forecast-train-edit-trigger{
+  cursor:text!important;
+}
+#forecastStatusCards .forecast-train-edit-trigger:hover{
+  filter:brightness(1.12)!important;
+  text-decoration:underline!important;
+  text-underline-offset:3px!important;
+}
+#forecastStatusCards .forecast-inline-train-editor{
+  display:inline-flex!important;
+  align-items:center!important;
+  gap:5px!important;
+  max-width:100%!important;
+}
+#forecastStatusCards .forecast-inline-train-editor[hidden]{display:none!important;}
+#forecastStatusCards .forecast-inline-train-editor input{
+  width:120px!important;
+  max-width:42vw!important;
+  min-height:28px!important;
+  border:1px solid rgba(147,197,253,.62)!important;
+  border-radius:9px!important;
+  background:rgba(2,6,23,.86)!important;
+  color:#fff!important;
+  padding:4px 8px!important;
+  font:inherit!important;
+  font-size:14px!important;
+  font-weight:1000!important;
+  outline:none!important;
+}
+#forecastStatusCards .forecast-inline-train-editor button{
+  min-height:28px!important;
+  padding:4px 8px!important;
+  border-radius:8px!important;
+  font-size:10px!important;
+}
+/* Editable inbound pool labels. */
+#forecastStatusCards .forecast-pool-edit-trigger{
+  appearance:none!important;
+  border:0!important;
+  background:transparent!important;
+  margin:0!important;
+  padding:0!important;
+  cursor:text!important;
+  text-align:left!important;
+}
+#forecastStatusCards .forecast-pool-edit-trigger:hover{
+  text-decoration:underline!important;
+  text-underline-offset:2px!important;
+}
+#forecastStatusCards .forecast-inline-pool-editor{
+  min-width:0!important;
+  display:flex!important;
+  align-items:center!important;
+  gap:4px!important;
+  grid-column:1 / 4!important;
+}
+#forecastStatusCards .forecast-inline-pool-editor[hidden]{display:none!important;}
+#forecastStatusCards .forecast-inline-pool-editor input{
+  width:94px!important;
+  min-width:0!important;
+  min-height:25px!important;
+  border:1px solid rgba(147,197,253,.65)!important;
+  border-radius:8px!important;
+  background:rgba(2,6,23,.88)!important;
+  color:#fff!important;
+  padding:3px 7px!important;
+  font-size:12px!important;
+  font-weight:1000!important;
+  outline:none!important;
+}
+#forecastStatusCards .forecast-inline-pool-editor input[type="number"]{
+  width:54px!important;
+  text-align:center!important;
+}
+#forecastStatusCards .forecast-inline-pool-editor button{
+  min-height:25px!important;
+  padding:3px 7px!important;
+  border-radius:7px!important;
+  border:1px solid rgba(147,197,253,.5)!important;
+  background:rgba(30,64,175,.68)!important;
+  color:#fff!important;
+  font-size:10px!important;
+  font-weight:900!important;
+}
+#forecastStatusCards .forecast-inline-pool-editor button[data-forecast-pool-edit-cancel]{
+  background:rgba(30,41,59,.72)!important;
+}
+#forecastStatusCards .forecast-quadrant-empty-add{
+  width:100%!important;
+  min-height:100%!important;
+  cursor:pointer!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  flex-direction:column!important;
+  gap:6px!important;
+}
+#forecastStatusCards .forecast-quadrant-empty-add:hover{
+  filter:brightness(1.12)!important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)!important;
+}
+#forecastStatusCards .forecast-empty-quadrant-trigger{
+  appearance:none!important;
+  border:0!important;
+  background:transparent!important;
+  color:inherit!important;
+  font:inherit!important;
+  font-weight:1000!important;
+  cursor:pointer!important;
+  padding:0!important;
+}
+#forecastStatusCards .forecast-quadrant-empty-add .forecast-inline-pool-editor{
+  justify-content:center!important;
+  flex-wrap:wrap!important;
+}
+#forecastStatusCards .forecast-quadrant-add-btn{
+  appearance:none!important;
+  width:22px!important;
+  height:22px!important;
+  border-radius:999px!important;
+  border:1px solid rgba(255,255,255,.24)!important;
+  background:rgba(15,23,42,.48)!important;
+  color:#fff!important;
+  font-size:16px!important;
+  line-height:18px!important;
+  font-weight:1000!important;
+  cursor:pointer!important;
+  display:inline-grid!important;
+  place-items:center!important;
+}
+#forecastStatusCards .forecast-quadrant-add-btn:hover{
+  filter:brightness(1.18)!important;
+  border-color:rgba(255,255,255,.42)!important;
+}
+#forecastStatusCards .forecast-quadrant{
+  cursor:pointer!important;
+}
+.forecast-quadrant-editor-overlay{
+  position:fixed!important;
+  inset:0!important;
+  z-index:100000!important;
+  display:grid!important;
+  place-items:center!important;
+  padding:18px!important;
+  background:rgba(2,6,23,.68)!important;
+  backdrop-filter:blur(6px)!important;
+}
+.forecast-quadrant-editor-modal{
+  width:min(520px,calc(100vw - 28px))!important;
+  border:1px solid rgba(147,197,253,.34)!important;
+  border-radius:14px!important;
+  background:linear-gradient(180deg,rgba(15,23,42,.98),rgba(8,13,29,.98))!important;
+  box-shadow:0 24px 80px rgba(0,0,0,.48), inset 0 1px 0 rgba(255,255,255,.08)!important;
+  color:#fff!important;
+  padding:14px!important;
+}
+.forecast-quadrant-editor-head{
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+  margin-bottom:12px!important;
+}
+.forecast-quadrant-editor-head strong{
+  display:block!important;
+  font-size:20px!important;
+  line-height:1!important;
+  font-weight:1000!important;
+}
+.forecast-quadrant-editor-head span{
+  display:block!important;
+  margin-top:5px!important;
+  color:#bfdbfe!important;
+  font-size:12px!important;
+  font-weight:900!important;
+}
+.forecast-quadrant-editor-close{
+  width:34px!important;
+  height:34px!important;
+  border-radius:10px!important;
+  border:1px solid rgba(148,163,184,.32)!important;
+  background:rgba(15,23,42,.72)!important;
+  color:#fff!important;
+  font-size:22px!important;
+  line-height:1!important;
+  cursor:pointer!important;
+}
+.forecast-quadrant-editor-rows{
+  display:grid!important;
+  gap:8px!important;
+  margin-bottom:12px!important;
+}
+.forecast-quadrant-editor-row,
+.forecast-quadrant-editor-add{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 86px auto!important;
+  gap:8px!important;
+  align-items:center!important;
+}
+.forecast-quadrant-editor-row input,
+.forecast-quadrant-editor-add input,
+.forecast-quadrant-editor-row select,
+.forecast-quadrant-editor-add select{
+  min-height:34px!important;
+  border:1px solid rgba(147,197,253,.42)!important;
+  border-radius:9px!important;
+  background:rgba(2,6,23,.82)!important;
+  color:#fff!important;
+  padding:5px 9px!important;
+  font-size:14px!important;
+  font-weight:1000!important;
+  outline:none!important;
+}
+.forecast-quadrant-editor-row select,
+.forecast-quadrant-editor-add select{
+  cursor:pointer!important;
+}
+.forecast-quadrant-editor-row input[type="number"],
+.forecast-quadrant-editor-add input[type="number"]{
+  text-align:center!important;
+}
+.forecast-quadrant-editor-row button,
+.forecast-quadrant-editor-add button{
+  min-height:34px!important;
+  border:1px solid rgba(96,165,250,.48)!important;
+  border-radius:9px!important;
+  background:rgba(37,99,235,.64)!important;
+  color:#fff!important;
+  padding:5px 12px!important;
+  font-size:12px!important;
+  font-weight:1000!important;
+  cursor:pointer!important;
+}
+.forecast-quadrant-editor-add{
+  padding-top:12px!important;
+  border-top:1px solid rgba(148,163,184,.18)!important;
+}
+.forecast-quadrant-editor-empty{
+  border:1px dashed rgba(148,163,184,.32)!important;
+  border-radius:10px!important;
+  padding:14px!important;
+  color:#cbd5e1!important;
+  font-size:13px!important;
+  font-weight:900!important;
+  text-align:center!important;
+}
+.forecast-tracklist-unresolved-note{
+  margin-top:10px!important;
+  color:#fecdd3!important;
+  font-size:12px!important;
+  font-weight:900!important;
 }</style>
 </body>
 </html>
