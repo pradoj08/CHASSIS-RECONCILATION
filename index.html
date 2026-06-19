@@ -5884,7 +5884,7 @@ body.forecast-view .forecast-bottom-controls {
         <button id="forecastInventoryImportBtn" type="button">Import Chassis</button>
         <button id="forecastMismatchImportBtn" type="button">Import Mismatch</button>
         <button id="forecastAuthorizedImportBtn" type="button">Import Authorized</button>
-        <button id="forecastClearBtn" type="button">Clear Forecast</button>
+        <button id="forecastClearBtn" type="button">Clear Inbound</button>
         <button id="forecastInventoryClearBtn" type="button">Clear Inventory</button>
         <button id="forecastClearImportBtn" type="button">Clear Chassis</button>
         <button id="forecastMismatchClearBtn" type="button">Clear Mismatch</button>
@@ -9932,11 +9932,16 @@ function buildForecastExcelCalculatorRows(units){
   }));
 }
 function buildForecastExcelShortageNotes(rows){
-  const byKey=new Map(rows.map(r=>[`${r.poolCode}|${r.size}`,r]));
+  const byKey=new Map();
+  rows.forEach(r=>{
+    byKey.set(`${r.poolCode}|${r.size}`,r);
+    const target=getForecastRequestBoardPair(r.poolCode,r.size);
+    if(target)byKey.set(`${target.pool}|${target.size}`,r);
+  });
   const checks=[
     ["TGRP","45",3,"TRAC"],["TGRP","40",15,"TRAC"],
-    ["FGCP","45",3,"FLEXI"],["FGCP","40",15,"FLEXI"],
-    ["SNCZ","53",15,"SNCZ"],["SNBZ","40",5,"SNCZ"],
+    ["FGCP","45",3,"FLEXI"],["FGCP","40",15,"FLEXI"],["FGCP","20",15,"FLEXI"],
+    ["SNCZ","53",15,"SNCZ"],["SNBZ","40",5,"SNBZ"],
     ["DCLI","53",15,"DCLI"],["DCLI","40",15,"DCLI/DCLP"],["DCLI","20",15,"DCLI/DCLP"]
   ];
   return checks.flatMap(([pool,size,limit,label])=>{
@@ -11446,11 +11451,9 @@ function clearForecastAuthorizedRows(){
 }
 function clearForecastImportedUnits(){
   forecastImportedUnits=[];
-  forecastInventoryRows=[];
-  forecastSelectedDays=new Set();
-  forecastHiddenTrainDays=new Set();
   saveForecastState();
   renderForecastImportedUnits();
+  if(typeof showArchiveToast==="function")showArchiveToast("Inbound imports cleared.");
 }
 
 
@@ -14440,7 +14443,7 @@ async function init(){
   const forecastArchiveSortSelect=$("forecastArchiveSortSelect"); if(forecastArchiveSortSelect)forecastArchiveSortSelect.onchange=()=>{forecastArchiveSortMode=forecastArchiveSortSelect.value||"newest";renderForecastArchiveList();};
   const forecastArchivePopupCloseBtn=$("forecastArchivePopupCloseBtn"); if(forecastArchivePopupCloseBtn)forecastArchivePopupCloseBtn.onclick=closeForecastArchivePopup;
   const forecastArchivePopup=$("forecastArchivePopup"); if(forecastArchivePopup)forecastArchivePopup.addEventListener("click",e=>{if(e.target===forecastArchivePopup)closeForecastArchivePopup();});
-  const forecastClearBtn=$("forecastClearBtn"); if(forecastClearBtn)forecastClearBtn.onclick=clearForecast;
+  const forecastClearBtn=$("forecastClearBtn"); if(forecastClearBtn)forecastClearBtn.onclick=clearForecastImportedUnits;
   const forecastStartingOnHand=$("forecastStartingOnHand"); if(forecastStartingOnHand)forecastStartingOnHand.oninput=renderForecast;
   const forecastNoTrainName=$("forecastNoTrainName"); if(forecastNoTrainName)forecastNoTrainName.oninput=()=>{renderForecastImportedUnits();saveForecastState()};
   const forecastImportBtn=$("forecastImportBtn"); if(forecastImportBtn)forecastImportBtn.onclick=()=>$("forecastFileInput")?.click();
@@ -24372,6 +24375,90 @@ body.forecast-view.forecast-print-clean-view #forecastModal .forecast-page > .he
   color:#fecdd3!important;
   font-size:12px!important;
   font-weight:900!important;
+}
+/* Keep inbound day columns from overlapping at narrower widths. */
+#forecastStatusCards.forecast-status-cards{
+  display:grid!important;
+  grid-template-columns:repeat(auto-fit,minmax(min(360px,100%),1fr))!important;
+  gap:22px!important;
+  align-items:start!important;
+  overflow:visible!important;
+}
+#forecastStatusCards .forecast-day-section,
+#forecastStatusCards .forecast-status-cards-grid,
+#forecastStatusCards .forecast-train-card,
+#forecastStatusCards .forecast-day-divider{
+  min-width:0!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+#forecastStatusCards .forecast-day-section{
+  width:100%!important;
+  overflow:hidden!important;
+}
+#forecastStatusCards .forecast-status-cards-grid{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  width:100%!important;
+}
+#forecastStatusCards .forecast-train-card{
+  width:100%!important;
+}
+#forecastStatusCards .forecast-day-divider{
+  width:100%!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  align-items:center!important;
+  gap:10px!important;
+}
+#forecastStatusCards .forecast-day-divider > div:first-child{
+  min-width:0!important;
+  overflow:hidden!important;
+}
+#forecastStatusCards .forecast-day-divider > div:first-child strong{
+  max-width:100%!important;
+  overflow:hidden!important;
+  text-overflow:ellipsis!important;
+  white-space:nowrap!important;
+}
+#forecastStatusCards .forecast-day-unit-total{
+  min-width:0!important;
+  flex:0 0 auto!important;
+}
+/* Prevent inbound-name edit controls from colliding with the hide button. */
+#forecastStatusCards .forecast-train-name-line .forecast-inline-train-editor:not([hidden]){
+  display:grid!important;
+  grid-template-columns:minmax(110px,1fr) 46px 56px 34px!important;
+  align-items:center!important;
+  gap:8px!important;
+  width:100%!important;
+  max-width:100%!important;
+}
+#forecastStatusCards .forecast-train-name-line .forecast-inline-train-editor input{
+  min-width:0!important;
+  width:100%!important;
+}
+#forecastStatusCards .forecast-train-name-line .forecast-inline-train-editor button{
+  min-width:0!important;
+  width:100%!important;
+  height:30px!important;
+  padding:0 6px!important;
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  line-height:1!important;
+}
+#forecastStatusCards .forecast-train-name-line .forecast-inline-train-editor .forecast-train-hide-emoji{
+  width:34px!important;
+  min-width:34px!important;
+  padding:0!important;
+  font-size:15px!important;
+  justify-self:end!important;
+}
+@media(max-width:520px){
+  #forecastStatusCards .forecast-train-name-line .forecast-inline-train-editor:not([hidden]){
+    grid-template-columns:minmax(0,1fr) 46px 56px 34px!important;
+  }
 }</style>
 </body>
 </html>
