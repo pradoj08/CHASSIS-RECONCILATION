@@ -56,7 +56,7 @@ button:hover{transform:translateY(-1px);border-color:#64748b}button.active{color
 .actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .btn-export{background:rgba(16,185,129,.16);border-color:rgba(52,211,153,.35);color:#d1fae5}.btn-import{background:rgba(37,99,235,.20);border-color:rgba(96,165,250,.42);color:#dbeafe}.btn-clear{background:rgba(225,29,72,.22);border-color:rgba(251,113,133,.42);color:#ffe4e6}
 .table-scroll{overflow:auto;max-height:62vh}table{width:max-content;min-width:100%;border-collapse:separate;border-spacing:0;text-align:center;font-size:12px}thead th{position:sticky;top:0;z-index:2;padding:10px 8px;color:#a8b8d4;background:#121c30;border-bottom:1px solid var(--line);white-space:nowrap;font-size:11px;font-weight:1000}th button{margin:0 auto;padding:0;border:0;background:transparent;color:inherit;font-size:11px;display:inline-flex;gap:4px;align-items:center;justify-content:center}th button.sorted{color:var(--gold)}td{padding:9px 8px;border-bottom:1px solid rgba(34,48,74,.84);white-space:nowrap;vertical-align:middle;color:#f8fafc}tbody tr:hover{background:rgba(30,41,59,.55)}
-.chassis{display:inline-flex;align-items:center;gap:7px;font-weight:1000;letter-spacing:-.02em}.kind,.pool{border-radius:7px;background:#1b2a43;color:#a9bddb;padding:3px 6px;font-size:10px;font-weight:1000}.pool{color:#fff}
+.chassis{display:inline-flex;align-items:center;gap:7px;font-weight:1000;letter-spacing:-.02em}.kind,.pool{border-radius:0!important;background:transparent!important;color:#a9bddb;padding:0!important;font-size:10px;font-weight:1000;border:none!important;box-shadow:none!important}.pool{color:#fff}
 .chip{display:inline-flex;align-items:center;justify-content:center;min-height:24px;border-radius:999px;border:1px solid transparent;padding:4px 10px;font-size:11px;font-weight:1000;line-height:1}
 .yes{color:#a7f3d0;background:rgba(16,185,129,.18);border-color:rgba(52,211,153,.3)}.no{color:#dbeafe;background:rgba(71,85,105,.4);border-color:rgba(148,163,184,.20)}.today{color:#a7f3d0;background:rgba(16,185,129,.20);border-color:rgba(52,211,153,.32)}.yesterday{color:#bae6fd;background:rgba(14,165,233,.20);border-color:rgba(56,189,248,.36)}.twoTen{color:#fed7aa;background:rgba(234,88,12,.24);border-color:rgba(251,146,60,.37)}.tenPlus{color:#fecdd3;background:rgba(225,29,72,.26);border-color:rgba(251,113,133,.42)}
 .loc{display:inline-flex;align-items:center;gap:4px;border-radius:999px;border:1px solid rgba(148,163,184,.25);padding:5px 10px;font-size:11px;font-weight:1000}.dirt{color:#fecdd3;background:rgba(225,29,72,.20);border-color:rgba(251,113,133,.34)}.shop{color:#fed7aa;background:rgba(234,88,12,.21);border-color:rgba(251,146,60,.34)}.rail{color:#bfdbfe;background:rgba(37,99,235,.24);border-color:rgba(96,165,250,.34)}.bowl{color:#f5d0fe;background:rgba(168,85,247,.23);border-color:rgba(216,180,254,.32)}.normal{color:#dbeafe;background:rgba(71,85,105,.42)}
@@ -1901,11 +1901,11 @@ th button[data-sort="ce"].ce-remove-ready {
   transform: none !important;
 }
 .hero-action-icon {
-  font-size: 24px !important;
+  font-size: 34px !important;
   line-height: 1 !important;
 }
 .hero-action-label {
-  font-size: 12px !important;
+  font-size: 15px !important;
   font-weight: 1000 !important;
   text-transform: uppercase !important;
   letter-spacing: .08em !important;
@@ -1914,34 +1914,36 @@ th button[data-sort="ce"].ce-remove-ready {
 .hero-yard-card {
   display: grid !important;
   align-content: center !important;
-  gap: 12px !important;
+  gap: 5px !important;
   min-width: 0 !important;
   width: 100% !important;
   min-height: 0 !important;
-  padding: 16px !important;
+  padding: 10px 14px !important;
   border: 1px solid rgba(96,165,250,.38) !important;
   background: rgba(15,23,42,.72) !important;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 14px 34px rgba(0,0,0,.20) !important;
+  box-sizing: border-box !important;
 }
 .hero-yard-card label {
   color: #bfdbfe !important;
-  font-size: 11px !important;
+  font-size: 10px !important;
   font-weight: 1000 !important;
   text-transform: uppercase !important;
   letter-spacing: .08em !important;
-  line-height: 1.1 !important;
+  line-height: 1 !important;
 }
 .hero-yard-card select,
 .hero-yard-card input {
   width: 100% !important;
-  height: 44px !important;
-  border-radius: 14px !important;
-  padding: 0 14px !important;
+  height: 34px !important;
+  border-radius: 10px !important;
+  padding: 0 10px !important;
   color: #facc15 !important;
   background: rgba(7,13,30,.86) !important;
   border: 1px solid rgba(96,165,250,.30) !important;
-  font-size: 15px !important;
+  font-size: 13px !important;
   font-weight: 1000 !important;
+  box-sizing: border-box !important;
 }
 .cloud-status-hidden {
   display: none !important;
@@ -5520,8 +5522,8 @@ body.forecast-view .forecast-bottom-controls {
 
       <div class="yard-card hero-yard-card">
         <label id="yardLabel" for="yardSelect">Yard checked 05/26/2026</label>
-        <input id="yardSelect" list="yardOptionsList" type="text" autocomplete="off">
-        <datalist id="yardOptionsList"></datalist>
+        <select id="yardSelect" autocomplete="off"></select>
+        <input id="yardSelectCustom" type="text" placeholder="Type custom yard name…" autocomplete="off" style="display:none;margin-top:6px;">
       </div>
 
       <button id="calendarTopBtn" class="hero-action-card calendar-top-btn" type="button">
@@ -6027,18 +6029,32 @@ body.forecast-view .forecast-bottom-controls {
         </div>
         <div class="forecast-tracklist-grid">
           <label>
-            <span>Inbound Name</span>
-            <input id="forecastTracklistName" type="text" placeholder="Example: Track 804 / YHO37R / Inbound 1">
-          </label>
-          <label>
             <span>Arrival Day</span>
             <input id="forecastTracklistDay" type="number" min="1" max="31" placeholder="Day">
           </label>
         </div>
-        <label class="forecast-tracklist-paste-label">
-          <span>Paste Tracklist</span>
-          <textarea id="forecastTracklistText" placeholder="Paste inbound/current-on-ramp tracklist here..."></textarea>
-        </label>
+        <div class="forecast-tracklist-slots">
+          <div class="forecast-tracklist-slot">
+            <input class="forecast-tracklist-slot-name" id="forecastTracklistName1" type="text" placeholder="Inbound 1 name (e.g. YHO37R)">
+            <textarea class="forecast-tracklist-slot-text" id="forecastTracklistText1" placeholder="Paste tracklist 1 here..."></textarea>
+          </div>
+          <div class="forecast-tracklist-slot">
+            <input class="forecast-tracklist-slot-name" id="forecastTracklistName2" type="text" placeholder="Inbound 2 name (e.g. Track 804)">
+            <textarea class="forecast-tracklist-slot-text" id="forecastTracklistText2" placeholder="Paste tracklist 2 here..."></textarea>
+          </div>
+          <div class="forecast-tracklist-slot">
+            <input class="forecast-tracklist-slot-name" id="forecastTracklistName3" type="text" placeholder="Inbound 3 name">
+            <textarea class="forecast-tracklist-slot-text" id="forecastTracklistText3" placeholder="Paste tracklist 3 here..."></textarea>
+          </div>
+          <div class="forecast-tracklist-slot">
+            <input class="forecast-tracklist-slot-name" id="forecastTracklistName4" type="text" placeholder="Inbound 4 name">
+            <textarea class="forecast-tracklist-slot-text" id="forecastTracklistText4" placeholder="Paste tracklist 4 here..."></textarea>
+          </div>
+          <div class="forecast-tracklist-slot">
+            <input class="forecast-tracklist-slot-name" id="forecastTracklistName5" type="text" placeholder="Inbound 5 name">
+            <textarea class="forecast-tracklist-slot-text" id="forecastTracklistText5" placeholder="Paste tracklist 5 here..."></textarea>
+          </div>
+        </div>
         <div id="forecastTracklistPreview" class="forecast-tracklist-preview">No tracklist pasted.</div>
         <div class="forecast-tracklist-actions">
           <button id="forecastTracklistImportConfirmBtn" type="button">Import Tracklist</button>
@@ -6137,7 +6153,10 @@ body.forecast-view .forecast-bottom-controls {
             <h3>Loading Out Creates</h3>
             <p>Counts IHOSA and YHO37R units by Shipper pool and Car Kind footage.</p>
           </div>
-          <button id="forecastUnplannedCloseBtn" type="button">Close</button>
+          <div class="forecast-unplanned-head-actions">
+            <button id="forecastUnplannedClearBtn" type="button" class="forecast-unplanned-clear-btn">Clear</button>
+            <button id="forecastUnplannedCloseBtn" type="button">Close</button>
+          </div>
         </div>
         <div class="forecast-unplanned-import">
           <button id="forecastUnplannedChooseBtn" type="button">Import Excel</button>
@@ -6388,28 +6407,82 @@ body.forecast-view .forecast-bottom-controls {
 const REPORT_TODAY = new Date("2026-05-26T00:00:00");
 const YARD_OPTIONS = ["[M] TGRP 40/45","[T] DCLP 40/45","[W] DCLI 53, SNBZ/SNCZ 40/53","[TH] FGCP 20/40","[F] TGRP/DCLP 20"];
 function setupYardSelectOptions(selectedValue=""){
-  const input=$("yardSelect");
-  const list=$("yardOptionsList");
-  if(!input)return;
-  const selected=String(selectedValue||"").trim();
-  if(list){
-    list.innerHTML="";
-    YARD_OPTIONS.forEach(label=>{
-      const option=document.createElement("option");
-      option.value=label;
-      list.appendChild(option);
-    });
-    if(selected && !YARD_OPTIONS.some(label=>label.toLowerCase()===selected.toLowerCase())){
-      const option=document.createElement("option");
-      option.value=selected;
-      list.appendChild(option);
-    }
+  const select=$("yardSelect");
+  const customInput=$("yardSelectCustom");
+  if(!select)return;
+  // Sanitize: treat sentinel value or blank as "use first preset"
+  let selected=String(selectedValue||"").trim();
+  if(selected==="__custom__"||selected==="Custom…"||selected==="Custom")selected="";
+  const isCustom=selected && !YARD_OPTIONS.some(label=>label.toLowerCase()===selected.toLowerCase());
+  select.innerHTML="";
+  YARD_OPTIONS.forEach(label=>{
+    const option=document.createElement("option");
+    option.value=label;
+    option.textContent=label;
+    select.appendChild(option);
+  });
+  const customOption=document.createElement("option");
+  customOption.value="__custom__";
+  customOption.textContent="Custom…";
+  select.appendChild(customOption);
+  if(isCustom){
+    // Show input pre-filled with the saved custom name; doesn't persist as a fixed option
+    if(customInput){customInput.style.display="block";customInput.value=selected;}
+    select.value="__custom__";
+  } else {
+    select.value=selected||YARD_OPTIONS[0]||"";
+    if(customInput)customInput.style.display="none";
   }
-  input.value=selected || input.value || YARD_OPTIONS[0] || "";
+}
+function getYardSelectValue(){
+  const select=$("yardSelect");
+  const customInput=$("yardSelectCustom");
+  if(select?.value==="__custom__")return String(customInput?.value||"").trim()||"Custom";
+  return select?.value||YARD_OPTIONS[0]||"";
+}
+function commitYardCustomName(){
+  const select=$("yardSelect");
+  const customInput=$("yardSelectCustom");
+  if(!select||!customInput)return;
+  const val=String(customInput.value||"").trim();
+  if(!val){
+    // revert to first preset if blank
+    select.value=YARD_OPTIONS[0];
+    customInput.style.display="none";
+    queueCloudSave();
+    return;
+  }
+  // Update or add the custom option in the select
+  let customOpt=select.querySelector("option[data-custom]");
+  if(!customOpt){
+    customOpt=document.createElement("option");
+    customOpt.setAttribute("data-custom","1");
+    // Insert before the "Custom…" sentinel
+    const sentinel=select.querySelector("option[value=__custom__]");
+    if(sentinel)select.insertBefore(customOpt,sentinel);
+    else select.appendChild(customOpt);
+  }
+  customOpt.value=val;
+  customOpt.textContent=val;
+  select.value=val;
+  customInput.style.display="none";
+  queueCloudSave();
 }
 function handleYardSelectChange(){
-  setupYardSelectOptions($("yardSelect")?.value||"");
-  queueCloudSave();
+  const select=$("yardSelect");
+  const customInput=$("yardSelectCustom");
+  if(select?.value==="__custom__"){
+    if(customInput){
+      customInput.style.display="block";
+      customInput.value="";
+      customInput.focus();
+    }
+  } else {
+    if(customInput)customInput.style.display="none";
+    // Remove ephemeral custom option when user picks a preset
+    select?.querySelector("option[data-custom]")?.remove();
+    queueCloudSave();
+  }
 }
 function buildYardOptionsHtml(selectedValue=""){
   const selected=String(selectedValue||"").trim();
@@ -6490,7 +6563,7 @@ function makeCurrentSessionSnapshot(){
   return {
     savedAt:new Date().toISOString(),
     reportDate:getReportBaseDate().toISOString(),
-    yardChecked:$("yardSelect")?.value||"",
+    yardChecked:getYardSelectValue(),
     tableRows,
     query,
     filter,
@@ -7246,11 +7319,11 @@ function makeArchiveName(){
 }
 function makeSnapshot(){
   const e=enrich();
-  return {id:makeArchiveId(),name:makeArchiveName(),savedAt:new Date().toISOString(),reportDate:getReportBaseDate().toISOString(),yardChecked:$("yardSelect")?.value||"",tableRows,query,filter,sortConfig,showBanner,importedFileArchives,counts:{onHand:e.length,yardChecked:e.filter(r=>r.yardChecked).length,eventToday:e.filter(r=>r.bucket.key==="today").length,missingToday:e.filter(r=>r.bucket.key!=="today").length,flaggedDelete:e.filter(r=>r.bucket.key==="tenPlus").length}};
+  return {id:makeArchiveId(),name:makeArchiveName(),savedAt:new Date().toISOString(),reportDate:getReportBaseDate().toISOString(),yardChecked:getYardSelectValue(),tableRows,query,filter,sortConfig,showBanner,importedFileArchives,counts:{onHand:e.length,yardChecked:e.filter(r=>r.yardChecked).length,eventToday:e.filter(r=>r.bucket.key==="today").length,missingToday:e.filter(r=>r.bucket.key!=="today").length,flaggedDelete:e.filter(r=>r.bucket.key==="tenPlus").length}};
 }
 function saveSnapshot(customName){
   const snap=makeSnapshot();
-  snap.yardChecked=snap.yardChecked||$("yardSelect")?.value||"";
+  snap.yardChecked=snap.yardChecked||getYardSelectValue();
   if(customName&&String(customName).trim())snap.name=String(customName).trim();
   const list=getArchiveList();
   list.unshift(snap);
@@ -8463,7 +8536,7 @@ function buildEmailReportStats(){
   const eventToday=e.filter(r=>r.bucket.key==="today").length;
   const missing=e.filter(r=>r.bucket.key!=="today").length;
   const deleteFlag=e.filter(r=>r.bucket.key==="tenPlus").length;
-  const yardDrop=$("yardSelect")?.value || "SELECTED YARD DROP";
+  const yardDrop=getYardSelectValue() || "SELECTED YARD DROP";
   return {e,total,yard,eventToday,missing,deleteFlag,yardDrop};
 }
 
@@ -11039,11 +11112,16 @@ function parseForecastTracklistText(raw,inboundName,etaDay,etaHour){
   return units;
 }
 function getForecastTracklistFormUnits(){
-  const inboundName=String($("forecastTracklistName")?.value||"").trim() || "Tracklist Inbound";
   const etaDay=String($("forecastTracklistDay")?.value||"").trim() || String(new Date().getDate());
   const etaHour="";
-  const raw=$("forecastTracklistText")?.value||"";
-  return parseForecastTracklistText(raw,inboundName,etaDay,etaHour);
+  const allUnits=[];
+  [1,2,3,4,5].forEach(n=>{
+    const raw=$("forecastTracklistText"+n)?.value||"";
+    if(!raw.trim())return;
+    const name=String($("forecastTracklistName"+n)?.value||"").trim() || ("Tracklist Inbound "+n);
+    allUnits.push(...parseForecastTracklistText(raw,name,etaDay,etaHour));
+  });
+  return allUnits;
 }
 function renderForecastTracklistPastePreview(){
   const box=$("forecastTracklistPreview");
@@ -11620,7 +11698,7 @@ function updateForecastTrainPoolSize(train,day,oldLabel,newValue){
   oldLabel=String(oldLabel||"").trim();
   const pair=parseForecastPoolSizeEdit(newValue);
   if(!train||!day||!oldLabel||!pair){
-    showForecastToast("Enter a pool and size like TGRP 40 or DCLI 53.");
+    showArchiveToast("Enter a pool and size like TGRP 40 or DCLI 53.");
     return false;
   }
   let changed=0;
@@ -11648,13 +11726,13 @@ function updateForecastTrainPoolSize(train,day,oldLabel,newValue){
     };
   });
   if(!changed){
-    showForecastToast("No matching units found for that pool.");
+    showArchiveToast("No matching units found for that pool.");
     return false;
   }
   saveForecastState();
   renderForecastImportedUnits();
   renderForecastExcelView();
-  showForecastToast(`Updated ${changed} unit${changed===1?"":"s"} to ${pair.pool==="TRAILER"?"TRAILER":`${pair.pool} ${pair.size}`}.`);
+  showArchiveToast(`Updated ${changed} unit${changed===1?"":"s"} to ${pair.pool==="TRAILER"?"TRAILER":`${pair.pool} ${pair.size}`}.`);
   return true;
 }
 function defaultForecastPoolSizeForQuadrant(quadrant){
@@ -11707,7 +11785,7 @@ function setForecastTrainPoolSizeCount(train,day,oldLabel,poolSizeValue,countVal
   const pair=parseForecastPoolSizeEdit(poolSizeValue);
   const desired=Math.max(0,Math.trunc(Number(String(countValue||"").replace(/[^0-9.-]/g,""))));
   if(!train||!day||!pair||!Number.isFinite(desired)){
-    showForecastToast("Enter a pool/size and a whole number count.");
+    showArchiveToast("Enter a pool/size and a whole number count.");
     return false;
   }
   const nextUnits=[];
@@ -11725,7 +11803,7 @@ function setForecastTrainPoolSizeCount(train,day,oldLabel,poolSizeValue,countVal
   renderForecastImportedUnits();
   renderForecastExcelView();
   const label=pair.pool==="TRAILER"?"TRAILER":`${pair.pool} ${pair.size}`;
-  showForecastToast(`${label} set to ${desired} on ${train}.`);
+  showArchiveToast(`${label} set to ${desired} on ${train}.`);
   return true;
 }
 function promptForecastPoolSizeCount(train,day,oldLabel,defaultPoolSize,defaultCount){
@@ -11744,6 +11822,15 @@ function forecastPoolLabelBelongsToQuadrant(label,quadrant){
   if(id==="dcli")return fingerprint.includes("DCLI")||fingerprint.includes("DCLP");
   if(id==="trailer")return fingerprint.includes("TRAILER");
   return false;
+}
+function getAllTrainDayPoolCounts(train,day){
+  const counts=new Map();
+  forecastImportedUnits.forEach(unit=>{
+    if(getForecastTrainGroupName(unit)!==train || getForecastUnitDay(unit)!==day)return;
+    const label=getForecastUnitPoolSizeLabel(unit);
+    counts.set(label,(counts.get(label)||0)+1);
+  });
+  return [...counts.entries()].map(([label,count])=>({label,count})).sort((a,b)=>String(a.label).localeCompare(String(b.label),undefined,{numeric:true,sensitivity:"base"}));
 }
 function getForecastQuadrantPoolCounts(train,day,quadrant){
   const counts=new Map();
@@ -11779,13 +11866,14 @@ function openForecastQuadrantPoolEditor(train,day,quadrant){
         <button type="button" class="forecast-quadrant-editor-close" data-forecast-quadrant-editor-close>&times;</button>
       </div>
       <div class="forecast-quadrant-editor-rows">
-        ${rows.length?rows.map(row=>`
+        ${getAllTrainDayPoolCounts(train,day).length?getAllTrainDayPoolCounts(train,day).map(row=>`
           <div class="forecast-quadrant-editor-row" data-forecast-editor-old-label="${escapeHtml(row.label)}">
             <select data-forecast-editor-pool aria-label="Pool and size">
               ${forecastPoolSizeSelectOptions(row.label)}
             </select>
             <input type="number" min="0" step="1" value="${row.count}" data-forecast-editor-count aria-label="Count">
             <button type="button" data-forecast-editor-save>Save</button>
+            <button type="button" class="forecast-editor-delete-btn" data-forecast-editor-delete title="Remove this pool">✕</button>
           </div>`).join(""):`<div class="forecast-quadrant-editor-empty">No ${escapeHtml(title)} chassis entered yet.</div>`}
       </div>
       <div class="forecast-quadrant-editor-add">
@@ -11796,6 +11884,23 @@ function openForecastQuadrantPoolEditor(train,day,quadrant){
         <button type="button" data-forecast-editor-add-save>Add / More</button>
       </div>
     </div>`;
+  function refreshEditorRows(){
+    const updatedRows=getAllTrainDayPoolCounts(train,day);
+    const rowsDiv=overlay.querySelector(".forecast-quadrant-editor-rows");
+    if(rowsDiv){
+      rowsDiv.innerHTML=updatedRows.length
+        ? updatedRows.map(row=>`
+          <div class="forecast-quadrant-editor-row" data-forecast-editor-old-label="${escapeHtml(row.label)}">
+            <select data-forecast-editor-pool aria-label="Pool and size">
+              ${forecastPoolSizeSelectOptions(row.label)}
+            </select>
+            <input type="number" min="0" step="1" value="${row.count}" data-forecast-editor-count aria-label="Count">
+            <button type="button" data-forecast-editor-save>Save</button>
+            <button type="button" class="forecast-editor-delete-btn" data-forecast-editor-delete title="Remove this pool">✕</button>
+          </div>`).join("")
+        : `<div class="forecast-quadrant-editor-empty">No ${escapeHtml(title)} chassis entered yet.</div>`;
+    }
+  }
   document.body.appendChild(overlay);
   overlay.addEventListener("click",event=>{
     if(event.target===overlay || event.target.closest("[data-forecast-quadrant-editor-close]")){
@@ -11806,13 +11911,28 @@ function openForecastQuadrantPoolEditor(train,day,quadrant){
     if(save){
       const row=save.closest(".forecast-quadrant-editor-row");
       const ok=setForecastTrainPoolSizeCount(train,day,row?.dataset.forecastEditorOldLabel||"",row?.querySelector("[data-forecast-editor-pool]")?.value||"",row?.querySelector("[data-forecast-editor-count]")?.value||"0");
-      if(ok)closeForecastQuadrantPoolEditor();
+      if(ok)refreshEditorRows();
       return;
     }
     const add=event.target.closest("[data-forecast-editor-add-save]");
     if(add){
-      const ok=setForecastTrainPoolSizeCount(train,day,"",overlay.querySelector("[data-forecast-editor-add-pool]")?.value||"",overlay.querySelector("[data-forecast-editor-add-count]")?.value||"1");
-      if(ok)closeForecastQuadrantPoolEditor();
+      const addPool=overlay.querySelector("[data-forecast-editor-add-pool]");
+      const addCount=overlay.querySelector("[data-forecast-editor-add-count]");
+      const ok=setForecastTrainPoolSizeCount(train,day,"",addPool?.value||"",addCount?.value||"1");
+      if(ok){
+        refreshEditorRows();
+        if(addCount)addCount.value="1";
+        if(addPool)addPool.focus();
+      }
+    }
+    const del=event.target.closest("[data-forecast-editor-delete]");
+    if(del){
+      const row=del.closest(".forecast-quadrant-editor-row");
+      const label=row?.dataset.forecastEditorOldLabel||"";
+      if(label){
+        setForecastTrainPoolSizeCount(train,day,label,label,"0");
+        refreshEditorRows();
+      }
     }
   });
   overlay.addEventListener("keydown",event=>{
@@ -12504,7 +12624,7 @@ function renderForecastStatusCards(){
           const itemBelongsToQuadrant=(item,id)=>{
             const label=String(item?.key||"").toUpperCase();
             const fingerprint=label.replace(/[^A-Z0-9]/g,"");
-            if(id==="tgrp")return /^(?:TGRP|TRGP)(?:20|40)/.test(fingerprint);
+            if(id==="tgrp")return /^(?:TGRP|TRGP)(?:20|40|45)/.test(fingerprint);
             if(id==="fgcp")return fingerprint.includes("FGCP");
             if(id==="sncz")return fingerprint.includes("SNCZ")||fingerprint.includes("SNBZ");
             if(id==="dcli")return fingerprint.includes("DCLI")||fingerprint.includes("DCLP");
@@ -12513,7 +12633,7 @@ function renderForecastStatusCards(){
           };
           const tgrpItems=itemDetails.filter(item=>{
             const fingerprint=String(item?.key||"").toUpperCase().replace(/[^A-Z0-9]/g,"");
-            return /^(?:TGRP|TRGP)(?:20|40)/.test(fingerprint);
+            return /^(?:TGRP|TRGP)(?:20|40|45)/.test(fingerprint);
           });
           const quadrantsHtml=quadrantDefinitions.map(def=>{
             const items=def.id==="tgrp" ? tgrpItems : itemDetails.filter(x=>itemBelongsToQuadrant(x,def.id));
@@ -14477,8 +14597,20 @@ if($("forecastNeedsSizeRule"))$("forecastNeedsSizeRule").textContent=needsSize;
 async function init(){
   document.body.classList.add("reconciliation-view");
   setupYardSelectOptions();
-  $("yardSelect").oninput=handleYardSelectChange;
   $("yardSelect").onchange=handleYardSelectChange;
+  const yardSelectCustomEl=$("yardSelectCustom");
+  if(yardSelectCustomEl){
+    yardSelectCustomEl.onblur=()=>commitYardCustomName();
+    yardSelectCustomEl.onkeydown=(e)=>{
+      if(e.key==="Enter"){e.preventDefault();commitYardCustomName();}
+      if(e.key==="Escape"){
+        yardSelectCustomEl.style.display="none";
+        const sel=$("yardSelect");
+        if(sel&&sel.value==="__custom__")sel.value=YARD_OPTIONS[0];
+        queueCloudSave();
+      }
+    };
+  }
   updateReportDateLabel();setupDisplaySliders();
   $("search").oninput=e=>{query=e.target.value;render();queueCloudSave()};
   document.querySelectorAll("th button[data-sort]").forEach(b=>b.onclick=()=>{const k=b.dataset.sort;if(k==="ce"&&applySelectedCeFlags())return;sortConfig={key:k,direction:sortConfig.key===k&&sortConfig.direction==="asc"?"desc":"asc"};render();queueCloudSave()});
@@ -14533,7 +14665,7 @@ async function init(){
   const forecastTracklistCloseBtn=$("forecastTracklistCloseBtn"); if(forecastTracklistCloseBtn)forecastTracklistCloseBtn.onclick=closeForecastTracklistImportModal;
   const forecastTracklistModal=$("forecastTracklistImportModal"); if(forecastTracklistModal)forecastTracklistModal.addEventListener("click",e=>{if(e.target===forecastTracklistModal)closeForecastTracklistImportModal()});
   const forecastTracklistImportConfirmBtn=$("forecastTracklistImportConfirmBtn"); if(forecastTracklistImportConfirmBtn)forecastTracklistImportConfirmBtn.onclick=importForecastTracklistFromModal;
-  ["forecastTracklistName","forecastTracklistDay","forecastTracklistText"].forEach(id=>{
+  ["forecastTracklistDay","forecastTracklistName1","forecastTracklistText1","forecastTracklistName2","forecastTracklistText2","forecastTracklistName3","forecastTracklistText3","forecastTracklistName4","forecastTracklistText4","forecastTracklistName5","forecastTracklistText5"].forEach(id=>{
     const el=$(id); if(el)el.addEventListener("input",()=>{clearTimeout(el._tracklistTimer);el._tracklistTimer=setTimeout(renderForecastTracklistPastePreview,120);});
   });
 
@@ -14607,6 +14739,40 @@ async function init(){
   if(forecastUnplannedUnitsBtn)forecastUnplannedUnitsBtn.onclick=openForecastUnplannedUnitsModal;
   const forecastUnplannedCloseBtn=$("forecastUnplannedCloseBtn");
   if(forecastUnplannedCloseBtn)forecastUnplannedCloseBtn.onclick=closeForecastUnplannedUnitsModal;
+  const forecastUnplannedClearBtn=$("forecastUnplannedClearBtn");
+  if(forecastUnplannedClearBtn){
+    let clearConfirming=false;
+    let clearTimer=null;
+    forecastUnplannedClearBtn.onclick=()=>{
+      if(!clearConfirming){
+        clearConfirming=true;
+        forecastUnplannedClearBtn.textContent="Confirm Clear";
+        forecastUnplannedClearBtn.classList.add("forecast-unplanned-clear-confirm");
+        clearTimer=setTimeout(()=>{
+          clearConfirming=false;
+          forecastUnplannedClearBtn.textContent="Clear";
+          forecastUnplannedClearBtn.classList.remove("forecast-unplanned-clear-confirm");
+        },3000);
+      } else {
+        clearTimeout(clearTimer);
+        clearConfirming=false;
+        forecastUnplannedClearBtn.textContent="Clear";
+        forecastUnplannedClearBtn.classList.remove("forecast-unplanned-clear-confirm");
+        forecastUnplannedRecords=[];
+        forecastUnplannedStats=null;
+        const summary=$("forecastUnplannedSummary");
+        if(summary)summary.textContent="Choose an Unplanned Inventory Excel file.";
+        const output=$("forecastUnplannedOutput");
+        if(output)output.innerHTML='<div class="forecast-unplanned-empty">No unplanned units calculated yet.</div>';
+        const dayFilter=$("forecastUnplannedDayFilter");
+        if(dayFilter){dayFilter.innerHTML='<option value="all">All Days</option>';dayFilter.disabled=true;}
+        const emptyInput=$("forecastUnplannedEmptyContainers");
+        if(emptyInput)emptyInput.value="0";
+        forecastUnplannedEmptyContainers=0;
+        if(typeof showArchiveToast==="function")showArchiveToast("Unplanned units cleared.");
+      }
+    };
+  }
   const forecastUnplannedUnitsModal=$("forecastUnplannedUnitsModal");
   if(forecastUnplannedUnitsModal)forecastUnplannedUnitsModal.addEventListener("click",event=>{
     if(event.target===forecastUnplannedUnitsModal)closeForecastUnplannedUnitsModal();
@@ -20156,6 +20322,50 @@ window.addEventListener("DOMContentLoaded",async()=>{
 .forecast-tracklist-grid input,#forecastTracklistText{width:100%!important;border:1px solid rgba(148,163,184,.22)!important;background:rgba(2,6,23,.70)!important;color:#f8fafc!important;border-radius:14px!important;padding:11px 12px!important;font-size:14px!important;font-weight:900!important;}
 .forecast-tracklist-paste-label{padding:18px 22px 0!important;}
 #forecastTracklistText{min-height:260px!important;resize:vertical!important;font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace!important;font-size:12px!important;line-height:1.35!important;}
+.forecast-tracklist-slots{
+  display:grid!important;
+  grid-template-columns:repeat(5,minmax(0,1fr))!important;
+  gap:10px!important;
+  margin-bottom:12px!important;
+}
+.forecast-tracklist-slot{
+  display:flex!important;
+  flex-direction:column!important;
+  gap:6px!important;
+}
+.forecast-tracklist-slot-name{
+  width:100%!important;
+  border:1px solid rgba(148,163,184,.22)!important;
+  background:rgba(2,6,23,.70)!important;
+  color:#f8fafc!important;
+  border-radius:10px!important;
+  padding:8px 10px!important;
+  font-size:12px!important;
+  font-weight:900!important;
+  box-sizing:border-box!important;
+}
+.forecast-tracklist-slot-name::placeholder{color:#64748b!important;}
+.forecast-tracklist-slot-text{
+  width:100%!important;
+  min-height:220px!important;
+  resize:vertical!important;
+  border:1px solid rgba(148,163,184,.22)!important;
+  background:rgba(2,6,23,.70)!important;
+  color:#f8fafc!important;
+  border-radius:10px!important;
+  padding:8px 10px!important;
+  font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace!important;
+  font-size:11px!important;
+  line-height:1.35!important;
+  box-sizing:border-box!important;
+}
+.forecast-tracklist-slot-text::placeholder{color:#64748b!important;}
+@media(max-width:900px){
+  .forecast-tracklist-slots{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+}
+@media(max-width:500px){
+  .forecast-tracklist-slots{grid-template-columns:1fr!important;}
+}
 .forecast-tracklist-preview{margin:16px 22px 0!important;border:1px solid rgba(45,212,191,.24)!important;background:rgba(15,23,42,.56)!important;border-radius:16px!important;padding:13px!important;}
 .forecast-tracklist-empty{color:#94a3b8!important;font-size:13px!important;font-weight:900!important;}
 .forecast-tracklist-preview-top{color:#fff!important;font-size:14px!important;font-weight:1000!important;margin-bottom:10px!important;}
@@ -23075,6 +23285,29 @@ body.forecast-excel-view-open .forecast-excel-view{
   color:#a9b8d0;
   font-size:12px;
 }
+.forecast-unplanned-head-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-shrink:0;
+}
+.forecast-unplanned-clear-btn{
+  min-height:36px;
+  padding:8px 14px;
+  border:1px solid rgba(148,163,184,.35)!important;
+  border-radius:10px;
+  background:rgba(15,23,42,.6)!important;
+  color:#94a3b8!important;
+  font-size:13px;
+  font-weight:1000;
+  cursor:pointer;
+  transition:background .15s,border-color .15s,color .15s;
+}
+.forecast-unplanned-clear-btn.forecast-unplanned-clear-confirm{
+  border-color:rgba(248,113,113,.6)!important;
+  background:rgba(127,29,29,.55)!important;
+  color:#fca5a5!important;
+}
 .forecast-unplanned-head button,
 .forecast-unplanned-import button{
   min-height:36px;
@@ -24369,18 +24602,23 @@ body.forecast-view.forecast-print-clean-view #forecastModal .forecast-page > .he
   gap:12px!important;
   margin-bottom:12px!important;
 }
+.forecast-quadrant-editor-head > div{
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+}
 .forecast-quadrant-editor-head strong{
-  display:block!important;
+  display:inline!important;
   font-size:20px!important;
   line-height:1!important;
   font-weight:1000!important;
 }
 .forecast-quadrant-editor-head span{
-  display:block!important;
-  margin-top:5px!important;
+  display:inline!important;
+  margin-top:0!important;
   color:#bfdbfe!important;
-  font-size:12px!important;
-  font-weight:900!important;
+  font-size:20px!important;
+  font-weight:1000!important;
 }
 .forecast-quadrant-editor-close{
   width:34px!important;
@@ -24395,37 +24633,74 @@ body.forecast-view.forecast-print-clean-view #forecastModal .forecast-page > .he
 }
 .forecast-quadrant-editor-rows{
   display:grid!important;
-  gap:8px!important;
+  gap:0!important;
   margin-bottom:12px!important;
+  border:1px solid rgba(147,197,253,.28)!important;
+  border-radius:11px!important;
+  overflow:hidden!important;
 }
-.forecast-quadrant-editor-row,
+.forecast-quadrant-editor-row{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) 86px auto auto!important;
+  gap:0!important;
+  align-items:center!important;
+  padding:0!important;
+  border-bottom:1px solid rgba(147,197,253,.14)!important;
+}
+.forecast-quadrant-editor-row:last-child{
+  border-bottom:none!important;
+}
 .forecast-quadrant-editor-add{
   display:grid!important;
   grid-template-columns:minmax(0,1fr) 86px auto!important;
   gap:8px!important;
   align-items:center!important;
+  padding-top:12px!important;
+  border-top:1px solid rgba(148,163,184,.18)!important;
 }
+/* Shared input/select base */
 .forecast-quadrant-editor-row input,
-.forecast-quadrant-editor-add input,
 .forecast-quadrant-editor-row select,
+.forecast-quadrant-editor-add input,
 .forecast-quadrant-editor-add select{
-  min-height:34px!important;
-  border:1px solid rgba(147,197,253,.42)!important;
-  border-radius:9px!important;
-  background:rgba(2,6,23,.82)!important;
+  min-height:36px!important;
   color:#fff!important;
-  padding:5px 9px!important;
   font-size:14px!important;
   font-weight:1000!important;
   outline:none!important;
 }
-.forecast-quadrant-editor-row select,
-.forecast-quadrant-editor-add select{
+/* Row controls — borderless, transparent, fits inside the shared container */
+.forecast-quadrant-editor-row select{
+  border:none!important;
+  border-right:1px solid rgba(147,197,253,.14)!important;
+  border-radius:0!important;
+  background:transparent!important;
+  padding:0 10px!important;
   cursor:pointer!important;
+  width:100%!important;
 }
-.forecast-quadrant-editor-row input[type="number"],
+.forecast-quadrant-editor-row input[type="number"]{
+  border:none!important;
+  border-right:1px solid rgba(147,197,253,.14)!important;
+  border-radius:0!important;
+  background:transparent!important;
+  padding:0 6px!important;
+  text-align:center!important;
+  width:100%!important;
+}
+/* Add row controls — keep individual pill style */
+.forecast-quadrant-editor-add select,
+.forecast-quadrant-editor-add input{
+  border:1px solid rgba(147,197,253,.42)!important;
+  border-radius:9px!important;
+  background:rgba(2,6,23,.82)!important;
+  padding:5px 9px!important;
+}
 .forecast-quadrant-editor-add input[type="number"]{
   text-align:center!important;
+}
+.forecast-quadrant-editor-add select{
+  cursor:pointer!important;
 }
 .forecast-quadrant-editor-row button,
 .forecast-quadrant-editor-add button{
@@ -24563,6 +24838,31 @@ body.forecast-view.forecast-print-clean-view #forecastModal .forecast-page > .he
 }
 #forecastStatusCards .forecast-train-card.forecast-card-meta-open .forecast-compact-eta-wrap{
   display:inline-flex!important;
-}</style>
+}
+/* STRIP inner kind/pool pill — transparent, no border, no background */
+.kind, .pool {
+  background: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+}
+
+/* TOTAL label: move to left of pill (row layout) */
+#forecastStatusCards .forecast-compact-total {
+  flex-direction: row !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+#forecastStatusCards .forecast-compact-total span {
+  text-align: left !important;
+}
+
+/* Inbound train name: match pill height (30px) */
+#forecastStatusCards .forecast-compact-train-main .forecast-train-name {
+  font-size: calc(30px * var(--forecast-status-text-scale, 1)) !important;
+  line-height: 1 !important;
+}
+</style>
 </body>
 </html>
